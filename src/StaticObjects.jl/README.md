@@ -1,0 +1,1 @@
+# StaticObjects.jl
