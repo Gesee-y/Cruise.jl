@@ -1,0 +1,88 @@
+
+
+Query plan:
+
+
+Imagine you have 4 bits.
+
+----
+
+Now, imagine 1011 comes.
+
+---- -> 1011
+
+Imagine 1000
+
+---- -> 1011, 1000
+
+It could be...
+
+---- -> 10--
+
+10-- -> 1011, 1000
+
+Now, if 1111 comes...
+
+---- -> 10--, 1111
+
+1001 comes
+
+---- -> 10--, 1111 remains.
+
+10-- -> 1011, 100-
+
+100- -> 1000, 1001
+
+
+Now, lets try larger stuffs.
+
+
+
+10000010001001
+10011101100101
+
+-------------- -> 100------0--01
+
+but if it comes to like...
+
+-------------- -> 100------0--01, 1--01010101000
+-------------- -> 1--------0--0-
+1--------0--0- -> 100------0--01, 1--01010101000
+
+You get that you should make whenever there are two elements which don't come to form the former?
+Meaning that... if ---- -> 1100 and 0011, then either could match... 
+Now, if ---- -> 11-- and --11
+and comes 1001...
+could match with 11-- to become... 
+1--- -> 1001, 11--
+Now, the matching can take place unambiguously.
+Because imagine... 1_ comes... 10 would be matched before it could become _0
+
+
+Now, 
+
+---- can be represented as
+
+11111111
+
+With 1 in the former saying "can be 1" and 1 in the latter saying "can be 0"
+
+00001111
+
+Means Can only be 0000
+
+01011110 means can be 0-0-
+
+Can be "or"-ed to get parent.
+
+
+
+
+
+Fatal flaw found:
+
+Imagine QUerying for _____________10
+And now looking at if each element ends in 00 or 11
+and there are many ending in __ 
+
+Horrible.

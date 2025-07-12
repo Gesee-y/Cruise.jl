@@ -1,0 +1,16 @@
+[[deps]]
+
+name = "Notifyers"
+uuid = "de92ec2b-fb1f-40f8-8e84-3094df8dc533" 
+version = "1.0.0"
+
+[[deps]]
+
+name = "NodeTree"
+uuid = "2904b71e-4df0-4a82-a724-4bbee9184de7"
+version = "0.9.0"
+
+[[deps]]
+name = "OrderedDict"
+uuid = "cfd1ef55-9d35-4cc0-9788-b3a5c0326929"
+version = "0.4.0"
