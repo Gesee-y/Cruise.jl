@@ -11,7 +11,7 @@ using .NodeTree
 export NOTIF_WINDOW_CREATED, NOTIF_WINDOW_UPDATED, NOTIF_WINDOW_EXITTED, NOTIF_WINDOW_TITLE_CHANGED
 export NOTIF_WINDOW_REPOSITIONED, NOTIF_WINDOW_RESIZED, NOTIF_WINDOW_FULLSCREEN, NOTIF_WINDOW_MINIMIZED
 export NOTIF_WINDOW_MAXIMIZED, NOTIF_WINDOW_HIDDEN
-export NOTIF_ERROR, NOTIF_WARNING, NOTIF_INFO, NOTIF_OUTDOOR_INITED
+export NOTIF_ERROR, NOTIF_WARNING, NOTIF_INFO, NOTIF_OUTDOOR_INITED, NOTIF_OUTDOOR_STYLE_QUITTED
 export NOTIF_OUTDOOR_QUITTED, NOTIF_WINDOW_RESTORED, NOTIF_WINDOW_RAISED
 
 export ContextType
@@ -20,7 +20,7 @@ export AbstractStyle, ODWindow, ODApp
 
 export CreateWindow, ResizeWindow, RepositionWindow, QuitWindow, SetWindowTitle, SetFullscreen
 export GetError, UpdateWindow, WindowDelay, InitOutdoor, WindowCount
-export QuitStyle, QuitOutdoor, GetStyle
+export QuitStyle, QuitOutdoor, GetStyle, GetWindowID
 
 # --------- Notifications ----------- #
 
@@ -32,11 +32,11 @@ A notification emitted when Outdoors have been quitted for a given window style.
 @Notifyer NOTIF_OUTDOOR_QUITTED()
 
 #=
-	@Notifyer NOTIF_OUTDOOR_INITED()
+	@Notifyer NOTIF_OUTDOOR_INITED(style)
 
 A notification emitted when have been initialized for a given window style.
 =#
-@Notifyer NOTIF_OUTDOOR_INITED()
+@Notifyer NOTIF_OUTDOOR_INITED(style)
 
 #=
 	@Notifyer NOTIF_OUTDOOR_STYLE_QUITTED(style)
@@ -160,7 +160,7 @@ A notification emitted when Outdoors find a severe error that make the program u
 continue. It's recommended to connect to it a function to throw the received error or at least
 to handle it.
 =#
-@Notifyer NOTIF_ERROR(mes::String,error::String)
+@Notifyer NOTIF_ERROR(mes::String,error::String=0)
 
 #=
 	@Notifyer NOTIF_WARNING(mes::String,warning::String)
@@ -168,7 +168,7 @@ to handle it.
 A notification emitted when Outdoors find a problem but that problem does not make the program 
 unable to process.
 =#
-@Notifyer NOTIF_WARNING(mes::String,warning::String)
+@Notifyer NOTIF_WARNING(mes::String,warning::String,code=0)
 
 #=
 	@Notifyer NOTIF_INFO(mes::String,info::String)
@@ -176,7 +176,7 @@ unable to process.
 A notification emitted when an information should be passed (For example the information about
 a driver, etc.).
 =#
-@Notifyer NOTIF_INFO(mes::String,info::String)
+@Notifyer NOTIF_INFO(mes::String,info::String,code=0)
 
 # ---------- Enumerations ----------- #
 
@@ -438,15 +438,14 @@ Initiliatize the current outdoor API
 When creating your own window style, you should create a dispatch of it with the type of your window.
 
 """
-QuitOutdoor() = begin
-	for (_,win) in Windows
+QuitOutdoor(app::ODApp) = begin
+	for (_,win) in app.Windows
 		QuitWindow(win)
 	end
-	childs = get_children(get_root(WindowTree))
+	childs = get_children(get_root(app.WindowTree))
 
 	while length(childs) > 0
-		QuitWindow(childs[1])
-		pop!(childs)
+		QuitWindow(pop!(childs)[])
 	end
 
 	NOTIF_OUTDOOR_QUITTED.emit
@@ -469,7 +468,7 @@ GetStyle(app::ODWindow) = getfield(app, :data)
 function GetWindowFromStyleID(app::ODApp,style::Type{<:AbstractStyle}, id::Integer)
 	
    # We iterate on the different windows of the app
-	for win in getfield(app.Windows,:vl)
+	for win in values(app.Windows)
 		st = GetStyle(win)
 
 		if st isa style && (GetStyleWindowID(st) == id)
@@ -508,9 +507,11 @@ function DestroyChildWindow(win::ODWindow)
 		childs = get_children(node)
 
 		while length(childs) > 0
-			QuitWindow(childs[])
-			remove_node(childs)
-			delete!(windows,childs[].id)
+			child = childs[end]
+			DestroyChildWindow(child[])
+			QuitWindow(child[])
+			remove_node(child)
+			delete!(windows,child[].id)
 		end
 	end
 end

@@ -55,9 +55,9 @@ Base.getindex(win::SDLWindow) = getfield(GetStyle(win),:window)
 Init Outdoor for the SDL style of window. If everything when well, then the notification
 `NOTIF_OUTDOOR_INITED` will be emitted.
 """
-function InitOutdoor(::Type{SDLStyle}) 
+function InitOutdoor(S::Type{SDLStyle}) 
 	if _init_SDL()
-		NOTIF_OUTDOOR_INITED.emit
+		NOTIF_OUTDOOR_INITED.emit = S
 	end
 end
 

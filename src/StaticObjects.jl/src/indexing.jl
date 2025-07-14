@@ -74,12 +74,12 @@ Get the element at the index i in the static array A.
 Get the element at the set of index idxs in the N-dimensional static array A.
 """
 function Base.getindex(array::AbstractSArray,i::Int)
-	1 <= i <= length(array) || throw(BoundsError(array,i))
+	@boundscheck 1 <= i <= length(array) || throw(BoundsError(array,i))
 	return array.data[i]
 end
 
 function Base.getindex(array::AbstractSArray{T,D,N},idxs::Vararg{Int,N}) where{T <: Any ,D <: Tuple ,N}
-	if (any(i -> !(1 <= i <= length(array)),idxs)) throw(BoundsError(array,i)) end
+	@boundscheck if (any(i -> !(1 <= i <= length(array)),idxs)) throw(BoundsError(array,i)) end
 	
 	i = _compute_coordinate(size(array),idxs)
 	return array.data[i]
@@ -114,12 +114,12 @@ Set the set of index idxs of the N-dimensional static array A with the value val
 	
 	setfield!(array,:data,data)
 end=#
-function Base.setindex!(array::AbstractSArray{T,D,N},val::T,idxs::Vararg{Int,N}) where{T <: Any ,D <: Tuple ,N}
-
+function Base.setindex!(array::AbstractSArray{T,D,N},v,idxs::Vararg{Int,N}) where{T <: Any ,D <: Tuple ,N}
+    val = convert(T, v)
     L = length(array)
 	i = _compute_coordinate(size(array),idxs)
 	
-	1 <= i <= L || throw(BoundsError(array,i))
+	@boundscheck 1 <= i <= L || throw(BoundsError(array,i))
 
 	AD = getfield(array,:data)
 

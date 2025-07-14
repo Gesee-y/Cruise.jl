@@ -12,6 +12,8 @@ include("Coordinate/coordinate_system.jl")
 include("colors.jl")
 include("rays.jl")
 include("rect.jl")
+include("circle.jl")
+include("collision.jl")
 
 """
 	nroot(n)

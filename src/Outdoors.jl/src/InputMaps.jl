@@ -51,7 +51,7 @@ InputMap(Set(["S","Z"]), 1.0)
 macro InputMap(ex)
 	name = ex.args[1]
 	len = length(ex.args)
-	strength = ex.args[len].args[2]
+	strength = ex.args[len] isa Expr ? ex.args[len].args[2] : 0
 
 	!(strength isa AbstractFloat) && (strength=1.0;len += 1)
 	keys = ex.args[2:len-1]
@@ -92,9 +92,9 @@ function IsKeyPressed(win::ODWindow, inp::InputMap)
 	MouseButtons = get_mousebutton_data(get_inputs_data(win))
 
 	for key in GetKeys(inp)
-		if key in Inputs
+		if haskey(Inputs, key)
 			IsKeyPressed(win,key) ? (return true) : nothing
-		elseif key in MouseButtons
+		elseif haskey(MouseButtons, key)
 			IsMouseButtonPressed(win,key) ? (return true) : nothing
 		end
 	end
@@ -136,6 +136,6 @@ end
 
 function _create_inputmap(m,name,keys,strength)
 	
-	eval(Expr(:toplevel, m, :(const $name = InputMap($keys; strength=$strength))))
-	eval(Expr(:export, name))
+	eval(Expr(:toplevel, m, :(const $m.$name = InputMap($keys; strength=$strength))))
+	#eval(Expr(:export, name))
 end

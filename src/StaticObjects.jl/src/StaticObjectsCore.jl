@@ -138,40 +138,40 @@ mutable struct SArray{T <: Any,D <: Tuple,N,L} <: AbstractSArray{T,D,N}
 	# Construct for a set of elements
 	@nospecialize
 	function SArray{T,D,N,L}(elts::Vararg{T,L}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(elts)
 	end
 
 	function SArray{T,D,N,L}(elts::Vararg{Any,L}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(convert_tuple(T,elts))
 	end
 
 	function SArray{T,D,N,L}(elts::NTuple{L,T}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(elts)
 	end
 
 	function SArray{T,D,N,L}(elts::NTuple{L,Any}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(convert_tuple(T,elts))
 	end
 
 	# Construct from a function or Initializer
 	Base.@propagate_inbounds function SArray{T,D,N,L}(::UndefInitializer) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}()
 	end
 
 	function SArray{T,D,N,L}(elt::T) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(fill_tuple(elt,L))
 	end
 
 	function SArray{T,D,N,L}(elt::AbstractArray{T,N}) where{T <: Any,D <: Tuple,N,L}
 		length(elt) != L && throw(DimensionMismatch("The array does not have the same length as L($L) passed in parameters"))
 		
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		return new{T,D,N,L}(Tuple(elt))
 	end
 
@@ -180,17 +180,17 @@ mutable struct SArray{T <: Any,D <: Tuple,N,L} <: AbstractSArray{T,D,N}
 		elt = Tuple(elt)
 		elt = convert.(T,elt)
 
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(elt)
 	end
 
 	function SArray{T,D,N,L}(elt::Any) where{T <: Any,D <: Tuple,N,L}
 		elt = convert(T,elt)
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(fill_tuple(elt,L))
 	end
 	function SArray{T,D,N,L}(elt::T) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(fill_tuple(elt,L))
 	end
 	@specialize
@@ -272,43 +272,43 @@ struct iSArray{T <: Any,D <: Tuple,N,L} <: AbstractSArray{T,D,N}
 
 	# Construct for a set of elements
 	function iSArray{T,D,N,L}(elts::Vararg{T,L}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(elts)
 	end
 
 	function iSArray{T,D,N,L}(elts::Vararg{Any,L}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(convert_tuple(T,elts))
 	end
 
 	# Construct from an NTuple
 	function iSArray{T,D,N,L}(elts::NTuple{L,T}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(elts)
 	end
 
 	function iSArray{T,D,N,L}(elts::NTuple{L,Any}) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(convert_tuple(T,elts))
 	end
 
 	# Construct from a function or Initializer
 	@nospecialize
 	Base.@propagate_inbounds function iSArray{T,D,N,L}(::UndefInitializer) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}()
 	end
 	@specialize
 
 	function iSArray{T,D,N,L}(elt::T) where{T <: Any,D <: Tuple,N,L}
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(fill_tuple(elt,L))
 	end
 
 	function iSArray{T,D,N,L}(elt::Array{T,N}) where{T <: Any,D <: Tuple,N,L}
 		length(elt) != L && throw(DimensionMismatch("The array does not have the same length as L($L) passed in parameters"))
 		
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(Tuple(elt))
 	end
 
@@ -317,13 +317,13 @@ struct iSArray{T <: Any,D <: Tuple,N,L} <: AbstractSArray{T,D,N}
 		elt = Tuple(elt)
 		elt = convert.(T,elt)
 
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(elt)
 	end
 
 	function iSArray{T,D,N,L}(elt::Any) where{T <: Any,D <: Tuple,N,L}
 		elt = convert(T,elt)
-		_check_argument(D,N,L)
+		@boundscheck _check_argument(D,N,L)
 		new{T,D,N,L}(fill_tuple(elt,L))
 	end
 end

@@ -18,25 +18,21 @@ include(joinpath("ReactiveECS","src","ReactiveECS.jl"))
 include(joinpath("Outdoors.jl","src","Outdoors.jl"))
 include(joinpath("Horizons.jl","src","Horizons.jl"))
 include(joinpath("Arceus.jl","src","Arceus.jl"))
-include(joinpath("MathLib.jl","src","MathLib.jl"))
+include(joinpath("Interactions", "src", "Interactions.jl"))
 
 using Reexport
 @reexport using .ReactiveECS
 @reexport using .Outdoors
 @reexport using .Horizons
 @reexport using .Arceus
+@reexport using .Interactions
 
+include("utilities.jl")
+include("App.jl")
+include("game_loop.jl")
 include("writer.jl")
 
-const LOCALES = Dict(
-    :fr => text_fr,
-    :es => text_es,
-    :hi => text_hi,
-    :zh => text_zh,
-    :ja => text_ja
-)
-
-text = [
+text_en = [
 	"{speed:0.2}Everything begins somewhere.{pause:4}",
     "No dream comes from nowhere.{pause:4}",
     "We are all searching for a new beginning.{pause:3}",
@@ -129,6 +125,15 @@ text_ja = [
     "{speed:0.3}こんにちは、Cruise！！{pause:3}"
 ]
 
+const LOCALES = Dict(
+    :en => text_en,
+    :fr => text_fr,
+    #:es => text_es,
+    :hi => text_hi,
+    :zh => text_zh,
+    :ja => text_ja
+)
+
 """
     HelloCruise!!(locale=:en)
 
@@ -136,7 +141,7 @@ Displays the introductory narrative for the Cruise game engine in the specified 
 - `locale`: Symbol indicating the language (e.g., `:en`, `:fr`, `:hi`, `:zh`, `:ja`).
 """
 function HelloCruise!!(locale=:en)
-
+    !haskey(LOCALES, locale) && (locale = :en)
 	writer = TextWriter(LOCALES[locale])
 	write_text(writer)
 

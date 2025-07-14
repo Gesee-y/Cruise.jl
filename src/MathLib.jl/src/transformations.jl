@@ -197,30 +197,43 @@ _get_translation_mat(position::Vector3D) = iMat4{Float32}(1,0,0,0
 			0,0,1,0,
 			position[1],position[2],position[3],1)
 
-function _get_rotation_matrix(angle::Real,axis::Vector3D,deg=false)
+function _get_rotation_matrix(θ::Real,axis::Vector3D,deg=false)
 
 	axis = vnormalize(axis)
 
 	sin_fn = deg ? sind : sin
 	cos_fn = deg ? cosd : cos
 
-	si = sin_fn(angle)
-	co = cos_fn(angle)
+	si = sin_fn(θ)
+	co = cos_fn(θ)
 
-	cst = 1.0 - co
+	cst = one(co) - co
 	
 	x = axis.x
 	y = axis.y
 	z = axis.z
 
 	return iMat4{Float32}(
-			(co + (x ^ 2) * cst), (x * y * cst - z * si), (x * z * cst + y * si), 0.0,
-			(x * y * cst + z * si), (co + (y ^ 2) * cst), (z * y * cst - x* si), 0.0,
-			(x * z * cst - y * si), (z * y * cst + x * si), (co + (z ^ 2) * cst), 0.0,
+			(co + (x * x) * cst), (x * y * cst - z * si), (x * z * cst + y * si), 0.0,
+			(x * y * cst + z * si), (co + (y * y) * cst), (z * y * cst - x* si), 0.0,
+			(x * z * cst - y * si), (z * y * cst + x * si), (co + (z * z) * cst), 0.0,
 			0.0,0.0,0.0,1.0
 		)
 end
+function _get_rotation2D_matrix(θ::Real,deg=false)
+	sin_fn = deg ? sind : sin
+	cos_fn = deg ? cosd : cos
 
+	si = sin_fn(θ)
+	co = cos_fn(θ)
+	
+	return iMat4{Float32}(
+			(co, si, 0.0, 0.0,
+			si, 0.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0,0.0,0.0,1.0
+		)
+end
 @noinline function _get_scale_matrix(scale::Vec2)
 	iMat4{Float32}(scale[1],0.0,0.0,0.0,
 		0.0,scale[2],0.0,0.0,
@@ -233,4 +246,47 @@ function _get_scale_matrix(scale::Vec3)
 		0.0,scale[2],0.0,0.0,
 		0.0,0.0,scale[3],0.0,
 		0.0,0.0,0.0,1.0)
+end
+
+function _calculate_matrix(pos::Vec2f, angle::Real;deg=false)
+	px,py = pos.data
+
+	sin_fn = deg ? sind : sin
+	cos_fn = deg ? cosd : cos
+
+    co = cos_fn(angle)
+    si = sin_fn(angle)
+	
+	Mat4f(
+		co,-si,0.0,px,
+		si,co,0.0,py,
+		0.0,0.0,1.0,0.0,
+		0.0,0.0,0.0,1.0,
+	)
+end
+
+function _calculate_matrix(pos::Vec3f, orientation::Quatf)
+	px,py,pz = pos.data
+	qx,qy,qz,qw = orientation.data
+	Mat4f(
+		1-2*qy*qy-2*qz*qz,
+		2*qx*qy - 2*qw*qz,
+		2*qx*qz + 2*qw*qy,
+		px,
+		
+		2*qx*qy + 2*qw*qz,
+		1-2*qx*qx-2*qz*qz,
+		2*qy*qz - 2*qw*qx,
+		py,
+		
+		2*qx*qz - 2*qw*qy,
+		2*qy*qz + 2*qw*qx,
+		1-2*qx*qx-2*qy*qy,
+		pz,
+
+		0.0,
+		0.0,
+		0.0,
+		1.0,
+	)
 end

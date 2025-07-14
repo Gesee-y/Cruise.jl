@@ -158,7 +158,7 @@ function Base.:*(m::StaticMatrix{T1, N, M}, v::StaticVector{T2, M}) where{T1<:Nu
 	arr = SVector{T, M}(undef)
 
 	# We create the main loop for the multiplication
-	@inbounds for i in Base.OneTo(M)
+	@inbounds @simd for i in Base.OneTo(M)
 		value = _compute_elt(m,v,i)
 		arr[i] = value
 	end
@@ -169,8 +169,8 @@ end
 function Stranspose(m::StaticMatrix{T, N, M}) where{T,N,M}
 	mat = SMatrix{T, M, N, N*M}(undef)
 
-	@inbounds for i in Base.OneTo(M)
-		for j in Base.OneTo(N)
+	@inbounds @simd for i in Base.OneTo(M)
+		@simd for j in Base.OneTo(N)
 			mat[i,j] = m[j,i]
 		end
 	end
@@ -208,7 +208,7 @@ function _compute_elt(m::StaticMatrix{T1,N, M}, v::StaticVector{T2,M},
 	value :: T = zero(T)
 
 	# Then we loop over the elements to do the multiplication
-	@inbounds for i2 in Base.OneTo(M)
+	@inbounds @simd for i2 in Base.OneTo(M)
 		value += m[i, i2] * v[i2]
 	end
 
