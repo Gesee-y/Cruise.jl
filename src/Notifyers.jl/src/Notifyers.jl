@@ -487,8 +487,8 @@ function _create_notifyer(m,data)
 	end
 
 	args = tuple(args...)
-	ex = :(const $m.$(data[1]) = Notifyer($name,$args))
-	eval(ex)
+	ex = :(const $(data[1]) = Notifyer($name,$args))
+	m.eval(ex)
 end
 
 function _precompile_notifyer(args::Tuple)
