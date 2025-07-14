@@ -89,7 +89,7 @@ Base.@propagate_inbounds function vinvert_mat(m::Matrix3D)
 end
 Base.@propagate_inbounds function vinvert_mat(m::Matrix4D{T}) where T
 	d = vdet(m)
-	d == 0 && error("THe matrice is not invertible")
+	d == 0 && error("The matrice is not invertible")
 	det = 1/d
 	data = m.data
 	return Mat4{Float32}(
@@ -107,7 +107,7 @@ Base.@propagate_inbounds function vinvert_mat(m::Matrix4D{T}) where T
 
 		(-data[6]*data[3]+data[2]*data[7]* data[16])*det,
 
-		(+data[4]*data[2]-data[0]*data[6]* data[15])*det;
+		(+data[4]*data[2]-data[0]*data[6]* data[15])*det,
 
 		(-data[4]*data[1]+data[0]*data[5]* data[15])*det,
 
@@ -124,7 +124,7 @@ Base.@propagate_inbounds function vinvert_mat(m::Matrix4D{T}) where T
 		-data[0]*data[10]*data[7]
 		-data[4]*data[2]*data[11]
 		+data[0]*data[6]*data[11])*det,
-		)
+		
 
 	    (data[8]*data[5]*data[3]
 		-data[4]*data[9]*data[3]
@@ -132,6 +132,7 @@ Base.@propagate_inbounds function vinvert_mat(m::Matrix4D{T}) where T
 		+data[0]*data[9]*data[7]
 		+data[4]*data[1]*data[11]
 		-data[0]*data[5]*data[11])*det
+	)
 end
 vinvert_mat(m::MatrixType{T}) where T <: Integer = Rational.(Stranspose(adjoint_mat(m)),vdet(m))
 vinvert_mat(m::MatrixType{T}) where T <: Number = Stranspose(adjoint_mat(m))/vdet(m)
@@ -173,11 +174,11 @@ function adjoint_mat(m::StaticMatrix{T,M,M}) where{T<:Number,M}
 	return mat
 end
 
-function Stranspose(m::Matrix2D{T})
+function Stranspose(m::Matrix2D{T}) where T
 	data = m.data
 	return Mat2{T}((data[1],data[3],data[2],data[4]))
 end
-function Stranspose(m::Matrix3D{T})
+function Stranspose(m::Matrix3D{T}) where T
 	data = m.data
 	return Mat3{T}((data[1],data[4],data[7],data[2],data[5], data[8], data[3], data[6], data[9]))
 end
@@ -207,7 +208,7 @@ function to_mat4(q::Quaternion,pos::Vector3D)
 		pos.y,
 		2*q.x*q.z + 2*q.y*q.w,
 		2*q.y*q.z - 2*q.x*q.w,
-		1 - (2*q.x*q.x + 2*q.y*q.y)
+		1 - (2*q.x*q.x + 2*q.y*q.y),
 		pos.z,
 		0,0,0,1
 		)

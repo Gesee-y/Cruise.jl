@@ -228,11 +228,11 @@ function _get_rotation2D_matrix(θ::Real,deg=false)
 	co = cos_fn(θ)
 	
 	return iMat4{Float32}(
-			(co, si, 0.0, 0.0,
-			si, 0.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0,0.0,0.0,1.0
-		)
+		co, si, 0.0, 0.0,
+		si, 0.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0,0.0,0.0,1.0
+	)
 end
 @noinline function _get_scale_matrix(scale::Vec2)
 	iMat4{Float32}(scale[1],0.0,0.0,0.0,

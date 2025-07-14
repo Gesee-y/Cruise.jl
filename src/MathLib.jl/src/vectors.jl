@@ -290,11 +290,9 @@ v1::VectorType{<:Number} × v2::VectorType{<:Number} = vcross(v1,v2)
 vrotate(v::Vector2D,ang::Real) = Vec2{Float32}(v[1]*cos(ang) - v[2]*sin(ang), v[1]*sin(ang) + v[2]*cos(ang))
 vrotated(v::Vector2D,ang::Real) = Vec2{Float32}(v[1]*cosd(ang) - v[2]*sind(ang), v[1]*sind(ang) + v[2]*cosd(ang))
 
-function vreflect(u::Vector2D, n::Vector2D)
-	u = vnormalize(u)
-	n = vnormalize(n)
-	θ = acos(vdot(u,n))
-	return vrotate(-u, 2θ)
+function vreflect(u::Vector2D, u2::Vector2D)
+	n = vnormalize(u2)
+	return Vec2f((u - 2(vdot(u,n))*n).data)
 end
 
 """
