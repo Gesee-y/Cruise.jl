@@ -136,6 +136,5 @@ end
 
 function _create_inputmap(m,name,keys,strength)
 	
-	eval(Expr(:toplevel, m, :(const $m.$name = InputMap($keys; strength=$strength))))
-	#eval(Expr(:export, name))
+	m.eval(:(const $name = InputMap($keys; strength=$strength)))
 end
