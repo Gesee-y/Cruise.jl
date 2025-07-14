@@ -3,23 +3,6 @@ include(joinpath("..","..", "src", "Cruise.jl"))
 using .Cruise
 
 const window_size = Vec2(600,400)
-const wall_height = 10
-const goal_width = 10
-const hz = 1
-
-const pv = window_size.y # paddle velocity
-const ball_vel_mult = Vec2(0.25,1.5)
-const ball_vel = ball_vel_mult .* window_size
-
-const paddle_ball_x_tolerance = 2
-ball_vel_y(i) =  -i * ball_vel_y_max
-const score_scale = 10
-const score_y_offset = 50
-const msg_scale = 2
-const center_line_dash_w = Vec2(10,40)
-const center_line_dash_spacing = 20
-const secs_between_rounds = 2
-const score_to_win = 10
 
 @InputMap UP("UP", "W")
 @InputMap LEFT("LEFT", "A")
@@ -75,32 +58,37 @@ function update_paddle(p::Paddle)
 	draw!(p)
 end
 function update_ball(b::Ball, p::Paddle)
-	b.rect.origin += b.velocity
+	b.rect.origin += b.velocity # We move the paddle
 	b.cooldown <= 0 && check_collision(b,p)
 	draw!(b)
 	b.cooldown >= 0 && (b.cooldown -= 1)
 end
 
+# Manual collision is easier for this one rather than using a full Particule2D
 function check_collision(b, p)
     pos = b.rect.origin
 	paddle_pos = p.rect.origin
 	if pos.x > window_size.x || pos.x < 0
-		pos.x = clamp(pos.x, 0, window_size.x)
-		b.dir.x = -b.dir.x
-		b.velocity = vreflect(b.velocity, iVec2{Int}(b.dir.x, 0))
-		b.cooldown = 2
 
-		WallTouched.emit = pos.x
+		# Make sure we don't go off the screen
+		pos.x = clamp(pos.x, 0, window_size.x)
+		b.dir.x = -b.dir.x # Just so we can get the surface normal
+		b.velocity = vreflect(b.velocity, iVec2{Int}(b.dir.x, 0)) # The new velocity is a reflection of the old one from the normal
+		b.cooldown = 2 # This cool down is to prevent redundant collision checking
+
+		WallTouched.emit = pos.x # Since we touched a wall, we notify it with the position of the ball
 	end
+	# In case the ball touched the top or bottom of the window
 	if pos.y > window_size.y || pos.y < 0
 		pos.y = clamp(pos.y, 0, window_size.y)
 		b.dir.y = -b.dir.y
 		b.velocity = vreflect(b.velocity, iVec2{Int}(0, -b.dir.y))
 		b.cooldown = 2
 	end
+	# If the ball toched a paddle
 	if overlapping(b.rect, p.rect)
-		dir = get_velocity()==0 ? 1 : -get_velocity()
-		b.velocity = vreflect(b.velocity, iVec2{Int}(dir,0))# + (sign(b.velocity.x)*iVec(0.1,0.1))
+		dir = get_velocity()==0 ? 1 : -get_velocity() # To make the velocity of the paddle affect the movement, we use it for the normal
+		b.velocity = vreflect(b.velocity, iVec2i(dir,0))
 		b.cooldown = 2
     end
 end
