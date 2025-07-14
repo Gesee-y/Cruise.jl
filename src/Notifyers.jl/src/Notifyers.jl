@@ -487,7 +487,7 @@ function _create_notifyer(m,data)
 	end
 
 	args = tuple(args...)
-	ex = Expr(:toplevel,m,:(const $m.$(data[1]) = Notifyer($name,$args)))
+	ex = :(const $m.$(data[1]) = Notifyer($name,$args))
 	eval(ex)
 end
 
