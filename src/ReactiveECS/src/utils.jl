@@ -40,14 +40,14 @@ macro memoize(fun)
 end
 
 """
-    sleep_ns(t::Integer;sec=false)
+    sleep_ns(t::Real;sec=false)
 
 A microsecond resolution sleep, allowing more precise hold up that `sleep` which has millisecond resolution.
 `sec` is wheter t is in seconds or nanoseconds.
 """
-function sleep_ns(t::Integer;sec=false)
+function sleep_ns(v::Real;sec=false)
 	factor = sec ? 10 ^ 9 : 1
-    t = UInt(t) * factor
+    t = UInt(floor(v * factor))
     
     t1 = time_ns()
     while true

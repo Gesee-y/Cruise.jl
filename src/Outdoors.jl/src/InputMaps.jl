@@ -135,6 +135,5 @@ function IsKeyJustReleased(win::ODWindow,inp::InputMap)
 end
 
 function _create_inputmap(m,name,keys,strength)
-	
 	m.eval(:(const $name = InputMap($keys; strength=$strength)))
 end

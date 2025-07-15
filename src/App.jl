@@ -5,7 +5,7 @@
 export CruiseApp
 export awake!, run!, shutdown!
 export on, off
-export init_appstyle
+export init_appstyle, context, instance
 
 ####################################################### CORE ##############################################################
 
@@ -21,6 +21,7 @@ end
 mutable struct CruiseApp
 	const inst::ODApp
 	const ecs::ECSManager
+	const manager::CrateManager
 	inited_style::Vector{Type{<:AbstractStyle}}
 	windows::Dict{Int,CRWindow}
 	running::Bool
@@ -35,7 +36,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(ODApp(), ECSManager(), Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
+	    app[] = CruiseApp(ODApp(), ECSManager(), CrateManager(), Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
 	end
 	unlock(app_lock)
 	return app[]	
@@ -59,6 +60,7 @@ end
 function shutdown!(a::CruiseApp)
     if on(a)
         a.running = false
+        DestroyAllCrates!(a.manager)
         QuitStyle.(a.inited_style)
         QuitOutdoor(a.inst)
     end
@@ -73,6 +75,7 @@ function init_appstyle(app, S::Type{<:AbstractStyle})
 end
 init_appstyle(app, c::Container{Type{<:AbstractStyle}}) = init_appstyle.(app,c)
 
+
 function Outdoors.CreateWindow(app::CruiseApp, ::Type{S}, ::Type{T}, title, w, h, 
 	args...; kwargs...) where {S <: AbstractStyle, T <: AbstractRenderer}
 	
@@ -86,6 +89,8 @@ function Outdoors.CreateWindow(app::CruiseApp, ::Type{S}, ::Type{T}, title, w, h
     return win
 end
 
+context(w::CRWindow) = w.backend
+instance(w::CRWindow) = w.win
 ################################################### Event Handling ########################################################
 
 export on_backend_error, on_backend_info, on_backend_warning, on_backend_debug

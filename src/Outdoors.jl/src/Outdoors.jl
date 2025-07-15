@@ -2,11 +2,8 @@
 
 module Outdoors
 
-include(joinpath("..","..","NodeTree.jl", "src", "NodeTree.jl"))
-include(joinpath("..","..","Notifyers.jl", "src", "Notifyers.jl"))
-
-using .Notifyers
-using .NodeTree
+using ..Notifyers
+using ..NodeTree
 
 export NOTIF_WINDOW_CREATED, NOTIF_WINDOW_UPDATED, NOTIF_WINDOW_EXITTED, NOTIF_WINDOW_TITLE_CHANGED
 export NOTIF_WINDOW_REPOSITIONED, NOTIF_WINDOW_RESIZED, NOTIF_WINDOW_FULLSCREEN, NOTIF_WINDOW_MINIMIZED

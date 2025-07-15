@@ -1,6 +1,6 @@
 ## SDL2 Windows##
 
-using SimpleDirectMediaLayer.LibSDL2
+using ..LibSDL2
 
 export SDLWindow, Delay, SDLStyle
 

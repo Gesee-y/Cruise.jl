@@ -137,7 +137,7 @@ macro gameloop(args...)
             if LOOP_VAR.max_fps > 0
                 wait_time = (1/LOOP_VAR.max_fps) - LOOP_VAR.delta_seconds
                 if wait_time > 0
-                    sleep_ns(wait_time;sec=true)
+                    Notifyers.sleep_ns(wait_time;sec=true)
                     # Update the timestamp again after waiting.
                     new_time = time_ns()
                     LOOP_VAR.delta_seconds = Float32((new_time - LOOP_VAR.last_frame_time_ns) / 1e9)

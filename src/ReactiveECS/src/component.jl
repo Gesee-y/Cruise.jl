@@ -33,19 +33,16 @@ macro component(name, block)
 
 	# Our struct expression
 	struct_ex = Expr(:struct, false, :($struct_name <: AbstractComponent), block)
-	eval(struct_ex)
+	__module__.eval(struct_ex)
 
-    eval(quote
-			create_component(::Type{$struct_name}, args...) = $struct_name(args...)
-			export $struct_name
-			
-			to_symbol(::Type{$struct_name}) = Symbol($ex)
+    __module__.eval(quote
+			ReactiveECS.to_symbol(::Type{$struct_name}) = Symbol($ex)
 
 			for field in fieldnames($struct_name)
 				T = $struct_name
 				f = QuoteNode(field)
 				type = fieldtype($struct_name, field)
-				eval(:(get_field(st::TableColumn{$T},
+				ReactiveECS.eval(:(get_field(st::TableColumn{$T},
 					::Val{$f})::Vector{$type} = getproperty(getfield(st, :data), ($f))
 				))
 		    end
