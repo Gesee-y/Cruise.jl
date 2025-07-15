@@ -1,0 +1,15 @@
+name = "ModernGLbp"
+uuid = "2930cd1e-366e-4c08-992f-3bff68fce32f"
+version = "2.0"
+
+[deps]
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[compat]
+julia = "1"
+
+[extras]
+GLFW = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
+
+[targets]
+test = ["GLFW"]

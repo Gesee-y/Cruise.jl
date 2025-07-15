@@ -7,21 +7,20 @@
 
 module Horizons
 
+using ..LibSDL2
+using ..ModernGL
+using ..Crates
+
 export AbstractRenderer
-
 export HORIZON_BACKEND_INITED, HORIZON_BACKEND_DESTROYED
-
 export HORIZON_ERROR, HORIZON_WARNING, HORIZON_INFO
-
 export InitBackend, UpdateRender, DestroyBackend
 
-include(joinpath("..","..","NodeTree.jl", "src", "NodeTree.jl"))
-include(joinpath("..","..","Notifyers.jl", "src", "Notifyers.jl"))
-include(joinpath("..","..","MathLib.jl","src","MathLib.jl"))
 include("SimpleMaths.jl")
 
-using .Notifyers
-using .NodeTree
+using ..MathLib
+using ..Notifyers
+using ..NodeTree
 
 const HDict{N,M} = NodeTree.SimpleDict{N,M}
 
@@ -98,8 +97,10 @@ new backend.
 DestroyBackend(backend) = (HORIZON_BACKEND_DESTROYED.emit = backend)
 
 include("Textures.jl")
-include("SDLHorizon\\SDLH.jl")
+include("Objects.jl")
+include("viewport.jl")
+include(joinpath("SDLHorizon","SDLH.jl"))
 include("Vertex.jl")
-include("GLHorizon\\GLH.jl")
+include(joinpath("GLHorizon","GLH.jl"))
 
 end #module

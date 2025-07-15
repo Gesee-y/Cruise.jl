@@ -1,6 +1,6 @@
 ####################### Function to draw with the SDL Renderer ################################
 
-export SetDrawColor, DrawPoint, DrawPoints, DrawLine, DrawLines, DrawRect, FillRect
+export SetDrawColor, DrawPoint, DrawPoints, DrawLine, DrawLines, DrawRect, DrawRectF, FillRect
 export DrawRects, FillRects
 
 """
@@ -130,6 +130,11 @@ function DrawRect(ren::SDLRender,@nospecialize(data))
 	rect = SDL_Rect(data[1],data[2],data[3],data[4])
 
 	SDL_RenderDrawRect(ren.renderer,Ref(rect))
+end
+function DrawRectF(ren::SDLRender,@nospecialize(data))
+	rect = SDL_FRect(data[1],data[2],data[3],data[4])
+
+	SDL_RenderDrawRectF(ren.renderer,Ref(rect))
 end
 
 """

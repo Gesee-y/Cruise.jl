@@ -112,14 +112,16 @@ all you have to do is just defining his `TextureData` and add it in the `data` f
 mutable struct Texture{T <: TextureData}
 	name :: String
 	id :: Tuple
-	rect :: HRect
+	rect :: Rect2D{Float32}
 	data :: T
 	renderable :: Bool
 	static :: StaticTextureInfo
 
 	# Constructors #
 
-	Texture{T}(name::String,id,w,h,data,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(name,id,HRect(w,h,x,y),data,renderable,StaticTextureInfo(static))
+	Texture{T}(name::String,id,w,h,data,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(name,id,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static))
+    Texture(name::String,id,w,h,data::T,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(name,id,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static))
+
 end
 
 """

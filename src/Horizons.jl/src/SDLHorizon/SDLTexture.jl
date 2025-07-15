@@ -14,41 +14,6 @@ struct StaticColor{R,G,B,A} end
 struct StaticPosition{X,Y} end
 
 """
-	struct BlankData <: TextureData
-		obj :: Ptr{SDL_Texture}
-		access :: SDL_TextureAccess
-		format :: Ptr{SDL_PixelFormat}
-
-This struct is used to created BlankTexture.
-"""
-struct BlankData <: TextureData
-	obj :: Ptr{SDL_Texture}
-	access :: TextureAccess
-	format :: SDL_PixelFormatEnum
-end
-
-"""
-	struct ImageData <: TextureData
-		obj :: Ptr{SDL_Texture}
-		access :: TextureAccess
-		format :: SDL_PixelFormatEnum
-
-This struct represent the necessary to represent an image texture.
-"""
-struct ImageData <: TextureData
-	obj :: Ptr{SDL_Texture}
-	access :: TextureAccess
-	format :: SDL_PixelFormatEnum
-end
-
-"""
-	SDLTexture = Union{Texture{BlankData},Texture{ImageData}}
-
-A Type that is a supertype of all the SDL Texture.
-"""
-const SDLTexture = Union{Texture{BlankData},Texture{ImageData}}
-
-"""
 	BlankTexture(ren::SDLRender,w,h;access=nothing,format=nothing,name=_generate_texture_name())
 
 This function will create a new empty SDL texture.
@@ -75,12 +40,22 @@ function BlankTexture(ren::SDLRender,w,h;x=0,y=0,access=TEXTURE_STREAMING,format
 	end
 
 	# The information for the blank texture
-	data = BlankData(tex_ptr,access,f)
+	data = SDLTextureData(tex_ptr,access,f)
 
 	# We finally construct the texture
-	texture = Texture{BlankData}(name,(0,),w,h,data;x=x,y=y,static=static)
+	texture = Texture{SDLTextureData}(name,(0,),w,h,data;x=x,y=y,static=static)
 
 	return texture
+end
+function Texture(backend::SDLRender,img::ImageCrate,x=0,y=0,static=false)
+	tex = SDL_CreateTextureFromSurface(backend.renderer, img.obj)
+	
+	if (C_NULL != tex)
+		info = _get_texture_info(tex)
+		data = SDLTextureData(tex, _to_horizon_access(info[4]),info[3])
+
+		return Texture{SDLTextureData}(_generate_texture_name(),(0,),img.width,img.height,data;x=x,y=y,static=static)
+    end
 end
 
 """
@@ -93,7 +68,7 @@ it visible on the screen.
 
 This function is to copy the content of a texture on another texture. The first texture is 
 considered as the parent of the first one (so if the parent is not rendered then it will also
-no be rendered)
+not be rendered)
 """
 function CopyTo(b::SDLRender,t::SDLTexture)
 	v = b.viewport[]
@@ -204,12 +179,12 @@ end
 # So that change in parents easily affect childs (We are talking about texture there.)
 @inline function _render_texture(b::SDLRender,v::SDLViewport,node;par=node[])
 	t = node[] # Just getting the texture
-	if (t.renderable)
+	if (t.visible)
 
 		# We have prefer tail recursivity there.
 		# Meaning that instead of first rendering the parent and then his child on him
 		# we first render his childs on him and then render the parent.
-		for n in get_childrens(node)
+		for n in get_children(node)
 			SetRenderTarget(b,par) # We set the parent as target for render
 			_render_texture(b,v,n;par=t) # We then start our recursive loop
 			# the loop will stop when we will have a childless node
@@ -224,14 +199,16 @@ end
 end
 
 # This function serve to render a texture
-function _render_a_texture(b::SDLRender,t::Texture)
+function _render_a_texture(b::SDLRender,obj::SDLObject)
+	t = get_texture(obj)
 	# This condition mean
 	# if a texture is not static or the texture is static and have not been rendered yet
 	if (!_is_static(t) || (_is_static(t) && !_is_rendered(t)))
-		r = t.rect # getting the rect of the texture 
-		rect = SDL_Rect(r.x,r.y,r.w,r.h)
+		ro = obj.rect # getting the rect of the texture 
+		r = t.rect
+		rect = SDL_FRect(ro.x,ro.y,r.w*ro.w,r.h*ro.h)
 		_set_rendered(t,true)
-		SDL_RenderCopy(b.renderer,_get_texture(t),C_NULL,Ref(rect))
+		SDL_RenderCopyF(b.renderer,_get_texture(t),C_NULL,Ref(rect))
 	end
 end
 

@@ -1,20 +1,11 @@
-################################# The SDL Mode of Horizon ###################################
-
-using SimpleDirectMediaLayer.LibSDL2
-using ModernGL
+############################################ The SDL Mode of Horizon #################################################
 
 export SDLRender, ClearScreen, SetRenderTarget, CreateViewport, SetAlpha, SetAlphaBlendMode
 export SetRenderScale, SetViewportPosition, ClearViewport, ClearTexture
 
-struct SDLViewport
-	screen::Texture
-	textures::ObjectTree
-	subview :: ObjectTree
+include("SDLObject.jl")
 
-	# Constructors #
-
-	SDLViewport(screen) = new(screen,ObjectTree(),ObjectTree())
-end
+const SDLViewport = HViewport{SDLObjectData, 2}
 
 """
 	struct SDLRender
@@ -30,12 +21,12 @@ struct SDLRender <: AbstractRenderer
 	vsync::Bool
 	accelerated::Bool
 	
-	viewport::Ref{Union{Nothing,SDLViewport}}
+	viewport::SDLViewport
 
 	# Constructors #
 
 	function SDLRender(win,ren,accelerated,vsync)
-		new(win,ren,vsync,accelerated,Ref{Union{Nothing,SDLViewport}}(nothing))
+		new(win,ren,vsync,accelerated,SDLViewport())
 	end
 end
 
@@ -117,15 +108,16 @@ function CreateViewport(r::SDLRender,w,h,x=0,y=0)
 	if tex != nothing
 
 		# We create a new viewport
-		v = SDLViewport(tex)
-
-		# And set the active viewport of the renderer
-		r.viewport[] = v
+		if !isdefined(r.viewport, :screen)
+			r.viewport.screen = SDLObject(Vec2f(x,y),Vec2f(1,1))
+			data = SDLObjectData(tex)
+		    r.viewport.screen.data = data
+		end
 
 		# Then we set the viewport as the target for rendering
 		SetRenderTarget(r)
 
-		return v
+		return 
 	end
 end
 
@@ -135,13 +127,13 @@ end
 Set the position of the current viewport.
 """
 SetViewportPosition(r::SDLRender,x::Int,y::Int) = begin
-	v = r.viewport[]
+	v = r.viewport
 
-	if v == nothing
+	if !isdefined(v, :screen)
 		return
 	else
-		v.screen.rect.x = x
-		v.screen.rect.y = y
+		get_texture(v.screen).rect.x = x
+		get_texture(v.screen).rect.y = y
 	end
 end
 
@@ -151,13 +143,13 @@ end
 Set the size of the current viewport.
 """
 SetViewportSize(r::SDLRender,w::Int,h::Int) = begin
-	v = r.viewport[]
+	v = r.viewport
 
-	if v == nothing
+	if !isdefined(v, :screen)
 		return
 	else
-		v.screen.rect.w = w
-		v.screen.rect.h = h
+		get_texture(v.screen).rect.w = w
+		get_texture(v.screen).rect.h = h
 	end
 end
 
@@ -184,15 +176,16 @@ a viewport, then the render target will be his viewport.
 Set the texture `t` as the current render target(meaning all operation will be done on it.)
 """
 function SetRenderTarget(ren::SDLRender,viewport=true)
-	v = ren.viewport[]
+	v = ren.viewport
 
-	if v == nothing || !viewport
+	if !isdefined(v, :screen) || !viewport
 		SDL_SetRenderTarget(ren.renderer,C_NULL)
 	else
 		SetRenderTarget(ren,v)
 	end
-end 
+end
 SetRenderTarget(ren::SDLRender,v::SDLViewport) = SetRenderTarget(ren,v.screen)
+SetRenderTarget(ren::SDLRender,obj::SDLObject) = SetRenderTarget(ren,get_texture(obj))
 
 function SetRenderTarget(ren::SDLRender,t::SDLTexture)
 	target = _get_texture(t)
@@ -264,9 +257,9 @@ end
 This function should be use to clear a viewport.
 """
 function ClearViewport(ren::SDLRender)
-	v = ren.viewport[]
+	v = ren.viewport
 	# We just clear the screen of the viewport
-	v != nothing && ClearTexture(ren,v.screen)
+	isdefined(v, :screen) && ClearTexture(ren,get_texture(v.screen))
 end
 
 """
@@ -288,12 +281,26 @@ function ClearTexture(ren::SDLRender,t::SDLTexture)
 		err = _get_SDL_Error()
 
 		# And throw it as a warning
-		HORIZON_WARNING.emit = ("Failed to clear screen.", err)
+		HORIZON_WARNING.emit = ("Failed to clear texture.", err)
 	end
 
 	# Finally we set back the render target to the previous target
 	SDL_SetRenderTarget(ren.renderer,ta)
 end
+
+function RenderObject(r::SDLRender,obj::SDLObject, parent=nothing)
+	t = get_texture(obj)
+	ro = obj.rect # getting the rect of the texture 
+	r = tex.rect
+	
+	rect = SDL_FRect(ro.x,ro.y,r.w*ro.w,r.h*ro.h)
+	ta = SDL_GetRenderTarget(r.renderer)
+	
+	isnothing(parent) ? SetRenderTarget(r) : SetRenderTarget(r, parent.data.texture)
+	SDL_RenderCopyF(b.renderer,_get_texture(t),C_NULL,Ref(rect))
+	SDL_SetRenderTarget(r.renderer, ta)
+end
+
 
 """
 	UpdateRender(backend::SDLRender)
@@ -304,10 +311,10 @@ function UpdateRender(backend::SDLRender)
 
 	# We start by setting the target to the renderer
 	SDL_SetRenderTarget(backend.renderer,C_NULL)
-	view = backend.viewport[]
+	view = backend.viewport
 
 	# If there is an active viewport
-	if view != nothing
+	if isdefined(view, :screen)
 
 		# We update the viewport recursively
 		_update_viewport(backend,view)
@@ -327,14 +334,14 @@ function DestroyBackend(backend::SDLRender)
 	v = backend.viewport[]
 
 	# If there is a active viewport
-	if v != nothing
+	if isdefined(view, :screen)
 
 		# We create an iterator to all textures in the viewport
 		iter = tree_to_leaves(v.textures)
 
 		# and destroy them all
 		for node in iter
-			SDL_DestroyTexture(_get_texture(node[]))
+			DestroyObject(node[])
 		end
 	end
 
@@ -375,7 +382,7 @@ function _update_viewport(b::SDLRender,v::SDLViewport;par=v)
 end
 
 # This function will update a sub viewport
-function _update_viewport(b::SDLRender,node::Node;par=node[].screen)
+function _update_viewport(b::SDLRender,node::Node;par=get_texture(node[]))
 	
 	# We just get the subviewport from the Node
 	v = node[]
@@ -395,7 +402,7 @@ function _update_viewport(b::SDLRender,node::Node;par=node[].screen)
 	_update_viewport_textures(b,v)
 
 	# and finally render his screen
-	_render_a_texture(b,v.screen)
+	_render_a_texture(b,get_texture(v.screen))
 
 	# Then we set back the target to the renderer
 	SDL_SetRenderTarget(backend.renderer,C_NULL)
@@ -405,10 +412,8 @@ end
 function _update_viewport_textures(b::SDLRender,v::SDLViewport)
 	
 	# We first set the viewport to the screen of the viewport
-	SetRenderTarget(b,v.screen)
-
-	# We just store the texture tree in a variable
-	tree = v.textures
+	SetRenderTarget(b,get_texture(v.screen))
+	tree = v.objects
 
 	# Then we iterate over the node in the root of the texture tree
 	for ch in get_children(get_root(tree))
