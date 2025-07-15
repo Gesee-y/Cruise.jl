@@ -18,7 +18,7 @@ mutable struct FireworkManager
 end
 
 const fm1 = FireworkManager(1, 3, 5, Vec2f(-5,-5), Vec2f(3,3), 0.1, Firework[])
-
+# Particle2D(inverse_mass, position, velocity, acceleration, foce_accumulation, damping)
 ArtilleryShot() = Particle2D(0.005,Vec2f(1.5,0),Vec2f(-30,40), Vec2f(20,0),Vec2f(0,0), 0.99)
 FireballShot() = Particle2D(1,Vec2f(1.5,400),Vec2f(0,-10), Vec2f(0.6,0.0),Vec2f(0,0.0), 0.9)
 PistolShot() = Particle2D(0.5,Vec2f(1.5,400),Vec2f(0,-35), Vec2f(0,1.0),Vec2f(0,0), 0.99)

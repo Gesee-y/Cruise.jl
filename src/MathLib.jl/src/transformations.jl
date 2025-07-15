@@ -63,12 +63,18 @@ mutable struct Transform{N}
 		angle = 0.0
 		scale = SVector{Float32,N}(Float32(1))
 
-		new{N}(vs, pos, angle, Vec3{Float32}(1,1,1), scale)
+		return new{N}(vs, pos, angle, Vec3{Float32}(1,1,1), scale)
+	end
+	Transform{N}(pos::SVector{Float32,N}) where N = begin
+	    t = Transform{N}()
+	    t.position = pos
+	    return t
 	end
 end
 
-function Transform2D()
+function Transform2D(pos::Vec2f=Vec2f(0,0))
 	t = Transform{2}()
+	t.position = pos
 	t.rotation_axis = Vec3{Float32}(0,0,1)
 	set_basis(t,Vec2(1,0),Vec2(0,1))
 
@@ -127,6 +133,22 @@ function update_transform_matrix!(t;pos=true,rot=true,scale=true)
 
 	#t.matrix = m3 * m2 * m1
 	t.matrix = m1 * m2 * m3
+end
+function update_transform_matrix!(t::Transform{2};pos=true,rot=true,scale=true)
+	position = t.space * t.position
+    sx, sy = t.scale.data
+    matrix = Mat4f(
+		co*sx,-si*sx,0.0,px*sx,
+		si*sy,co*sy,0.0,py*sy,
+		0.0,0.0,1.0,0.0,
+		0.0,0.0,0.0,1.0,
+	)
+	m1 = pos ? _get_translation_mat(position) : 1
+	m2 = rot ? _get_rotation_matrix(t.angle,t.rotation_axis) : 1
+	m3 = scale ? _get_scale_matrix(t.scale) : 1
+
+	#t.matrix = m3 * m2 * m1
+	t.matrix = matrix
 end
 
 get_transform_matrix(t::Transform) = getfield(t,:matrix)
@@ -289,4 +311,40 @@ function _calculate_matrix(pos::Vec3f, orientation::Quatf)
 		0.0,
 		1.0,
 	)
+end
+
+function to_global_basis(t::Mat4f,lm::Mat4f)
+	tdata = t.data
+	localdata = l.data
+	t4 = tdata[1]*localdata[1]+tdata[2]*localdata[4]+tdata[3]*localdata[7]
+	t9 = tdata[1]*localdata[2]+tdata[2]*localdata[5]+tdata[3]*localdata[8]
+	t14 = tdata[1]*localdata[3]+tdata[2]*localdata[6]+tdata[3]*localdata[9]
+	t28 = tdata[5]*localdata[1]+tdata[6]*localdata[4]+tdata[7]*localdata[7]
+	t33 = tdata[5]*localdata[2]+tdata[6]*localdata[5]+tdata[7]*localdata[8]
+	t38 = tdata[5]*localdata[3]+tdata[6]*localdata[6]+tdata[7]*localdata[9]
+    t52 = tdata[9]*localdata[1]+tdata[10]*localdata[4]+tdata[11]*localdata[7]
+    t57 = tdata[9]*localdata[2]+tdata[10]*localdata[5]+tdata[11]*localdata[8]
+    t62 = tdata[9]*localdata[3]+tdata[10]*localdata[6]+tdata[11]*localdata[9]
+
+    return Mat4f(
+    	t4*tdata[1]+t9*tdata[2]+t14*tdata[3],
+		t4*tdata[5]+t9*tdata[6]+t14*tdata[7],
+		t4*tdata[9]+t9*tdata[10]+t14*tdata[11],
+		t28*tdata[1]+t33*tdata[2]+t38*tdata[3],
+		
+		t28*tdata[5]+t33*tdata[6]+t38*tdata[7],
+		t28*tdata[9]+t33*tdata[10]+t38*tdata[11],
+		t52*tdata[1]+t57*tdata[2]+t62*tdata[3],
+		t52*tdata[5]+t57*tdata[6]+t62*tdata[7],
+		
+		t52*tdata[9]+t57*tdata[10]+t62*tdata[11],
+    	0.0,
+    	0.0,
+    	0.0,
+    	
+    	0.0,
+    	0.0,
+    	0.0,
+    	0.0
+    )
 end

@@ -50,9 +50,10 @@ Represent a `N` dimensional spring force lying the particule `other`.
 - `spring_constant`: is the stiffness of the spring.
 """
 mutable struct SpringForce{N} <: AbstractSpringForce
-	other::Particle{N}
+	other::Union{Particle{N}, RigidBody{N}}
 	rest_length::Float32
 	spring_constant::Float32
+	connections::NTuple{2, SVector{Float32,N}}
 end
 const SpringForce2D = SpringForce{2}
 const SpringForce3D = SpringForce{3}
@@ -191,12 +192,12 @@ Apply a `N` dimensional buoyance force simulated with a spring to the particule 
 
 Apply a `N` dimensional fake stiff spring force to the particule `p` at the time interval `Δ`. 
 """
-function update_force(p::Particle{N}, f::GravityForce{N}, Δ::Float32) where N
+function update_force(p::AbstractBody{N}, f::GravityForce{N}, Δ::Float32) where N
     m = getmass(p)
 	!isfinite(m) && return 
 	add_force(p, f.gravity*m)
 end
-function update_force(p::Particle{N}, f::DragForce, Δ::Float32) where N
+function update_force(p::AbstractBody{N}, f::DragForce, Δ::Float32) where N
 	k1, k2 = f.k1, f.k2
 	force, vel_norm = vnormalize_and_norm(p.velocity)
 	dragCoef = k1*vel_norm + k2*vel_norm*vel_norm
@@ -212,6 +213,16 @@ function update_force(p::Particle{N}, f::SpringForce{N}, Δ::Float32) where N
 
     force *= -magnitude
     add_force(p, force)
+end
+function update_force(p::RigidBody{N}, f::SpringForce{N}, Δ::Float32) where N
+	lws, ows = get_point_in_global_space(p.matrix,f.connections[1]), 
+               get_point_in_global_space(other.matrix,f.connections[2])
+    
+	force, magnitude = vnormalize_and_norm(lws - ows)
+	magnitude = f.spring_constant * abs(magnitude - f.rest_length)
+
+    force *= -magnitude
+    add_force(p, force, lws;glob=true)
 end
 function update_force(p::Particle{N}, f::AnchoredSpringForce{N}, Δ::Float32) where N
 	force, magnitude = vnormalize_and_norm(p.position - f.anchor)

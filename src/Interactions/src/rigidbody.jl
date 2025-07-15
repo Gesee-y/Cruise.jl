@@ -7,7 +7,7 @@ export RigidBody2D,RigidBody3D
 ####################################################### CORE #########################################################
 
 """
-    mutable struct RigidBody2D <: AbstractBody
+    mutable struct RigidBody2D <: RigidBody{N}
 		inverse_mass::IReal
 		position::Vec2f
 		velocity::Vec2f
@@ -22,7 +22,7 @@ whole unique object.
 - `angle`: The current angle of the body.
 - `matrix`: A cached trasformation useful if other systems need it.
 """
-mutable struct RigidBody2D <: AbstractBody
+mutable struct RigidBody2D <: RigidBody{2}
 	inverse_mass::IReal
 	position::Vec2f
 	velocity::Vec2f
@@ -32,7 +32,7 @@ mutable struct RigidBody2D <: AbstractBody
 end
 
 """
-    mutable struct RigidBody3D <: AbstractBody
+    mutable struct RigidBody3D <: RigidBody
 		inverse_mass::IReal
 		position::Vec3f
 		velocity::Vec3f
@@ -49,55 +49,71 @@ whole unique object.
 - `orientation`: The current angle of the body, represented as a `Quaternion`.
 - `matrix`: A cached trasformation useful if other systems need it.
 """
-mutable struct RigidBody3D <: AbstractBody
+mutable struct RigidBody3D <: RigidBody{3}
 	inverse_mass::IReal
 	position::Vec3f
 	velocity::Vec3f
 	rotation::Vec3f
+	acceleration::Vec3f
 	orientation::Quatf
+	forceAccum::Vec3f
+	torquAccum::Vec3f
+	linearDamping::IReal
+	angularDamping::IReal
 	inverse_inertia_tensor::Mat3f
+	inverse_inertia_tensorW::Mat4f
 	matrix::Mat4f
 end
 
 ################################################# FUNCTIONS #########################################################
 
-function calculateDerivedData(r::AbstractBody)
-	r.matrix = _calculate_matrix(r.position, r.orientation)
+function integrate!(r::RigidBody, Δ::Float32)
+	rotation, velocity, orientation = r.rotation, r.velocity, r.orientation
+	inversemass = r.inverse_mass
+	# Calculate linear acceleration from force inputs.
+	lastFrameAcceleration = r.acceleration
+	add_scaled(lastFrameAcceleration,forceAccum, inverseMass)
+	# Calculate angular acceleration from torque inputs.
+	angularAcceleration = r.inverse_inertia_tensorW * torqueAccum
+	# Adjust velocities
+	# Update linear velocity from both acceleration and impulse.
+	add_scaled(r.velocity, lastFrameAcceleration, duration)
+	# Update angular velocity from both acceleration and impulse.
+	add_scaled(r.rotation,angularAcceleration, duration)
+	# Impose drag.
+	r.velocity *= r.linearDamping^duration
+	r,rotation *= r.angularDamping^ duration
+	# Adjust positions
+	# Update linear position.
+	add_scaled(r.position,r.velocity, duration)
+	# Update angular position.
+	add_scaled(r.orientation,r.rotation, duration);
+	# Impose drag.
+	velocity *= r.linearDamping^duration;
+	rotation *= r.angularDamping^duration;
+	# Normalize the orientation, and update the matrices with the new
+	# position and orientation.
+	calculateDerivedData(r);
+	# Clear accumulators.
+	clear_accumulate(r);
 end
 
-function _to_global_basis(t::Mat4f,lm::Mat4f)
-	tdata = t.data
-	localdata = l.data
-	t4 = tdata[1]*localdata[1]+tdata[2]*localdata[4]+tdata[3]*localdata[7]
-	t9 = tdata[1]*localdata[2]+tdata[2]*localdata[5]+tdata[3]*localdata[8]
-	t14 = tdata[1]*localdata[3]+tdata[2]*localdata[6]+tdata[3]*localdata[9]
-	t28 = tdata[5]*localdata[1]+tdata[6]*localdata[4]+tdata[7]*localdata[7]
-	t33 = tdata[5]*localdata[2]+tdata[6]*localdata[5]+tdata[7]*localdata[8]
-	t38 = tdata[5]*localdata[3]+rotmat.data[6]*localdata[6]+rotmat.data[7]*localdata[9]
-    t52 = rotmat.data[9]*localdata[1]+rotmat.data[10]*localdata[4]+rotmat.data[11]*localdata[7]
-    t57 = rotmat.data[9]*localdata[2]+rotmat.data[10]*localdata[5]+rotmat.data[11]*localdata[8]
-    t62 = rotmat.data[9]*localdata[3]+rotmat.data[10]*localdata[6]+rotmat.data[11]*localdata[9]
+function calculateDerivedData(r::RigidBody)
+	r.matrix = _calculate_matrix(r.position, r.orientation)
+	r.inverse_inertia_tensorW = to_global_basis(r.matrix, r.inverse_inertia_tensor)
+end
 
-    return Mat4f(
-    	t4*tdata[1]+t9*tdata[2]+t14*tdata[3],
-		t4*tdata[5]+t9*tdata[6]+t14*tdata[7],
-		t4*tdata[9]+t9*tdata[10]+t14*tdata[11],
-		t28*tdata[1]+t33*tdata[2]+t38*tdata[3],
-		
-		t28*tdata[5]+t33*tdata[6]+t38*tdata[7],
-		t28*tdata[9]+t33*tdata[10]+t38*tdata[11],
-		t52*tdata[1]+t57*tdata[2]+t62*tdata[3],
-		t52*tdata[5]+t57*tdata[6]+t62*tdata[7],
-		
-		t52*tdata[9]+t57*tdata[10]+t62*tdata[11]
-    	0.0,
-    	0.0,
-    	0.0,
-    	
-    	0.0,
-    	0.0,
-    	0.0,
-    	0.0)
+function get_point_in_global_space(t::Mat4f, p::Vec3; glob=false)
+	v = iQuatf(p.x,p.y,p.z,0)
+	nq = glob ? vinvert_mat(t)*v : v
+
+	return Vec3f(nq.x,nq.y, nq.z)
+end
+function get_point_in_global_space(t::Mat4f, p::Vec2)
+	v = iQuatf(p.x,p.y,0,0)
+	nq = vinvert_mat(t)*v
+
+	return Vec2f(nq.x,nq.y)
 end
 
 """
@@ -105,4 +121,12 @@ end
 
 The the inverse inertia of a rigid body `r` given an inertia tensor,
 """
-setinvinertia(r::AbstractBody, inertia::SMatrix) = setfield!(e, :inverse_inertia_tensor, vinvert_mat(inertia))
+setinvinertia(r::RigidBody, inertia::SMatrix) = setfield!(e, :inverse_inertia_tensor, vinvert_mat(inertia))
+
+function add_force(r::RigidBody3D, f::Vec3, p::Vec3)
+	np = get_point_in_global_space(r.matrix, p)
+	r.forceAccum += f
+	r.torquAccum += np × f
+end
+add_force(r::RigidBody3D, f::Vec3) = (r.forceAccum += f)
+clear_accumulate(r::RigidBody) = (r.forceAccum .= zero(IReal);r.torquAccum .= zero(IReal))

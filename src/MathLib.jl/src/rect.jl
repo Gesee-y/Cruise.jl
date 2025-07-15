@@ -11,12 +11,13 @@
 """
 mutable struct Rect{T, N}
 	origin::SVector{T, N}
-	dimensions::SVector{Int, N}
+	dimensions::SVector{T, N}
 	
 	# Constructors #
 	
 	Rect(v1::SVector{T1, N}, v2::SVector{T2, N}) where {T1,T2,N} = new{promote_type(T1,T2),N}(v1, v2)
 	Rect{T}(v1::SVector{<:Number, N}, v2::SVector{<:Number, N}) where {T,N} = new{T,N}(convert.(T,v1), v2)
+	Rect{T,N}(v1::SVector{T, N}, v2::SVector{T, N}) where {T,N} = new{T,N}(convert.(T,v1), v2)
 end
 
 const Rect2D{T} = Rect{T,2}
@@ -24,12 +25,22 @@ const Rect2Di = Rect2D{Int}
 const Rect2Df = Rect2D{Float32}
 
 Rect2Di() = Rect2Di(0,0,0,0)
-Rect2Di(x::Integer,y::Integer,w::Integer,h::Integer) = Rect{Int}(Vec2(x,y),Vec2(w, h))
-Rect2Di(v1::Vector2D,v2::Vector2D) = Rect{2}(v1, v2)
+Rect2Di(x::Integer,y::Integer,w::Integer,h::Integer) = Rect{Int}(Vec2i(x,y),Vec2i(w, h))
 
 Rect2Df() = Rect{2}(0,0,0,0)
-Rect2Df(x::Real,y::Real,w::Real,h::Real) = Rect{Float32}(Vec2(x,y),Vec2(w, h))
-Rect2Df(v1::Vector2D,v2::Vector2D) = Rect2D{Float32}(v1, v2)
+Rect2Df(x::Real,y::Real,w::Real,h::Real) = Rect{Float32}(Vec2f(x,y),Vec2f(w, h))
+
+const Rect3D{T} = Rect{T,3}
+const Rect3Di = Rect3D{Int}
+const Rect3Df = Rect3D{Float32}
+
+Rect3Di() = Rect3Di(0,0,0,0)
+Rect3Di(x::Integer,y::Integer,w::Integer,h::Integer) = Rect{Int}(Vec3i(x,y),Vec3i(w, h))
+Rect3Di(v1::Vector3D,v2::Vector3D) = Rect{3}(v1, v2)
+
+Rect3Df() = Rect{3}(0,0,0,0)
+Rect3Df(x::Real,y::Real,z::Real,w::Real,h::Real,d::Real) = Rect{Float32}(Vec3f(x,y,z),Vec3f(w,h,d))
+Rect3Df(v1::Vector3D,v2::Vector3D) = Rect3D{Float32}(v1, v2)
 
 
 function Base.getproperty(r::Rect2D, s::Symbol)

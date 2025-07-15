@@ -30,7 +30,7 @@ This represent a point mass.
 - `damping`: amount of damping applied to the linear movement. Damping is required to remove energy added
     through numerical instability of the integrator.
 """
-mutable struct Particle{N} <: AbstractBody
+mutable struct Particle{N} <: AbstractBody{N}
 	inverse_mass::IReal
 	position::SVector{IReal,N}
 	velocity::SVector{IReal,N}
@@ -94,4 +94,4 @@ Set the inverse mass of the particle `p`. Useful to make infinite mass object.
 """
 setinvmass!(p::Particle, invm::IReal) = setfield(p.inverse_mass, invm)
 
-clear_accumulate_force(p::Particle) = foreach(zero,p.forceAccum)
+clear_accumulate_force(p::Particle) = (p.forceAccum .= zero(IReal))
