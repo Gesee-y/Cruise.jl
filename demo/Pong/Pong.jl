@@ -58,37 +58,32 @@ function update_paddle(p::Paddle)
 	draw!(p)
 end
 function update_ball(b::Ball, p::Paddle)
-	b.rect.origin += b.velocity # We move the paddle
+	b.rect.origin += b.velocity
 	b.cooldown <= 0 && check_collision(b,p)
 	draw!(b)
 	b.cooldown >= 0 && (b.cooldown -= 1)
 end
 
-# Manual collision is easier for this one rather than using a full Particule2D
 function check_collision(b, p)
     pos = b.rect.origin
 	paddle_pos = p.rect.origin
 	if pos.x > window_size.x || pos.x < 0
-
-		# Make sure we don't go off the screen
 		pos.x = clamp(pos.x, 0, window_size.x)
-		b.dir.x = -b.dir.x # Just so we can get the surface normal
-		b.velocity = vreflect(b.velocity, iVec2{Int}(b.dir.x, 0)) # The new velocity is a reflection of the old one from the normal
-		b.cooldown = 2 # This cool down is to prevent redundant collision checking
+		b.dir.x = -b.dir.x
+		b.velocity = vreflect(b.velocity, iVec2{Int}(b.dir.x, 0))
+		b.cooldown = 2
 
-		WallTouched.emit = pos.x # Since we touched a wall, we notify it with the position of the ball
+		WallTouched.emit = pos.x
 	end
-	# In case the ball touched the top or bottom of the window
 	if pos.y > window_size.y || pos.y < 0
 		pos.y = clamp(pos.y, 0, window_size.y)
 		b.dir.y = -b.dir.y
 		b.velocity = vreflect(b.velocity, iVec2{Int}(0, -b.dir.y))
 		b.cooldown = 2
 	end
-	# If the ball toched a paddle
 	if overlapping(b.rect, p.rect)
-		dir = get_velocity()==0 ? 1 : -get_velocity() # To make the velocity of the paddle affect the movement, we use it for the normal
-		b.velocity = vreflect(b.velocity, iVec2i(dir,0))
+		dir = get_velocity()==0 ? 1 : -get_velocity()
+		b.velocity = vreflect(b.velocity, iVec2{Int}(dir,0))
 		b.cooldown = 2
     end
 end

@@ -1,37 +1,92 @@
-# Cruise engine v0.1.0: Windows creation
+# Cruise Engine v0.1.0 – Window Creation
 
-In this section, we will see how to open a window with Cruise.
-First of all import Cruise (Don't make these manipulations in the REPL, at least you encapsulate it in a function)
+This section explains how to create and manage windows using Cruise. Windows are at the core of any graphical application, and Cruise makes it easy to open and control them.
+
+> **Note:** Do **not** run these commands directly in the REPL unless they are wrapped in a function. Window creation and the game loop are better handled in a structured environment (script or function).
+
+---
+
+## Step 1 – Import Cruise
 
 ```julia
 using Cruise
 ```
 
-Then we create a new app:
+---
+
+## Step 2 – Create a Cruise Application
+
+Every Cruise-based project begins with creating a central application instance:
 
 ```julia
 app = CruiseApp()
 ```
 
-Now we have to make a window with the function `CreateWindow`:
+This instance acts as a container for all windows, events, and state handling.
+
+---
+
+## Step 3 – Create a Window
+
+Use `CreateWindow` to initialize a new window:
 
 ```julia
 win = CreateWindow(app, SDLStyle, SDLRender, "My First Window", 640, 480)
 ```
 
-Okay, there are some important points explain now:
-   
-   - We pass our app to `CreateWindow` as first argument, this will store and instance of the window in the app for event management
-   - The second argument `SDLStyle` indicate which style of window you want to use (in future release, you will be able to specify `GLFWStyle`)
-   - The third argument `SDLRender` is the rendering backend we want to use, in our cas, we will use SDL rendering backend.
-   - Then the remaining arguments are the title, width and heigth of our window.
+### Explanation of Parameters:
 
-But if you just launch this code like that, you will have a bad time trying to close the  window because it's not receiving inputs yet. That's where our game loop comes in handy. Just do:
+| Parameter           | Description                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `app`               | The application instance that will manage the window. Required for event handling.                  |
+| `SDLStyle`          | The windowing backend. Currently, only `SDLStyle` is available. Support for `GLFWStyle` is planned. |
+| `SDLRender`         | The rendering backend to use. Here, we use SDL's 2D renderer.                                       |
+| `"My First Window"` | The window title (displayed in the title bar).                                                      |
+| `640`, `480`        | The width and height of the window, in pixels.                                                      |
+
+---
+
+## Step 4 – Run the Game Loop
+
+Creating the window isn’t enough. It won’t respond to input or update properly unless a **game loop** is running. Here's how to start it:
 
 ```julia
-@gameloop app begin end
+@gameloop app begin
+end
 ```
 
-And your window should be behaving normally. That's because the gameloop internally update the events of the windows.
-The loop will stop when you will close the window.
-You can create multiple windows, the loop will stop when all of them will be closed (at least you overrided this behavior, we will see more about that later).
+The `@gameloop` macro will:
+
+* Poll and dispatch window events
+* Refresh each window
+* Keep the app running until all windows are closed
+
+> **By default**, the loop exits when **all windows are closed**. You can override this behavior (covered in a later section).
+
+---
+
+## Multiple Windows
+
+Cruise allows you to create multiple windows by calling `CreateWindow` multiple times. All windows are managed by the same `CruiseApp` instance. The game loop automatically keeps track of them.
+
+Example:
+
+```julia
+win1 = CreateWindow(app, SDLStyle, SDLRender, "Main", 800, 600)
+win2 = CreateWindow(app, SDLStyle, SDLRender, "Debug", 400, 300)
+
+@gameloop app begin
+end
+```
+
+Closing **both** windows will stop the loop, unless configured otherwise.
+
+---
+
+## Summary
+
+Cruise’s window system is modular, backend-agnostic, and designed to scale. You now know how to:
+
+* Initialize a Cruise application
+* Create one or more windows
+* Run the game loop

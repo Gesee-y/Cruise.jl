@@ -82,4 +82,11 @@ You can use regular operations on vectors such as:
    - **Projection** : `v_getproj(a,b) # return the projection of a on b.`
    - **Reflection**: `vreflect(a,b) # Return the reflection of a with the normal b`
 
-And we went throught the essential functions.
+## Summary
+
+Cruise provides you all the vector math you need in order to make your game. You now know:
+
+* How to create some vectors
+* How to manipulate them
+
+* 
