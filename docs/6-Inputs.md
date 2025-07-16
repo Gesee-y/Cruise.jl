@@ -97,4 +97,4 @@ You now know how to:
 * Detect input states per frame
 * Use input maps for better abstraction
 
-In the next section, we’ll explore rendering within the game loop.
+In the next section, we’ll explore rendering within the game loop and how to use `@frame` for visual output.
