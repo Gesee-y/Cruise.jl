@@ -95,6 +95,8 @@ Each Cruise module is **self-contained** and can be developed in isolation. Whet
 * Choose the module you want to improve.
 * Fork, hack, PR. Simple.
 
+> I'm neither physicist nor an expert in rendering, so any expertise is welcome, especially on these point.
+
 ---
 
 ## License
