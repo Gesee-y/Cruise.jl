@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.0 – A Powerful Game Engine in Julia
+# Cruise Engine v0.1.5 – A Powerful Game Engine in Julia
 
 Welcome to the official documentation for **Cruise**, a modular, high-performance game engine built with Julia.
 
