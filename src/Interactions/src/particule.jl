@@ -61,7 +61,17 @@ function integrate!(p::Particle, Δ::IReal)
 
 	clear_accumulate_force(p)
 end
-
+function integrate!(p::Particle{N}, Δ::Float32) where N
+    # Verlet integration
+    position = p.position
+    velocity = p.velocity
+    acceleration = p.forceAccum * p.inverse_mass
+    p.position += velocity * Δ + 0.5 * acceleration * Δ^2
+    new_acceleration = p.forceAccum * p.inverse_mass
+    p.velocity += 0.5 * (acceleration + new_acceleration) * Δ
+    p.velocity *= p.damping^Δ
+    clear_accumulate_force(p)
+end
 add_force(p::Particle{N}, f::SVector{<:IReal, N}) where N = (p.forceAccum += f)
 
 """
@@ -85,13 +95,13 @@ getinvmass(n) = 0.0f0
 
 Use this to set the mass of the particle `p`. If you directly want to set the inverse mass, use `setinvmass`.
 """
-setmass!(p::Particle, m::IReal) = setfield!(p.inverse_mass, 1/m)
+setmass!(p::Particle, m::IReal) = setfield!(p,:inverse_mass, 1/m)
 
 """
     setinvmass!(p::Particle, invm::IReal)
 
 Set the inverse mass of the particle `p`. Useful to make infinite mass object.
 """
-setinvmass!(p::Particle, invm::IReal) = setfield(p.inverse_mass, invm)
+setinvmass!(p::Particle, invm::IReal) = setfield(p,:inverse_mass, invm)
 
 clear_accumulate_force(p::Particle) = (p.forceAccum .= zero(IReal))

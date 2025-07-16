@@ -89,5 +89,5 @@ function fill_contact!(link::RodCable{N}, c::IContact{N}) where N
 	
 	return 1
 end
-_current_length(l::LinkCable) = vnorm(l.particles[2] - l.particles[2])
-_current_length(l::RodCable) = vnorm(l.particles[2] - l.particles[2])
+_current_length(l::LinkCable) = vnorm(l.particles[2].position - l.particles[1].position)
+_current_length(l::RodCable) = vnorm(l.particles[2].position - l.particles[1].position)
