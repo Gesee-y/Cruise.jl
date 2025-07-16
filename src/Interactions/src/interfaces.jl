@@ -51,7 +51,7 @@ add_pair(fr::ForceRegistry, p::Particle, f::AbstractForce) = add_pair(fr, p => f
 Remove the register pair from the registry of `fr`.
 If the pair doesn't exist, it will have no effect.    
 """
-remove_pair(fr::ForceRegistry, p::Pair{Particle, AbstractForce}) = filter!(f -> f == p, fr.registry)
+remove_pair(fr::ForceRegistry, p::Pair{Particle, AbstractForce}) = filter!(f -> f != p, fr.registry)
 remove_pair(fr::ForceRegistry, p::Particle, f::AbstractForce) = remove_pair(fr, p => f)
 
 """
@@ -70,7 +70,7 @@ function update_forces(fr::ForceRegistry)
     end
 end
 
-update_force(::Particle, ::AbstractForce, ::Float32) = nothing
+update_force(::Particle, ::AbstractForce, ::Float32) = error("Force $(typeof(f)) hasn't implemented `update_force`.")
 
 make_contact(::AbstractConstraint) = nothing
 fill_contact!(::AbstractConstraint, c) = nothing

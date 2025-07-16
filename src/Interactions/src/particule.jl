@@ -48,19 +48,6 @@ const Particle2D = Particle{2}
 
 Update the internal data of `p` but doing integrations.
 """
-function integrate!(p::Particle, Δ::IReal)
-	position = p.position
-	velocity = p.velocity
-	acceleration = p.acceleration
-	forceAccum = p.forceAccum
-	inverse_mass = p.inverse_mass
-	add_scaled(position, velocity,Δ)
-	add_scaled(acceleration, forceAccum, inverse_mass)
-	add_scaled(velocity, acceleration, Δ)
-	velocity *= p.damping ^ Δ
-
-	clear_accumulate_force(p)
-end
 function integrate!(p::Particle{N}, Δ::Float32) where N
     # Verlet integration
     position = p.position
