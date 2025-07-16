@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.0 – Drawing Images
+# Cruise Engine v0.1.5 – Drawing Images
 
 This section explains how to load and render images in Cruise.
 
