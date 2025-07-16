@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.0 – Window Creation
+# Cruise Engine v0.1.5 – Window Creation
 
 This section explains how to create and manage windows using Cruise. Windows are at the core of any graphical application, and Cruise makes it easy to open and control them.
 
