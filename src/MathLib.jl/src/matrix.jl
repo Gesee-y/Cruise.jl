@@ -45,14 +45,31 @@ vdet(m::Matrix3D) = begin
 	return m[1] * d1 - m[2] * d2 + m[3] * d3
 end
 function vdet(m::Matrix4D)
-	data = m.data
-
-	return data[9]*data[6]*data[3]+
-	data[5]*data[10]*data[3]+
-	data[9]*data[2]*data[7]-
-	data[1]*data[10]*data[7]-
-	data[5]*data[2]*data[11]+
-	data[1]*data[6]*data[11]
+    data = m.data
+    return data[1] * data[6] * data[11] * data[16] -
+           data[1] * data[6] * data[12] * data[15] -
+           data[1] * data[10] * data[7] * data[16] +
+           data[1] * data[10] * data[8] * data[15] +
+           data[1] * data[14] * data[7] * data[12] -
+           data[1] * data[14] * data[8] * data[11] -
+           data[5] * data[2] * data[11] * data[16] +
+           data[5] * data[2] * data[12] * data[15] +
+           data[5] * data[10] * data[3] * data[16] -
+           data[5] * data[10] * data[4] * data[15] -
+           data[5] * data[14] * data[3] * data[12] +
+           data[5] * data[14] * data[4] * data[11] +
+           data[9] * data[2] * data[7] * data[16] -
+           data[9] * data[2] * data[8] * data[15] -
+           data[9] * data[6] * data[3] * data[16] +
+           data[9] * data[6] * data[4] * data[15] +
+           data[9] * data[14] * data[3] * data[8] -
+           data[9] * data[14] * data[4] * data[7] -
+           data[13] * data[2] * data[7] * data[12] +
+           data[13] * data[2] * data[8] * data[11] +
+           data[13] * data[6] * data[3] * data[12] -
+           data[13] * data[6] * data[4] * data[11] -
+           data[13] * data[10] * data[3] * data[8] +
+           data[13] * data[10] * data[4] * data[7]
 end
 
 """
@@ -87,53 +104,37 @@ Base.@propagate_inbounds function vinvert_mat(m::Matrix3D)
 		(t4-t8)*det
 		)
 end
-Base.@propagate_inbounds function vinvert_mat(m::Matrix4D{T}) where T
-	d = vdet(m)
-	d == 0 && error("The matrice is not invertible")
-	det = 1/d
-	data = m.data
-	return Mat4{Float32}(
-		(-data[10]*data[7]+data[6]*data[11])*det,
+function vinvert_mat(m::Matrix4D)
+    data = m.data
+    inv = zeros(Float32, 16)
 
-		(data[9]*data[7]-data[5]*data[11])*det,
+    inv[1] = data[6]*data[11]*data[16] - data[6]*data[12]*data[15] - data[10]*data[7]*data[16] + data[10]*data[8]*data[15] + data[14]*data[7]*data[12] - data[14]*data[8]*data[11]
+    inv[2] = -data[2]*data[11]*data[16] + data[2]*data[12]*data[15] + data[10]*data[3]*data[16] - data[10]*data[4]*data[15] - data[14]*data[3]*data[12] + data[14]*data[4]*data[11]
+    inv[3] = data[2]*data[7]*data[16] - data[2]*data[8]*data[15] - data[6]*data[3]*data[16] + data[6]*data[4]*data[15] + data[14]*data[3]*data[8] - data[14]*data[4]*data[7]
+    inv[4] = -data[2]*data[7]*data[12] + data[2]*data[8]*data[11] + data[6]*data[3]*data[12] - data[6]*data[4]*data[11] - data[10]*data[3]*data[8] + data[10]*data[4]*data[7]
 
-		(-data[9]*data[6]+data[5]*data[10]* data[16])*det,
+    inv[5] = -data[5]*data[11]*data[16] + data[5]*data[12]*data[15] + data[9]*data[7]*data[16] - data[9]*data[8]*data[15] - data[13]*data[7]*data[12] + data[13]*data[8]*data[11]
+    inv[6] = data[1]*data[11]*data[16] - data[1]*data[12]*data[15] - data[9]*data[3]*data[16] + data[9]*data[4]*data[15] + data[13]*data[3]*data[12] - data[13]*data[4]*data[11]
+    inv[7] = -data[1]*data[7]*data[16] + data[1]*data[8]*data[15] + data[5]*data[3]*data[16] - data[5]*data[4]*data[15] - data[13]*data[3]*data[8] + data[13]*data[4]*data[7]
+    inv[8] = data[1]*data[7]*data[12] - data[1]*data[8]*data[11] - data[5]*data[3]*data[12] + data[5]*data[4]*data[11] + data[9]*data[3]*data[8] - data[9]*data[4]*data[7]
 
-		(data[10]*data[3]-data[2]*data[11])*det,
+    inv[9] = data[5]*data[10]*data[16] - data[5]*data[12]*data[14] - data[9]*data[6]*data[16] + data[9]*data[8]*data[14] + data[13]*data[6]*data[12] - data[13]*data[8]*data[10]
+    inv[10] = -data[1]*data[10]*data[16] + data[1]*data[12]*data[14] + data[9]*data[2]*data[16] - data[9]*data[4]*data[14] - data[13]*data[2]*data[12] + data[13]*data[4]*data[10]
+    inv[11] = data[1]*data[6]*data[16] - data[1]*data[8]*data[14] - data[5]*data[2]*data[16] + data[5]*data[4]*data[14] + data[13]*data[2]*data[8] - data[13]*data[4]*data[6]
+    inv[12] = -data[1]*data[6]*data[12] + data[1]*data[8]*data[10] + data[5]*data[2]*data[12] - data[5]*data[4]*data[10] - data[9]*data[2]*data[8] + data[9]*data[4]*data[6]
 
-		(-data[9]*data[3]+data[1]*data[11])*det,
+    inv[13] = -data[5]*data[10]*data[15] + data[5]*data[11]*data[14] + data[9]*data[6]*data[15] - data[9]*data[7]*data[14] - data[13]*data[6]*data[11] + data[13]*data[7]*data[10]
+    inv[14] = data[1]*data[10]*data[15] - data[1]*data[11]*data[14] - data[9]*data[2]*data[15] + data[9]*data[3]*data[14] + data[13]*data[2]*data[11] - data[13]*data[3]*data[10]
+    inv[15] = -data[1]*data[6]*data[15] + data[1]*data[7]*data[14] + data[5]*data[2]*data[15] - data[5]*data[3]*data[14] - data[13]*data[2]*data[7] + data[13]*data[3]*data[6]
+    inv[16] = data[1]*data[6]*data[11] - data[1]*data[7]*data[10] - data[5]*data[2]*data[11] + data[5]*data[3]*data[10] + data[9]*data[2]*data[7] - data[9]*data[3]*data[6]
 
-		(data[9]*data[2]-data[1]*data[10]* data[16])*det,
+    det = data[1]*inv[1] + data[2]*inv[5] + data[3]*inv[9] + data[4]*inv[13]
+    det == 0 && error("Matrix is not invertible")
 
-		(-data[6]*data[3]+data[2]*data[7]* data[16])*det,
-
-		(+data[4]*data[2]-data[0]*data[6]* data[15])*det,
-
-		(-data[4]*data[1]+data[0]*data[5]* data[15])*det,
-
-		(data[9]*data[6]*data[3]
-		-data[5]*data[10]*data[3]
-		-data[9]*data[2]*data[7]
-		+data[1]*data[10]*data[7]
-		+data[5]*data[2]*data[11]
-		-data[1]*data[6]*data[11])*det,
-
-		(-data[8]*data[6]*data[3]
-		+data[4]*data[10]*data[3]
-		+data[8]*data[2]*data[7]
-		-data[0]*data[10]*data[7]
-		-data[4]*data[2]*data[11]
-		+data[0]*data[6]*data[11])*det,
-		
-
-	    (data[8]*data[5]*data[3]
-		-data[4]*data[9]*data[3]
-		-data[8]*data[1]*data[7]
-		+data[0]*data[9]*data[7]
-		+data[4]*data[1]*data[11]
-		-data[0]*data[5]*data[11])*det
-	)
+    inv = inv ./ det
+    return Mat4{Float32}(Tuple(inv))
 end
+
 vinvert_mat(m::MatrixType{T}) where T <: Integer = Rational.(Stranspose(adjoint_mat(m)),vdet(m))
 vinvert_mat(m::MatrixType{T}) where T <: Number = Stranspose(adjoint_mat(m))/vdet(m)
 
@@ -181,6 +182,15 @@ end
 function Stranspose(m::Matrix3D{T}) where T
 	data = m.data
 	return Mat3{T}((data[1],data[4],data[7],data[2],data[5], data[8], data[3], data[6], data[9]))
+end
+function Stranspose(m::Matrix4D{T}) where T
+    data = m.data
+    return Mat4{T}((
+        data[1], data[5], data[9],  data[13],
+        data[2], data[6], data[10], data[14],
+        data[3], data[7], data[11], data[15],
+        data[4], data[8], data[12], data[16]
+    ))
 end
 
 function to_mat3(q::Quaternion)
@@ -263,36 +273,21 @@ function invtransform(m::Matrix4D, v::Quaternion)
 end
 
 function invtransformdir(m::Matrix4D, v::Vector3D)
-	x,y,z = v.data
-	data = m.data
-	return iVec3f(
-		x * data[1] +
-		y * data[5] +
-		z * data[9],
-		
-		x * data[2] +
-		y * data[6] +
-		z * data[10],
-
-		x * data[3] +
-		y * data[9] +
-		z * data[11]
-	)
+    x, y, z = v.data
+    data = m.data
+    return iVec3f(
+        x * data[1] + y * data[5] + z * data[9],
+        x * data[2] + y * data[6] + z * data[10],
+        x * data[3] + y * data[7] + z * data[11]
+    )
 end
-function transformdir(m::Matrix4D, v::Vector3D)
-	x,y,z = v.data
-	data = m.data
-	return iVec3f(
-		x * data[1] +
-		y * data[2] +
-		z * data[3],
 
-		x * data[5] +
-		y * data[6] +
-		z * data[7],
-		
-		x * data[9] +
-		y * data[10] +
-		z * data[11]
-	)
+function transformdir(m::Matrix4D, v::Vector3D)
+    x, y, z = v.data
+    data = m.data
+    return iVec3f(
+        x * data[1] + y * data[2] + z * data[3],
+        x * data[5] + y * data[6] + z * data[7],
+        x * data[9] + y * data[10] + z * data[11]
+    )
 end

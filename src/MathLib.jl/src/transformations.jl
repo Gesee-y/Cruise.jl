@@ -136,6 +136,7 @@ function update_transform_matrix!(t;pos=true,rot=true,scale=true)
 end
 function update_transform_matrix!(t::Transform{2};pos=true,rot=true,scale=true)
 	position = t.space * t.position
+    px, py = position.data
     sx, sy = t.scale.data
     matrix = Mat4f(
 		co*sx,-si*sx,0.0,px*sx,
@@ -315,7 +316,7 @@ end
 
 function to_global_basis(t::Mat4f,lm::Mat4f)
 	tdata = t.data
-	localdata = l.data
+	localdata = lm.data
 	t4 = tdata[1]*localdata[1]+tdata[2]*localdata[4]+tdata[3]*localdata[7]
 	t9 = tdata[1]*localdata[2]+tdata[2]*localdata[5]+tdata[3]*localdata[8]
 	t14 = tdata[1]*localdata[3]+tdata[2]*localdata[6]+tdata[3]*localdata[9]
