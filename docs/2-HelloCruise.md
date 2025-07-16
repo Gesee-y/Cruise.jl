@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.0 – Hello Cruise!!
+# Cruise Engine v0.1.5 – Hello Cruise!!
 
 In this section, we will set up a minimal Cruise application to verify that everything works as expected.
 
