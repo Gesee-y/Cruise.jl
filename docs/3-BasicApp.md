@@ -1,10 +1,10 @@
-# Cruise Engine v0.1.0 – Creating a Basic App
+# Cruise Engine v0.1.5 – Creating a Basic App
 
 In this section, we’ll learn how to set up a minimal Cruise application **without opening a window**. This will help you understand the basic structure of a Cruise-based app and how the main loop is handled.
 
 ---
 
-## 📦 Step 1: Import the Package
+## Step 1: Import the Package
 
 Assuming you’ve already installed Cruise:
 
@@ -14,7 +14,7 @@ julia> using Cruise
 
 ---
 
-## 🏗️ Step 2: Create a New App
+## Step 2: Create a New App
 
 To create a new Cruise application instance:
 
@@ -22,11 +22,11 @@ To create a new Cruise application instance:
 julia> app = CruiseApp()
 ```
 
-> ℹ️ `CruiseApp()` returns a **singleton**. This means subsequent calls will return the same `app` instance.
+> `CruiseApp()` returns a **singleton**. This means subsequent calls will return the same `app` instance.
 
 ---
 
-## 🔁 Step 3: Define the Game Loop
+## Step 3: Define the Game Loop
 
 You can now define a game loop using the `@gameloop` macro:
 
@@ -40,7 +40,7 @@ julia> @gameloop max_fps=60 app begin
 
 ---
 
-## 📖 Explanation
+## Explanation
 
 Let’s break down what happens in this code:
 
@@ -76,7 +76,7 @@ This function stops the app and cleans up all allocated resources.
 
 ---
 
-## ✅ Summary
+## Summary
 
 You now understand how to:
 
