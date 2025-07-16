@@ -94,7 +94,7 @@ pos = obj.rect.origin
 end
 ```
 
-This will move the object based on arrow key input. Cruise treats booleans as `Int`s, so this works as expected (`true = 1`, `false = 0`).
+This will move the object based on arrow key input. Julia can treats booleans as `Int`s, so this works as expected (`true = 1`, `false = 0`).
 
 ---
 
