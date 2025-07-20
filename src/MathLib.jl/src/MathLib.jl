@@ -20,6 +20,7 @@ export get_center, get_as_range, to_global_basis
 export bipolar_distance, ToCartesian
 # TODO: Migrate this to the physic engine
 export point_in_rect, overlapping
+export wrap, posmod, lerp, inverse_lerp
 
 
 ## A mathematics library for the engine ##

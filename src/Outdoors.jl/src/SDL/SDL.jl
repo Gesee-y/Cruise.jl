@@ -113,7 +113,7 @@ Outdoors.connect(NOTIF_ERROR) do msg,err
 end
 
 InitOutdoor(SDLStyle)
-app = ODApp
+app = ODApp()
 
 win = CreateWindow(app,SDLWindow,"Outdoor Test",640,480)
 sleep(4)
@@ -163,28 +163,6 @@ function CreateWindow(app::ODApp,::Type{SDLStyle},title::String,w,h,x=0,y=0; par
 	return nothing
 end
 
-function CreateContext(app::SDLWindow,mode::ContextType;vsync=true,hardware=true)
-	win = GetStyle(app)
-
-	if mode == SIMPLE_CONTEXT
-		flags = SDL_RENDERER_SOFTWARE
-		hardware && (flags = SDL_RENDERER_ACCELERATED)
-		vsync && (flags = flags | SDL_RENDERER_PRESENTVSYNC)
-
-		ren = SDL_CreateRenderer(win.window, -1, flags)
-
-		if C_NULL == ren
-			err = _get_SDL_Error()
-			NOTIF_ERROR.emit = ("Failed to initialize simple context for SDL2", err)
-
-			return nothing
-		end
-
-		win.renderer = ren
-
-		NOTIF_CONTEXT_CREATED.emit = win
-	end
-end
 """
 	ResizeWindow(window::SDLWindow,width,height)
 

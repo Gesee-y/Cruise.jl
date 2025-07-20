@@ -17,7 +17,7 @@ struct CollisionGrid{N,L}
 
 	# Constructor
 
-	function CollisionGrid{N}(size)
+	function CollisionGrid{N}(size) where N
 		mask = UInt(2)^(BIT_WIDTH*4)-1 # We get our look up mask, a serie of 1
 		zones = SMatrix{Vector,N,N,L}(undef)
 		for i in eachindex(zones)
@@ -49,12 +49,12 @@ function ProcessObjects(grid::CollisionGrid, obj::Vector)
 end
 
 """
-    SetInZone(grid::CollisionGrid{N,M,L}, obj::AbstractBody)
+    SetInZone(grid::CollisionGrid{N,L}, obj::AbstractBody)
 
 This automatically route the object `obj` to the correct grids cells using bitboard lookup, making this function
 super fast.
 """
-function SetInZone(grid::CollisionGrid{N,M,L}, obj::AbstractBody)
+function SetInZone(grid::CollisionGrid{N,L}, obj::AbstractBody) where {N,L}
 	xs,xe = obj.rect.x, obj.rect.x + obj.rect.w
 	ys,ye = obj.rect.y, obj.rect.y + obj.rect.h
 	size = 1 << BIT_WIDTH # The size of our mask

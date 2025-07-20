@@ -102,6 +102,7 @@ macro gameloop(args...)
         off(app) && awake!(app)
         od_app = app.inst
         world = app.ecs
+        tolerance = 0.02
         LOOP_VAR = GameLoop()
         LOOP_VAR.max_fps = $max_fps
         LOOP_VAR.max_frame_duration = $max_duration
@@ -132,22 +133,34 @@ macro gameloop(args...)
             # Advance the timer.
             LOOP_VAR.frame_idx += 1
             new_time::UInt = time_ns()
-            LOOP_VAR.delta_seconds = Float32((new_time - LOOP_VAR.last_frame_time_ns) / 1e9)
+            elapsed_seconds = Float32((new_time - LOOP_VAR.last_frame_time_ns) / 1e9)
+
             # Cap the framerate, by waiting if necessary.
             if LOOP_VAR.max_fps > 0
-                wait_time = (1/LOOP_VAR.max_fps) - LOOP_VAR.delta_seconds
-                if wait_time > 0
-                    Notifyers.sleep_ns(wait_time;sec=true)
-                    # Update the timestamp again after waiting.
-                    new_time = time_ns()
+                target_frame_time = 1/LOOP_VAR.max_fps
+                
+                # Time snapping: If we are near from the target time then we just act as we are there
+                ratio = (elapsed_seconds / target_frame_time)
+                fratio = round(ratio)
+                if (ratio - fratio <= tolerance) && (fratio >= 1)
+                    LOOP_VAR.delta_seconds = target_frame_time * fratio
+                    # No need to sleep if we are already at the correct time
+                else
+                    wait_time = target_frame_time*(fratio+1) - elapsed_seconds
+                    if wait_time > 0
+                        Notifyers.sleep_ns(wait_time; sec=true)
+                        # Update the timestamp again after waiting.
+                        new_time = time_ns()
+                    end
                     LOOP_VAR.delta_seconds = Float32((new_time - LOOP_VAR.last_frame_time_ns) / 1e9)
                 end
+            else
+                LOOP_VAR.delta_seconds = elapsed_seconds
             end
 
             LOOP_VAR.last_frame_time_ns = new_time
             # Cap the length of the next frame.
-            LOOP_VAR.delta_seconds = min(LOOP_VAR.max_frame_duration,
-                                            LOOP_VAR.delta_seconds)
+            LOOP_VAR.delta_seconds = min(LOOP_VAR.max_frame_duration, LOOP_VAR.delta_seconds)
         end
     end)
     
