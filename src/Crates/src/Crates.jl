@@ -13,6 +13,8 @@ abstract type AbstractCrate end
 include("manager.jl")
 include("interface.jl")
 include("image.jl")
+include("audio.jl")
+include("music.jl")
 
 ###################################################### FUNCTIONS ###################################################### 
 
