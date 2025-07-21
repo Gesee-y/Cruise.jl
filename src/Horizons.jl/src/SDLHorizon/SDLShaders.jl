@@ -143,7 +143,7 @@ function ProcessPixelTable(f,w,h,format::Ptr{SDL_PixelFormat},extra=();pix=nothi
 	b = Ref{UInt8}(0); a = Ref{UInt8}(0)
 
 	# The Process Loop
-	for i in Base.OneTo(w)
+	@inbounds for i in Base.OneTo(w)
 		x = (i)/(h) # If you have read above, I think you understand what this does
 		for j in Base.OneTo(h)
 			idx = i+w*(j-1)

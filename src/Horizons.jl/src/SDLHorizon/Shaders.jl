@@ -313,6 +313,46 @@ function GlitchEffect(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_Pi
     end
 end
 
+function BloomShader(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    kernel = [
+        1 2 1;
+        2 4 2;
+        1 2 1
+    ] ./ 16  # noyau gaussien 3x3
+
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32}) -> begin
+        x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
+        r_acc = 0.0
+        g_acc = 0.0
+        b_acc = 0.0
+        a_acc = 0.0
+
+        # Flou gaussien 3x3 pondéré par kernel sur les pixels voisins
+        for dy in -1:1, dx in -1:1
+            nx = clamp(x + dx, 1, w)
+            ny = clamp(y + dy, 1, h)
+            idx = (ny - 1) * w + nx
+            r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+            SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+            weight = kernel[dy+2, dx+2]
+            r_acc += r_ref[] * weight
+            g_acc += g_ref[] * weight
+            b_acc += b_ref[] * weight
+            a_acc += a_ref[] * weight
+        end
+
+        # Ajout du pixel original (pour conserver détail)
+        r_orig, g_orig, b_orig, a_orig = color
+        r_final = clamp(UInt8(r_acc) + r_orig, 0, 255)
+        g_final = clamp(UInt8(g_acc) + g_orig, 0, 255)
+        b_final = clamp(UInt8(b_acc) + b_orig, 0, 255)
+        a_final = clamp(UInt8(a_acc) + a_orig, 0, 255)
+
+        return Color8(r_final, g_final, b_final, a_final)
+    end
+end
+
+
 """
     heat_distortion_shader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra)
 
