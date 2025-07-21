@@ -1,7 +1,8 @@
 ####################### Function to draw with the SDL Renderer ################################
 
 export SetDrawColor, DrawPoint, DrawPoints, DrawLine, DrawLines, DrawRect, DrawRectF, FillRect
-export DrawRects, FillRects
+export DrawRects, FillRects, FillRectsF, DrawRectsF, FillRectF
+export DrawCircle, FillCircle, DrawPolygon, FillPolygon, DrawEllipse, FillEllipse, DrawArc, DrawThickLine
 
 """
 	SetDrawColor(ren::SDLRender,col)
@@ -57,7 +58,7 @@ function DrawPoints(ren::SDLRender,positions;count=length(positions))
 	arr = Vector{SDL_Point}(undef,count)
 
 	# We iterate from 1 to count
-	for i in Base.OneTo(count)
+	@inbounds for i in Base.OneTo(count)
 		pos = positions[i]
 
 		# And create the SDL_Point and assign it in the array
@@ -136,6 +137,16 @@ function DrawRectF(ren::SDLRender,@nospecialize(data))
 
 	SDL_RenderDrawRectF(ren.renderer,Ref(rect))
 end
+function DrawRect(ren::SDLRender, r::Rect2D{<:Integer})
+	rect = SDL_Rect(data[1],data[2],data[3],data[4])
+
+	SDL_RenderDrawRect(ren.renderer,Ref(rect))
+end
+function DrawRect(ren::SDLRender, r::Rect2D{<:AbstractFloat})
+	rect = SDL_FRect(data[1],data[2],data[3],data[4])
+
+	SDL_RenderDrawRectF(ren.renderer,Ref(rect))
+end
 
 """
 	FillRect(ren::SDLRender,data)
@@ -149,6 +160,12 @@ function FillRect(ren::SDLRender,data)
 
 	SDL_RenderFillRect(ren.renderer,Ref(rect))
 end
+function FillRectF(ren::SDLRender,data)
+	rect = SDL_FRect(data[1],data[2],data[3],data[4])
+
+	SDL_RenderFillRectF(ren.renderer,Ref(rect))
+end
+
 
 """
 	DrawRects(ren::SDLRender,datas;count=length(data))
@@ -175,6 +192,26 @@ function DrawRects(ren::SDLRender,datas;count=length(datas))
 	# We then draw the rects
 	SDL_RenderDrawRects(ren.renderer,arr,count)
 end
+function DrawRectsF(ren::SDLRender,datas;count=length(datas))
+	
+	# We pre-allocate the Vector of SDL_Rect to contain the rects to draw
+	arr = Vector{SDL_FRect}(undef,count)
+
+	# We iterate from 1 to count
+	for i in Base.OneTo(count)
+		d = datas[i]
+
+		# We create the rect
+		rect = SDL_FRect(d[1],d[2],d[3],d[4])
+		
+		# and put it in the array
+		arr[i] = rect
+	end
+
+	# We then draw the rects
+	SDL_RenderDrawRectsF(ren.renderer,arr,count)
+end
+
 
 """
 	FillRects(ren::SDLRender,datas;count=length(data))
@@ -200,4 +237,224 @@ function FillRects(ren::SDLRender,datas;count=length(datas))
 
 	# We then draw the filled rects
 	SDL_RenderFillRects(ren.renderer,arr,count)
+end
+function FillRectsF(ren::SDLRender,datas;count=length(datas))
+
+	# We pre-allocate the Vector of SDL_Rect to contain the rects to draw
+	arr = Vector{SDL_FRect}(undef,count)
+
+	# We iterate from 1 to count
+	for i in Base.OneTo(count)
+		d = datas[i]
+
+		# We create the rect
+		rect = SDL_FRect(d[1],d[2],d[3],d[4])
+
+		# and put it in the array
+		arr[i] = rect
+	end
+
+	# We then draw the filled rects
+	SDL_RenderFillRectsF(ren.renderer,arr,count)
+end
+
+"""
+    DrawCircle(ren::SDLRender, center, radius; filled=false)
+
+Draw a circle on the renderer `ren` with center at `center` (HVec2) and radius `radius`.
+If `filled` is true, the circle is filled; otherwise, only the outline is drawn.
+"""
+function DrawCircle(ren::SDLRender, center::HVec2{T}, radius::T; filled::Bool=false) where T<:Integer
+    # Algorithme de Bresenham pour les cercles
+    x0, y0 = center.x, center.y
+    x = radius
+    y = 0
+    err = 0
+
+    while x >= y
+        if filled
+            # Dessiner des lignes horizontales pour remplir
+            DrawLine(ren, HVec2(x0 - x, y0 + y), HVec2(x0 + x, y0 + y))
+            DrawLine(ren, HVec2(x0 - x, y0 - y), HVec2(x0 + x, y0 - y))
+            DrawLine(ren, HVec2(x0 - y, y0 + x), HVec2(x0 + y, y0 + x))
+            DrawLine(ren, HVec2(x0 - y, y0 - x), HVec2(x0 + y, y0 - x))
+        else
+            # Dessiner les points du contour
+            DrawPoint(ren, HVec2(x0 + x, y0 + y))
+            DrawPoint(ren, HVec2(x0 - x, y0 + y))
+            DrawPoint(ren, HVec2(x0 + x, y0 - y))
+            DrawPoint(ren, HVec2(x0 - x, y0 - y))
+            DrawPoint(ren, HVec2(x0 + y, y0 + x))
+            DrawPoint(ren, HVec2(x0 - y, y0 + x))
+            DrawPoint(ren, HVec2(x0 + y, y0 - x))
+            DrawPoint(ren, HVec2(x0 - y, y0 - x))
+        end
+
+        if err <= 0
+            y += 1
+            err += 2*y + 1
+        end
+        if err > 0
+            x -= 1
+            err -= 2*x + 1
+        end
+    end
+end
+
+function DrawCircle(ren::SDLRender, center::HVec2{T}, radius::T; filled::Bool=false) where T<:AbstractFloat
+    # Version flottante pour SDL_RenderDrawPointF
+    x0, y0 = center.x, center.y
+    x = radius
+    y = 0.0
+    err = 0.0
+
+    while x >= y
+        if filled
+            DrawLine(ren, HVec2(x0 - x, y0 + y), HVec2(x0 + x, y0 + y))
+            DrawLine(ren, HVec2(x0 - x, y0 - y), HVec2(x0 + x, y0 - y))
+            DrawLine(ren, HVec2(x0 - y, y0 + x), HVec2(x0 + y, y0 + x))
+            DrawLine(ren, HVec2(x0 - y, y0 - x), HVec2(x0 + y, y0 - x))
+        else
+            DrawPoint(ren, HVec2(x0 + x, y0 + y))
+            DrawPoint(ren, HVec2(x0 - x, y0 + y))
+            DrawPoint(ren, HVec2(x0 + x, y0 - y))
+            DrawPoint(ren, HVec2(x0 - x, y0 - y))
+            DrawPoint(ren, HVec2(x0 + y, y0 + x))
+            DrawPoint(ren, HVec2(x0 - y, y0 + x))
+            DrawPoint(ren, HVec2(x0 + y, y0 - x))
+            DrawPoint(ren, HVec2(x0 - y, y0 - x))
+        end
+
+        if err <= 0
+            y += 1.0
+            err += 2*y + 1
+        end
+        if err > 0
+            x -= 1.0
+            err -= 2*x + 1
+        end
+    end
+end
+
+"""
+    FillCircle(ren::SDLRender, center, radius)
+
+Convenience function to draw a filled circle.
+"""
+FillCircle(ren::SDLRender, center::HVec2, radius) = DrawCircle(ren, center, radius; filled=true)
+
+"""
+    DrawPolygon(ren::SDLRender, center, radius, sides; filled=false)
+
+Draw a regular polygon with `sides` sides, centered at `center` (HVec2) with radius `radius`.
+If `filled` is true, the polygon is filled using a scanline approach.
+"""
+function DrawPolygon(ren::SDLRender, center::HVec2{T}, radius::T, sides::Int; filled::Bool=false) where T<:Union{Integer,AbstractFloat}
+    @assert sides >= 3 "Polygon must have at least 3 sides"
+    points = Vector{HVec2{T}}(undef, sides)
+    for i in 1:sides
+        angle = 2 * pi * (i - 1) / sides
+        points[i] = HVec2{T}(center.x + radius * cos(angle), center.y + radius * sin(angle))
+    end
+
+    if filled
+        # Triangulation simple pour le remplissage (approche fan triangulation)
+        for i in 2:(sides-1)
+            DrawLine(ren, points[1], points[i])
+            DrawLine(ren, points[i], points[i+1])
+            DrawLine(ren, points[1], points[i+1])
+        end
+        DrawLine(ren, points[1], points[sides])
+    else
+        # Dessiner le contour
+        DrawLines(ren, points, count=sides)
+        # Fermer le polygone
+        DrawLine(ren, points[sides], points[1])
+    end
+end
+
+"""
+    FillPolygon(ren::SDLRender, center, radius, sides)
+
+Convenience function to draw a filled regular polygon.
+"""
+FillPolygon(ren::SDLRender, center::HVec2, radius, sides) = DrawPolygon(ren, center, radius, sides; filled=true)
+
+"""
+    DrawEllipse(ren::SDLRender, center, rx, ry; filled=false)
+
+Draw an ellipse centered at `center` (HVec2) with horizontal radius `rx` and vertical radius `ry`.
+If `filled` is true, the ellipse is filled.
+"""
+function DrawEllipse(ren::SDLRender, center::HVec2{T}, rx::T, ry::T; filled::Bool=false) where T<:Union{Integer,AbstractFloat}
+    x0, y0 = center.x, center.y
+    steps = max(50, round(Int, 2 * pi * max(rx, ry))) # Nombre de points pour l'approximation
+    points = Vector{HVec2{T}}(undef, steps)
+    for i in 1:steps
+        theta = 2 * pi * (i - 1) / steps
+        points[i] = HVec2{T}(x0 + rx * cos(theta), y0 + ry * sin(theta))
+    end
+
+    if filled
+        # Triangulation simple pour le remplissage
+        for i in 2:(steps-1)
+            DrawLine(ren, points[1], points[i])
+            DrawLine(ren, points[i], points[i+1])
+            DrawLine(ren, points[1], points[i+1])
+        end
+        DrawLine(ren, points[1], points[steps])
+    else
+        # Dessiner le contour
+        DrawLines(ren, points, count=steps)
+        DrawLine(ren, points[steps], points[1])
+    end
+end
+
+"""
+    FillEllipse(ren::SDLRender, center, rx, ry)
+
+Convenience function to draw a filled ellipse.
+"""
+FillEllipse(ren::SDLRender, center::HVec2, rx, ry) = DrawEllipse(ren, center, rx, ry; filled=true)
+
+"""
+    DrawArc(ren::SDLRender, center, radius, start_angle, end_angle)
+
+Draw an arc of a circle centered at `center` (HVec2) with radius `radius`, from `start_angle` to `end_angle` (in radians).
+"""
+function DrawArc(ren::SDLRender, center::HVec2{T}, radius::T, start_angle::Real, end_angle::Real) where T<:Union{Integer,AbstractFloat}
+    steps = max(20, round(Int, abs(end_angle - start_angle) * radius)) # Ajuster la résolution
+    points = Vector{HVec2{T}}(undef, steps)
+    for i in 1:steps
+        theta = start_angle + (end_angle - start_angle) * (i - 1) / (steps - 1)
+        points[i] = HVec2{T}(center.x + radius * cos(theta), center.y + radius * sin(theta))
+    end
+    DrawLines(ren, points, count=steps)
+end
+
+"""
+    DrawThickLine(ren::SDLRender, start, end, thickness)
+
+Draw a line from `start` to `end` (HVec2) with specified `thickness`.
+"""
+function DrawThickLine(ren::SDLRender, start::HVec2{T}, end::HVec2{T}, thickness::T) where T<:Union{Integer,AbstractFloat}
+    # Calculer la direction de la ligne
+    dir = end - start
+    len = norm(dir)
+    if len == 0
+        return
+    end
+    dir = dir / len
+    # Vecteur perpendiculaire pour l'épaisseur
+    perp = HVec2{T}(-dir.y, dir.x)
+    half_thickness = thickness / 2
+
+    # Définir les quatre coins du rectangle représentant la ligne épaisse
+    p1 = start + perp * half_thickness
+    p2 = start - perp * half_thickness
+    p3 = end + perp * half_thickness
+    p4 = end - perp * half_thickness
+
+    # Dessiner un polygone rempli
+    DrawPolygon(ren, HVec2{T}(0, 0), 0, 4; filled=true, points=[p1, p2, p4, p3])
 end

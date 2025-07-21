@@ -1,0 +1,314 @@
+# GameShaders.jl: Effets de type shader pour Horizons.jl
+# Ces fonctions sont conçues pour être utilisées avec ProcessPixels et ProcessPixelTable
+
+export BrightnessContrast, InvertColors, Sepia, GaussianBlur, EdgeDetection, Vignette, Ripple, ChromaKey
+
+"""
+    BrightnessContrast(color, pos, extra)
+
+Adjust brightness and contrast of the pixel. `extra` is a tuple (brightness, contrast) where:
+- brightness > 1 increases brightness, < 1 decreases it.
+- contrast > 1 increases contrast, < 1 decreases it.
+"""
+function BrightnessContrast(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{2,Float32})
+    r, g, b, a = color
+    brightness, contrast = extra
+
+    # Ajuster la luminosité et le contraste
+    r = clamp(round(Int, (r * brightness - 128) * contrast + 128), 0, 255)
+    g = clamp(round(Int, (g * brightness - 128) * contrast + 128), 0, 255)
+    b = clamp(round(Int, (b * brightness - 128) * contrast + 128), 0, 255)
+
+    return Color8(r, g, b, a)
+end
+
+"""
+    InvertColors(color, pos, extra)
+
+Invert the colors of the pixel. `extra` is unused.
+"""
+function InvertColors(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra=())
+    r, g, b, a = color
+    return Color8(255 - r, 255 - g, 255 - b, a)
+end
+
+"""
+    Sepia(color, pos, extra)
+
+Apply a sepia tone to the pixel. `extra` is unused.
+"""
+function Sepia(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra=())
+    r, g, b, a = color
+    # Formule de conversion sépia
+    r_out = clamp(round(Int, r * 0.393 + g * 0.769 + b * 0.189), 0, 255)
+    g_out = clamp(round(Int, r * 0.349 + g * 0.686 + b * 0.168), 0, 255)
+    b_out = clamp(round(Int, r * 0.272 + g * 0.534 + b * 0.131), 0, 255)
+    return Color8(r_out, g_out, b_out, a)
+end
+
+"""
+    GaussianBlur(color, pos, extra, pixels, w, h)
+
+Apply a Gaussian blur to the pixel. `extra` is a tuple (radius, sigma).
+Requires access to the full pixel array, width, and height via a closure.
+"""
+function GaussianBlur(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{2,Float32}) -> begin
+        x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
+        radius, sigma = extra
+        r_sum, g_sum, b_sum, a_sum = 0.0, 0.0, 0.0, 0.0
+        weight_sum = 0.0
+
+        # Noyau gaussien
+        for ky in -radius:radius
+            for kx in -radius:radius
+                px, py = x + kx, y + ky
+                if 1 <= px <= w && 1 <= py <= h
+                    idx = (py - 1) * w + px
+                    weight = exp(-Float32(kx^2 + ky^2) / (2 * sigma^2)) / (2 * pi * sigma^2)
+                    r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+                    SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+                    r_sum += r_ref[] * weight
+                    g_sum += g_ref[] * weight
+                    b_sum += b_ref[] * weight
+                    a_sum += a_ref[] * weight
+                    weight_sum += weight
+                end
+            end
+        end
+
+        r = clamp(round(Int, r_sum / weight_sum), 0, 255)
+        g = clamp(round(Int, g_sum / weight_sum), 0, 255)
+        b = clamp(round(Int, b_sum / weight_sum), 0, 255)
+        a = clamp(round(Int, a_sum / weight_sum), 0, 255)
+        return Color8(r, g, b, a)
+    end
+end
+
+"""
+    EdgeDetection(color, pos, extra, pixels, w, h)
+
+Apply edge detection using a Sobel filter. `extra` is unused.
+Requires access to the full pixel array, width, and height via a closure.
+"""
+function EdgeDetection(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra=()) -> begin
+        x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
+        if x <= 1 || x >= w || y <= 1 || y >= h
+            return Color8(color...)
+        end
+
+        # Noyaux Sobel
+        sobel_x = [-1 0 1; -2 0 2; -1 0 1]
+        sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]
+        gx, gy = 0.0, 0.0
+
+        for ky in -1:1
+            for kx in -1:1
+                px, py = x + kx, y + ky
+                idx = (py - 1) * w + px
+                r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+                SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+                intensity = (r_ref[] + g_ref[] + b_ref[]) / 3.0
+                gx += sobel_x[ky + 2, kx + 2] * intensity
+                gy += sobel_y[ky + 2, kx + 2] * intensity
+            end
+        end
+
+        edge = clamp(round(Int, sqrt(gx^2 + gy^2)), 0, 255)
+        return Color8(edge, edge, edge, color[4])
+    end
+end
+
+"""
+    Vignette(color, pos, extra)
+
+Apply a vignette effect, darkening the edges. `extra` is a tuple (strength, radius).
+"""
+function Vignette(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{2,Float32})
+    r, g, b, a = color
+    strength, radius = extra
+    x, y = pos
+    # Distance depuis le centre (0.5, 0.5)
+    dist = sqrt((x - 0.5)^2 + (y - 0.5)^2)
+    factor = clamp(1.0 - strength * (dist / radius), 0.0, 1.0)
+    r = clamp(round(Int, r * factor), 0, 255)
+    g = clamp(round(Int, g * factor), 0, 255)
+    b = clamp(round(Int, b * factor), 0, 255)
+    return Color8(r, g, b, a)
+end
+
+"""
+    Ripple(color, pos, extra, time)
+
+Apply a ripple distortion effect. `extra` is a tuple (amplitude, frequency, speed).
+Requires a `time` parameter for animation, passed via extra or a global variable.
+"""
+function Ripple(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Float32}) -> begin
+        x, y = pos
+        amplitude, frequency, speed, time = extra[1], extra[2], extra[3], extra[4]
+        # Calculer la distorsion
+        dist = sqrt((x - 0.5)^2 + (y - 0.5)^2)
+        offset = amplitude * sin(frequency * dist - speed * time)
+        new_x = clamp(round(Int, (x + offset) * w), 1, w)
+        new_y = clamp(round(Int, (y + offset) * h), 1, h)
+        idx = (new_y - 1) * w + new_x
+        r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+        SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+        return Color8(r_ref[], g_ref[], b_ref[], a_ref[])
+    end
+end
+
+"""
+    ChromaKey(color, pos, extra)
+
+Replace a specific color with transparency or another color. `extra` is a tuple (target_color, threshold, replacement_color).
+- target_color: NTuple{3,UInt8} (RGB) to replace.
+- threshold: Float32, tolerance for color matching.
+- replacement_color: NTuple{4,UInt8} (RGBA) or nothing for transparency.
+"""
+function ChromaKey(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Any})
+    r, g, b, a = color
+    target_color, threshold, replacement_color = extra
+    tr, tg, tb = target_color
+    # Calculat color distance
+    dist = sqrt((r - tr)^2 + (g - tg)^2 + (b - tb)^2)
+    if dist <= threshold
+        if replacement_color === nothing
+            return Color8(r, g, b, 0) # Transparent
+        else
+            return Color8(replacement_color...)
+        end
+    end
+    return Color8(r, g, b, a)
+end
+
+# RetroGameShaders.jl: Effets rétro et glitch pour Horizons.jl
+# Ces fonctions sont conçues pour être utilisées avec ProcessPixels et ProcessPixelTable
+
+export ChromaticAberration, CRTDistortion, GlitchEffect
+
+"""
+    ChromaticAberration(pixels, w, h, format)
+
+Apply a chromatic aberration effect by offsetting the RGB channels.
+`extra` is a tuple (offset_x, offset_y, intensity) where:
+- offset_x, offset_y: Pixel offset for red and blue channels relative to green.
+- intensity: Strength of the effect (0.0 to 1.0).
+Requires access to the full pixel array, width, height, and format.
+"""
+function ChromaticAberration(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Float32}) -> begin
+        x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
+        offset_x, offset_y, intensity = extra
+        r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+
+        # Récupérer le canal rouge avec un décalage
+        rx, ry = clamp(x + round(Int, offset_x), 1, w), clamp(y + round(Int, offset_y), 1, h)
+        r_idx = (ry - 1) * w + rx
+        SDL_GetRGBA(pixels[r_idx], format, r_ref, g_ref, b_ref, a_ref)
+        r = r_ref[]
+
+        # Canal vert sans décalage
+        g = color[2]
+
+        # Récupérer le canal bleu avec un décalage opposé
+        bx, by = clamp(x - round(Int, offset_x), 1, w), clamp(y - round(Int, offset_y), 1, h)
+        b_idx = (by - 1) * w + bx
+        SDL_GetRGBA(pixels[b_idx], format, r_ref, g_ref, b_ref, a_ref)
+        b = b_ref[]
+
+        # Mélanger avec l'intensité
+        r = clamp(round(Int, r * intensity + color[1] * (1 - intensity)), 0, 255)
+        g = clamp(round(Int, g * intensity + color[2] * (1 - intensity)), 0, 255)
+        b = clamp(round(Int, b * intensity + color[3] * (1 - intensity)), 0, 255)
+        a = color[4]
+
+        return Color8(r, g, b, a)
+    end
+end
+
+"""
+    CRTDistortion(pixels, w, h, format)
+
+Apply a CRT distortion effect with curvature and scanlines.
+`extra` is a tuple (curvature, scanline_strength, scanline_frequency) where:
+- curvature: Amount of screen curvature (0.0 to 0.5).
+- scanline_strength: Intensity of scanlines (0.0 to 1.0).
+- scanline_frequency: Frequency of scanlines.
+Requires access to the full pixel array, width, height, and format.
+"""
+function CRTDistortion(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Float32}) -> begin
+        x, y = pos
+        curvature, scanline_strength, scanline_frequency = extra
+
+        # Appliquer une distorsion de type CRT (courbure)
+        center_x, center_y = 0.5, 0.5
+        dx, dy = x - center_x, y - center_y
+        dist = sqrt(dx^2 + dy^2)
+        max_dist = sqrt(0.5^2 + 0.5^2)
+        distortion = 1.0 + curvature * (dist / max_dist)^2
+        new_x = clamp(center_x + dx / distortion, 0.0, 1.0)
+        new_y = clamp(center_y + dy / distortion, 0.0, 1.0)
+
+        # Échantillonner le pixel à la position déformée
+        px, py = round(Int, new_x * w), round(Int, new_y * h)
+        px, py = clamp(px, 1, w), clamp(py, 1, h)
+        idx = (py - 1) * w + px
+        r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+        SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+
+        # Appliquer les scanlines
+        scanline_factor = 1.0 - scanline_strength * (sin(new_y * h * scanline_frequency * pi) + 1.0) / 2.0
+        r = clamp(round(Int, r_ref[] * scanline_factor), 0, 255)
+        g = clamp(round(Int, g_ref[] * scanline_factor), 0, 255)
+        b = clamp(round(Int, b_ref[] * scanline_factor), 0, 255)
+        a = a_ref[]
+
+        return Color8(r, g, b, a)
+    end
+end
+
+"""
+    GlitchEffect(pixels, w, h, format)
+
+Apply a glitch effect with screen shake and block displacement.
+`extra` is a tuple (time, shake_intensity, block_size, block_shift) where:
+- time: Animation time for dynamic effects.
+- shake_intensity: Intensity of screen shake (pixels).
+- block_size: Size of displaced pixel blocks.
+- block_shift: Maximum block displacement (pixels).
+Requires access to the full pixel array, width, height, and format.
+"""
+function GlitchEffect(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_PixelFormat})
+    return (color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32}) -> begin
+        x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
+        time, shake_intensity, block_size, block_shift = extra
+
+        # Appliquer un tremblement global
+        shake_x = round(Int, shake_intensity * sin(time * 5.0))
+        shake_y = round(Int, shake_intensity * cos(time * 5.0))
+        px, py = clamp(x + shake_x, 1, w), clamp(y + shake_y, 1, h)
+
+        # Déplacer des blocs de pixels
+        block_x = div(x - 1, round(Int, block_size)) * round(Int, block_size)
+        block_y = div(y - 1, round(Int, block_size)) * round(Int, block_size)
+        block_offset_x = round(Int, block_shift * sin(time + block_x * 0.1))
+        block_offset_y = round(Int, block_shift * cos(time + block_y * 0.1))
+        px = clamp(px + block_offset_x, 1, w)
+        py = clamp(py + block_offset_y, 1, h)
+
+        # Add random artefacts
+        if rand() < 0.01 # 1% chance per pixel
+            return Color8(rand(UInt8), rand(UInt8), rand(UInt8), color[4])
+        end
+
+        # Échantillonner le pixel à la position modifiée
+        idx = (py - 1) * w + px
+        r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
+        SDL_GetRGBA(pixels[idx], format, r_ref, g_ref, b_ref, a_ref)
+        return Color8(r_ref[], g_ref[], b_ref[], a_ref[])
+    end
+end
