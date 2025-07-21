@@ -367,3 +367,5 @@ A SDL shader that does nothing. he return the color passed in inputs
 function identity_shader(color,_,_)
 	return Color8(color...)
 end
+
+include("Shaders.jl")

@@ -312,3 +312,18 @@ function GlitchEffect(pixels::Vector{UInt32}, w::Int, h::Int, format::Ptr{SDL_Pi
         return Color8(r_ref[], g_ref[], b_ref[], a_ref[])
     end
 end
+
+"""
+    heat_distortion_shader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra)
+
+Applya a heat distorsion to a texture
+"""
+function heat_distortion_shader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra)
+    t, amplitude, frequency = extra
+    x, y = pos
+    offset = sin(y * frequency + t) * amplitude
+    r = UInt8(clamp(color[1] + offset, 0, 255))
+    g = UInt8(clamp(color[2] + offset, 0, 255))
+    b = UInt8(clamp(color[3] + offset, 0, 255))
+    return (r, g, b, color[4])
+end
