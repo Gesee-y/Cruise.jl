@@ -1,73 +1,174 @@
-# GameShaders.jl: Effets de type shader pour Horizons.jl
-# Ces fonctions sont conçues pour être utilisées avec ProcessPixels et ProcessPixelTable
+#####################################################################################################################
+######################################################## SHADERS ####################################################
+#####################################################################################################################
 
-export BrightnessContrast, InvertColors, Sepia, GaussianBlur, EdgeDetection, Vignette, Ripple, ChromaKey
+export BrightnessContrastShader, InvertColorsShader, SepiaShader, GaussianBlurShader, EdgeDetectionShader
+export VignetteShader, RippleShader, ChromaKeyShader
 
+"""
+    mutable struct BrightnessShader <: SDLShader
+        brightness::Float32
+        contrast::Float32
+
+Adjust brightness and contrast of the pixel.
+- brightness > 1 increases brightness, < 1 decreases it.
+- contrast > 1 increases contrast, < 1 decreases it.
+"""
 mutable struct BrightnessShader <: SDLShader
     brightness::Float32
     contrast::Float32
 end
 
+"""
+    struct InvertColorsShader <: SDLShader
+
+Invert the colors of the pixel.
+"""
 struct InvertColorsShader <: SDLShader end
+
+"""
+    struct SepiaShader <: SDLShader
+
+Apply a sepia tone to the pixel.
+"""
 struct SepiaShader <: SDLShader end
 
+"""
+    mutable struct GaussianBlurShader <: SDLShader
+        radius::Float32
+        sigma::Float32
+        data::ShaderPixelData
+
+Apply a Gaussian blur to the pixel.
+"""
 mutable struct GaussianBlurShader <: SDLShader
     radius::Float32
     sigma::Float32
-    data::Tuple
+    data::ShaderPixelData
 end
 need_pixeldata(shader::GaussianBlurShader) = :data
+
+"""
+    mutable struct EdgeDetectionShader <: SDLShader
+        data::ShaderPixelData
+
+Apply edge detection using a Sobel filter.
+"""
 mutable struct EdgeDetectionShader <: SDLShader
-    data::Tuple
+    data::ShaderPixelData
 end
-need_pixeldata(shader::GaussianBlurShader) = :data
+need_pixeldata(shader::EdgeDetectionShader) = :data
+
+"""
+    mutable struct VignetteShader <: SDLShader
+        strength::Float32
+        radius::Float32
+
+Apply a vignette effect, darkening the edges.
+"""
 mutable struct VignetteShader <: SDLShader
     strength::Float32
     radius::Float32
 end
+
+"""
+    mutable struct RippleShader <: SDLShader
+        amplitude::Float32
+        frequency::Float32
+        speed::Float32
+        time::Float32
+        data::ShaderPixelData
+
+Apply a ripple distortion effect.
+"""
 mutable struct RippleShader <: SDLShader
     amplitude::Float32
     frequency::Float32
     speed::Float32
     time::Float32
-    data::Tuple
+    data::ShaderPixelData
 end
 need_pixeldata(shader::RippleShader) = :data
+
+"""
+    mutable struct ChromaKeyShader <: SDLShader
+        target_color::NTuple{3,UInt8}
+        threshold::Float32
+        replacement_color::NTuple{4,UInt8}
+
+Replace a specific color with transparency or another color.
+- target_color: NTuple{3,UInt8} (RGB) to replace.
+- threshold: Float32, tolerance for color matching.
+- replacement_color: NTuple{4,UInt8} (RGBA) or nothing for transparency.
+"""
 mutable struct ChromaKeyShader <: SDLShader
-    target_color::Color8
+    target_color::NTuple{3,UInt8}
     threshold::Float32
-    replacement_color::Color8
+    replacement_color::NTuple{4,UInt8}
 end
+
+"""
+    mutable struct ChromaticAberrationShader <: SDLShader
+        offset_x::Float32
+        offset_y::Float32
+        intensity::Float32
+        data::ShaderPixelData
+
+Apply a chromatic aberration effect by offsetting the RGB channels.
+- offset_x, offset_y: Pixel offset for red and blue channels relative to green.
+- intensity: Strength of the effect (0.0 to 1.0).
+"""
 mutable struct ChromaticAberrationShader <: SDLShader
     offset_x::Float32
     offset_y::Float32
     intensity::Float32
-    data::Tuple
+    data::ShaderPixelData
 end
 need_pixeldata(shader::ChromaticAberrationShader) = :data
+
+"""
+    mutable struct CRTDistortionShader <: SDLShader
+        curvature::Float32
+        scanline_strength::Float32
+        scanline_frequency::Float32
+        data::ShaderPixelData
+
+Apply a CRT distortion effect with curvature and scanlines.
+- curvature: Amount of screen curvature (0.0 to 0.5).
+- scanline_strength: Intensity of scanlines (0.0 to 1.0).
+- scanline_frequency: Frequency of scanlines.
+"""
 mutable struct CRTDistortionShader <: SDLShader
     curvature::Float32
     scanline_strength::Float32
     scanline_frequency::Float32
-    data::Tuple
+    data::ShaderPixelData
 end
 need_pixeldata(shader::CRTDistortionShader) = :data
+
+"""
+    mutable struct GlitchEffectShader <: SDLShader
+        time::Float32
+        shake_intensity::Float32
+        block_size::Float32
+        block_shift::Float32
+        data::ShaderPixelData
+
+Apply a glitch effect with screen shake and block displacement.
+- time: Animation time for dynamic effects.
+- shake_intensity: Intensity of screen shake (pixels).
+- block_size: Size of displaced pixel blocks.
+- block_shift: Maximum block displacement (pixels).
+"""
 mutable struct GlitchEffectShader <: SDLShader
     time::Float32
     shake_intensity::Float32
     block_size::Float32
     block_shift::Float32
-    data::Tuple
+    data::ShaderPixelData
 end
 need_pixeldata(shader::GlitchEffectShader) = :data
 
-"""
-    (shader::BrightnessShader)(color, pos, extra)
-
-Adjust brightness and contrast of the pixel. `extra` is a tuple (brightness, contrast) where:
-- brightness > 1 increases brightness, < 1 decreases it.
-- contrast > 1 increases contrast, < 1 decreases it.
-"""
 function (b::BrightnessShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
     brightness, contrast = b.brightness, b.contrast
@@ -80,38 +181,22 @@ function (b::BrightnessShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     return Color8(r, g, b, a)
 end
 
-"""
-    (::InvertColorsShader)(color, pos)
-
-Invert the colors of the pixel.
-"""
 function (::InvertColorsShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
     return Color8(255 - r, 255 - g, 255 - b, a)
 end
 
-"""
-    (::Sepia)(color, pos, extra)
-
-Apply a sepia tone to the pixel. `extra` is unused.
-"""
 function (::Sepia)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
-    # Formule de conversion sépia
+    # Sepia conversion formula
     r_out = clamp(round(Int, r * 0.393 + g * 0.769 + b * 0.189), 0, 255)
     g_out = clamp(round(Int, r * 0.349 + g * 0.686 + b * 0.168), 0, 255)
     b_out = clamp(round(Int, r * 0.272 + g * 0.534 + b * 0.131), 0, 255)
     return Color8(r_out, g_out, b_out, a)
 end
 
-"""
-    GaussianBlur(color, pos)
-
-Apply a Gaussian blur to the pixel. `extra` is a tuple (radius, sigma).
-Requires access to the full pixel array, width, and height via a closure.
-"""
 function (shader::GaussianBlurShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.pixels, shader.data.size, shader.data.format 
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     radius, sigma = shader.radius, shader.sigma
     r_sum, g_sum, b_sum, a_sum = 0.0, 0.0, 0.0, 0.0
@@ -142,14 +227,8 @@ function (shader::GaussianBlurShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Floa
     return Color8(r, g, b, a)
 end
 
-"""
-    EdgeDetection(color, pos, pixels, w, h)
-
-Apply edge detection using a Sobel filter.
-Requires access to the full pixel array, width, and height via a closure.
-"""
 function (::EdgeDetectionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     if x <= 1 || x >= w || y <= 1 || y >= h
         return Color8(color...)
@@ -176,12 +255,7 @@ function (::EdgeDetectionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     return Color8(edge, edge, edge, color[4])
 end
 
-"""
-    Vignette(color, pos, extra)
-
-Apply a vignette effect, darkening the edges. `extra` is a tuple (strength, radius).
-"""
-function (shader::VignetteShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{2,Float32})
+function (shader::VignetteShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
     strength, radius = shader.strength, shader.radius
     x, y = pos
@@ -194,15 +268,9 @@ function (shader::VignetteShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}
     return Color8(r, g, b, a)
 end
 
-"""
-    Ripple(color, pos, time)
-
-Apply a ripple distortion effect. `extra` is a tuple (amplitude, frequency, speed, time).
-Requires a `time` parameter for animation, passed via extra or a global variable.
-"""
 function (shader::RippleShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     x, y = pos
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     amplitude, frequency, speed, time = shader.amplitude, shader.frequency, shader.speed, shader.time
     # Calculate distortion
     dist = sqrt((x - 0.5)^2 + (y - 0.5)^2)
@@ -215,14 +283,6 @@ function (shader::RippleShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     return Color8(r_ref[], g_ref[], b_ref[], a_ref[])
 end
 
-"""
-    ChromaKey(color, pos, extra)
-
-Replace a specific color with transparency or another color. `extra` is a tuple (target_color, threshold, replacement_color).
-- target_color: NTuple{3,UInt8} (RGB) to replace.
-- threshold: Float32, tolerance for color matching.
-- replacement_color: NTuple{4,UInt8} (RGBA) or nothing for transparency.
-"""
 function (shader::ChromaKeyShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
     target_color, threshold, replacement_color = shader.target_color, color.threshold, color.replacement_color
@@ -239,19 +299,10 @@ function (shader::ChromaKeyShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64
     return Color8(r, g, b, a)
 end
 
-export ChromaticAberration, CRTDistortion, GlitchEffect
+export ChromaticAberrationShader, CRTDistortionShader, GlitchEffectShader
 
-"""
-    ChromaticAberration(pixels, w, h, format)
-
-Apply a chromatic aberration effect by offsetting the RGB channels.
-`extra` is a tuple (offset_x, offset_y, intensity) where:
-- offset_x, offset_y: Pixel offset for red and blue channels relative to green.
-- intensity: Strength of the effect (0.0 to 1.0).
-Requires access to the full pixel array, width, height, and format.
-"""
 function (shader::ChromaticAberrationShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     offset_x, offset_y, intensity = shader.offset_x, shader.offset_y, shader.intensity
     r_ref, g_ref, b_ref, a_ref = Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0), Ref{UInt8}(0)
@@ -284,19 +335,9 @@ const CRTr_ref = Ref{UInt8}(0)
 const CRTg_ref = Ref{UInt8}(0)
 const CRTb_ref = Ref{UInt8}(0)
 const CRTa_ref = Ref{UInt8}(0)
-"""
-    CRTDistortion(pixels, w, h, format)
-
-Apply a CRT distortion effect with curvature and scanlines.
-`extra` is a tuple (curvature, scanline_strength, scanline_frequency) where:
-- curvature: Amount of screen curvature (0.0 to 0.5).
-- scanline_strength: Intensity of scanlines (0.0 to 1.0).
-- scanline_frequency: Frequency of scanlines.
-Requires access to the full pixel array, width, height, and format.
-"""
 function (shader::CRTDistortionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Float32})
     x, y = pos
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     curvature, scanline_strength, scanline_frequency = shader.curvature, shader.scanline_strength, shader.scanline_frequency
 
     # Appliquer une distorsion de type CRT (courbure)
@@ -324,19 +365,8 @@ function (shader::CRTDistortionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Flo
     return Color8(r, g, b, a)
 end
 
-"""
-    GlitchEffect(pixels, w, h, format)
-
-Apply a glitch effect with screen shake and block displacement.
-`extra` is a tuple (time, shake_intensity, block_size, block_shift) where:
-- time: Animation time for dynamic effects.
-- shake_intensity: Intensity of screen shake (pixels).
-- block_size: Size of displaced pixel blocks.
-- block_shift: Maximum block displacement (pixels).
-Requires access to the full pixel array, width, height, and format.
-"""
 function (shader::GlitchEffectShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32})
-    pixels, w, h, format = shader.data
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     time, shake_intensity, block_size, block_shift = shader.time, shader.shake_intensity, shader.block_size, shader.block_shift
 
@@ -365,13 +395,14 @@ function (shader::GlitchEffectShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Floa
     return Color8(r_ref[], g_ref[], b_ref[], a_ref[])
 end
 
-function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32})
-    kernel = [
+const kernel = [
         1 2 1;
         2 4 2;
         1 2 1
-    ] ./ 16  # noyau gaussien 3x3
-    pixels, w, h, format = shader.data
+    ] ./ 16
+
+function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32})
+    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
 
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     r_acc = 0.0
@@ -379,7 +410,6 @@ function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTup
     b_acc = 0.0
     a_acc = 0.0
 
-    # Flou gaussien 3x3 pondéré par kernel sur les pixels voisins
     for dy in -1:1, dx in -1:1
         nx = clamp(x + dx, 1, w)
         ny = clamp(y + dy, 1, h)
@@ -402,7 +432,6 @@ function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTup
 
     return Color8(r_final, g_final, b_final, a_final)
 end
-
 
 """
     heat_distortion_shader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra)

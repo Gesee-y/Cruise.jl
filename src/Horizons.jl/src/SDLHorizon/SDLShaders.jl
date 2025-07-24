@@ -4,6 +4,17 @@ export ProcessPixels, ProcessPixelTable, SetPixels, get_pixels
 
 abstract type SDLShader end
 
+struct ShaderPixelData
+	pixels::Vector{UInt32}
+	size::NTuple{2, Int}
+	format::SDL_PixelFormat
+
+	## Constructors
+
+	ShaderPixelData() = new()
+	ShaderPixelData(pixels, w, h, format) = new(pixels, (w, h), format)
+end
+
 """
 	ProcessPixels(f,t::SDLTexture;rect=C_NULL)
 
@@ -42,34 +53,32 @@ function ProcessPixels(shader::SDLShader,t::SDLTexture,extra=();rect=C_NULL,ren=
 	wref = Ref{Int}(0); href = Ref{Int}(0)
 	datafield = need_pixeldata(shader)
 
-	!isnothing(datafield) && setfield!(shader, datafield, (pixels, w, h, format))
+	!isnothing(datafield) && setfield!(shader, datafield, ShaderPixelData(pixels, (w, h), format))
 
 	# The processing loop, the core of the shader like behaviour
 	if t.data.access == TEXTURE_STREAMING
-		for i in Base.OneTo(w)
-			x = (i)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
-			for j in Base.OneTo(h)
-				# The index of the current pixels
-				idx = i+w*(j-1)
-				y = (j)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
+		@inbounds for idx in eachindex(pixels)
+			i = idx % w + 1
+			j = idx ÷ w + 1
+			x = (i)/(w) # We choose to map the position to 0-1, no matter the original size of the texture
+			y = (j)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
 
-				# We get the different components of the texture
-				# and store them in the Refs declared above
-				SDL_GetRGBA(pixels[idx],format,r,g,b,a)
+			# We get the different components of the texture
+			# and store them in the Refs declared above
+			SDL_GetRGBA(pixels[idx],format,r,g,b,a)
 
-				# We then create the object that will be passed as arguments to the function `f`
-				color = (r[],g[],b[],a[])
-				position = (x,y)
+			# We then create the object that will be passed as arguments to the function `f`
+			color = (r[],g[],b[],a[])
+			position = (x,y)
 
 
-				# We then call the function passed as arguments to the function
-				result = shader(color,position) # extra is the information the user passed to ProcessPixels
-				result = _rearrange_color(result) # We then make sure the result is in the range 0-255
+			# We then call the function passed as arguments to the function
+			result = shader(color,position) # extra is the information the user passed to ProcessPixels
+			result = _rearrange_color(result) # We then make sure the result is in the range 0-255
 
-				# We can finally assign the color to the pixels
-				resulting_pixel = SDL_MapRGBA(format,result.r,result.g,result.b,result.a)
-				pixels[idx] = resulting_pixel
-			end
+			# We can finally assign the color to the pixels
+			resulting_pixel = SDL_MapRGBA(format,result.r,result.g,result.b,result.a)
+			pixels[idx] = resulting_pixel
 		end
 	
 		# And we can finally unlock the texture
