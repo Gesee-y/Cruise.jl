@@ -33,6 +33,10 @@ julia> ]add https://github.com/Gesee-y/Cruise.jl/main/blob/src/FunctionPooling
 - `getname`: The named of the function that is overriden in a `FunctionObject`.
 - `getfunc`: The actual function getting overriden in a `FunctionObject`.
 
+## Other Insight
+
+For better results you cans also use `functor`s to if only the internal data of your function change. Or you can use DynamicExpression.jl if performances aren't a bottle neck.
+
 ## Bug report
 
 If you notice any bug or inconsistencies in this package, feel free to raise an issue.
