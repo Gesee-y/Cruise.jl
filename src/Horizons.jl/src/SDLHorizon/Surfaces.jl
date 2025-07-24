@@ -84,7 +84,7 @@ function BlitSurface(s1::Surface,s2::Surface,srcrect=C_NULL,dstrect=HRect(0,0,0,
 	dst = SDL_Rect(dstrect.x, dstrect.y, 0, 0)
 
 	# We finally fuse the surface
-	SDL_BlitSurface(GetSurfacePtr(s1), Ref(srcrect), GetSurfacePtr(2), Ref(dst))
+	SDL_BlitSurface(GetSurfacePtr(s1), Ref(srcrect), GetSurfacePtr(s2), Ref(dst))
 end
 
 """

@@ -1,7 +1,7 @@
 ############################################ The SDL Mode of Horizon #################################################
 
 export SDLRender, ClearScreen, SetRenderTarget, CreateViewport, SetAlpha, SetAlphaBlendMode
-export SetRenderScale, SetViewportPosition, ClearViewport, ClearTexture
+export SetRenderScale, SetViewportPosition, ClearViewport, ClearTexture, SetScale
 
 include("SDLObject.jl")
 
@@ -98,18 +98,18 @@ include("SDLShaders.jl")
 This function create a new Viewport for the renderer r.
 Once the viewport created, it's now possible to use textures and surfaces
 """
-function CreateViewport(r::SDLRender,w,h,x=0,y=0)
+function CreateViewport(r::SDLRender,w,h,x=0,y=0;scale=4)
 	
 	# We create a blank texture that will be the screen of the viewport
 	# other texture will just be pasted on it.
-	tex = BlankTexture(r,w,h;x=x,y=y,access=TEXTURE_TARGET)
+	tex = BlankTexture(r,Int(floor(w/scale)),Int(floor(h/scale));x=x,y=y,access=TEXTURE_TARGET)
 
 	# if no error happened while creating the texture
 	if tex != nothing
 
 		# We create a new viewport
 		if !isdefined(r.viewport, :screen)
-			r.viewport.screen = SDLObject(Vec2f(x,y),Vec2f(1,1))
+			r.viewport.screen = SDLObject(Vec2f(x,y),Vec2f(scale,scale))
 			data = SDLObjectData(tex)
 		    r.viewport.screen.data = data
 		end
@@ -223,6 +223,8 @@ end
 This function set the scale of the current render target. Can be useful for some zooming effect.
 """
 SetRenderScale(r::SDLRender,x::Int,y::Int) = SDL_RenderSetScale(r.renderer,x,y) 
+SetScale(obj::SDLObject,sx,sy) = (obj.rect.dimensions.x = sx; obj.rect.dimensions.y = sx)
+SetScale(obj::SDLObject,s) = (obj.rect.dimensions.x = s; obj.rect.dimensions.y = s)
 
 """
 	ClearScreen(ren::SDLRender)

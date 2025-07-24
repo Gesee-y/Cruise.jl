@@ -30,7 +30,18 @@ the blue and the last for transparency.)
 		HORIZON_WARNING.emit = ("Failed to set the color of the renderer $ren.",err)
 	end
 end
+@inline function SetDrawColor(ren::SDLRender,col::Color8)
+	
+	# We set the color of the drawing and check for error
+	if 0 != SDL_SetRenderDrawColor(ren.renderer,col.r,col.g,col.b,col.a)
 
+		# We get the error
+		err = _get_SDL_Error()
+
+		# And throw it as a warning
+		HORIZON_WARNING.emit = ("Failed to set the color of the renderer $ren.",err)
+	end
+end
 """
 	DrawPoint(ren::SDLRender,pos)
 
@@ -264,6 +275,7 @@ end
 Draw a circle on the renderer `ren` with center at `center` (HVec2) and radius `radius`.
 If `filled` is true, the circle is filled; otherwise, only the outline is drawn.
 """
+DrawCircle(ren::SDLRender, center, radius) = DrawCircle(ren, HVec2(center[1], center[2]), radius)
 function DrawCircle(ren::SDLRender, center::HVec2{T}, radius::T; filled::Bool=false) where T<:Integer
     # Algorithme de Bresenham pour les cercles
     x0, y0 = center.x, center.y
@@ -342,6 +354,7 @@ end
 Convenience function to draw a filled circle.
 """
 FillCircle(ren::SDLRender, center::HVec2, radius) = DrawCircle(ren, center, radius; filled=true)
+FillCircle(ren::SDLRender, center, radius) = DrawCircle(ren, HVec2(center[1], center[2]), radius; filled=true)
 
 """
     DrawPolygon(ren::SDLRender, center, radius, sides; filled=false)
@@ -437,9 +450,9 @@ end
 
 Draw a line from `start` to `end` (HVec2) with specified `thickness`.
 """
-function DrawThickLine(ren::SDLRender, start::HVec2{T}, end::HVec2{T}, thickness::T) where T<:Union{Integer,AbstractFloat}
+function DrawThickLine(ren::SDLRender, start::HVec2{T}, stop::HVec2{T}, thickness::T) where T<:Union{Integer,AbstractFloat}
     # Calculer la direction de la ligne
-    dir = end - start
+    dir = stop - start
     len = norm(dir)
     if len == 0
         return
@@ -452,8 +465,8 @@ function DrawThickLine(ren::SDLRender, start::HVec2{T}, end::HVec2{T}, thickness
     # Définir les quatre coins du rectangle représentant la ligne épaisse
     p1 = start + perp * half_thickness
     p2 = start - perp * half_thickness
-    p3 = end + perp * half_thickness
-    p4 = end - perp * half_thickness
+    p3 = stop + perp * half_thickness
+    p4 = stop - perp * half_thickness
 
     # Dessiner un polygone rempli
     DrawPolygon(ren, HVec2{T}(0, 0), 0, 4; filled=true, points=[p1, p2, p4, p3])

@@ -1,6 +1,8 @@
 ############################## Shader like function for SDL ################################
 
-export ProcessPixels, ProcessPixelTable, SetPixels
+export ProcessPixels, ProcessPixelTable, SetPixels, get_pixels
+
+abstract type SDLShader end
 
 """
 	ProcessPixels(f,t::SDLTexture;rect=C_NULL)
@@ -13,9 +15,9 @@ that will be the position of the pixel. your function should return a `Color8` o
 `t` is the texture you want to modify the pixels; `rect` is the part of the pixel you want to modify
 should be a `HRect`.
 """
-function ProcessPixels(f,t::SDLTexture,extra=();rect=C_NULL)
+function ProcessPixels(shader::SDLShader,t::SDLTexture,extra=();rect=C_NULL,ren=nothing)
 	# We first get the pixels of the texture `t`
-	pixels = get_pixels(t;rect=rect,unlock=false)
+	pixels::Vector{UInt32} = get_pixels(t;rect=rect,unlock=false,ren=ren)
 
 	# We allocate the format contained in the data of the texture
 	format = SDL_AllocFormat(t.data.format)
@@ -31,24 +33,61 @@ function ProcessPixels(f,t::SDLTexture,extra=();rect=C_NULL)
 	end
 
 	# A bunch of information for the processing loop
-	w = t.rect.w; h = t.rect.h
+	w = Int(floor(t.rect.w)); h = Int(floor(t.rect.h))
 	rect != C_NULL && (w = rect.w, h = rect.h)
 	r = Ref{UInt8}(0) # red component
 	g = Ref{UInt8}(0) # green component
 	b = Ref{UInt8}(0) # blue component
 	a = Ref{UInt8}(0) # alpha component
-	
+	wref = Ref{Int}(0); href = Ref{Int}(0)
+	datafield = need_pixeldata(shader)
+
+	!isnothing(datafield) && setfield!(shader, datafield, (pixels, w, h, format))
+
 	# The processing loop, the core of the shader like behaviour
-	for i in Base.OneTo(w)
-		x = (i)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
-		for j in Base.OneTo(h)
-			# The index of the current pixels
-			idx = i+w*(j-1)
+	if t.data.access == TEXTURE_STREAMING
+		for i in Base.OneTo(w)
+			x = (i)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
+			for j in Base.OneTo(h)
+				# The index of the current pixels
+				idx = i+w*(j-1)
+				y = (j)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
+
+				# We get the different components of the texture
+				# and store them in the Refs declared above
+				SDL_GetRGBA(pixels[idx],format,r,g,b,a)
+
+				# We then create the object that will be passed as arguments to the function `f`
+				color = (r[],g[],b[],a[])
+				position = (x,y)
+
+
+				# We then call the function passed as arguments to the function
+				result = shader(color,position) # extra is the information the user passed to ProcessPixels
+				result = _rearrange_color(result) # We then make sure the result is in the range 0-255
+
+				# We can finally assign the color to the pixels
+				resulting_pixel = SDL_MapRGBA(format,result.r,result.g,result.b,result.a)
+				pixels[idx] = resulting_pixel
+			end
+		end
+	
+		# And we can finally unlock the texture
+		SDL_UnlockTexture(_get_texture(t))
+	else
+		ta = SDL_GetRenderTarget(ren.renderer)
+		SetRenderTarget(ren, t)
+		results = Dict{Color8, Vector{SDL_Point}}()
+		@inbounds for idx in eachindex(pixels)
+			i = idx % w + 1
+			j = idx ÷ w + 1
+			x = (i)/(w) # We choose to map the position to 0-1, no matter the original size of the texture
 			y = (j)/(h) # We choose to map the position to 0-1, no matter the original size of the texture
 
 			# We get the different components of the texture
 			# and store them in the Refs declared above
-			SDL_GetRGBA(pixels[idx],format,r,g,b,a)
+			pixel = pixels[idx]
+			SDL_GetRGBA(pixel,format,r,g,b,a)
 
 			# We then create the object that will be passed as arguments to the function `f`
 			color = (r[],g[],b[],a[])
@@ -56,20 +95,29 @@ function ProcessPixels(f,t::SDLTexture,extra=();rect=C_NULL)
 
 
 			# We then call the function passed as arguments to the function
-			result = f(color,position,extra) # extra is the information the user passed to ProcessPixels
-			result = _rearrange_color(result) # We then make sure the result is in the range 0-255
+			result = shader(color,position) # extra is the information the user passed to ProcessPixels
+			#result = _rearrange_color(result) # We then make sure the result is in the range 0-255
 
-			# We can finally assign the color to the pixels
-			resulting_pixel = SDL_MapRGBA(format,result.r,result.g,result.b,result.a)
-			pixels[idx] = resulting_pixel
+			if haskey(results, result)
+				push!(results[result],SDL_Point(i-1,j-1))
+			else
+				results[result] = SDL_Point[SDL_Point(i-1,j-1)]
+			end
+
+			#SetDrawColor(ren, result)
+			#DrawPoint(ren, (i-1,j-1))
 		end
-	end
 
+		for key in keys(results)
+			points = results[key]
+			SetDrawColor(ren,key)
+			SDL_RenderDrawPoints(ren.renderer, points, length(points))
+		end
+
+		SDL_SetRenderTarget(ren.renderer, ta)
+    end
 	# Once the loop finished, we no longer need the format object
 	SDL_FreeFormat(format)
-
-	# And we can finally unlock the texture
-	SDL_UnlockTexture(_get_texture(t))
 end
 @noinline function ProcessPixels(f,s::Surface,extra=())
 	# We first get the pixels of the surface `s`
@@ -141,7 +189,7 @@ function ProcessPixelTable(f,w,h,format::Ptr{SDL_PixelFormat},extra=();pix=nothi
 	# Our regular color container Refs
 	r = Ref{UInt8}(0); g = Ref{UInt8}(0)
 	b = Ref{UInt8}(0); a = Ref{UInt8}(0)
-
+    
 	# The Process Loop
 	@inbounds for i in Base.OneTo(w)
 		x = (i)/(h) # If you have read above, I think you understand what this does
@@ -253,14 +301,36 @@ process his pixels.)
 
 Do the same as `get_pixels(t::SDLTexture;rect=C_NULL,unlock=false)` but with Surfaces.
 """
-function get_pixels(t::SDLTexture;rect=C_NULL,unlock=false)
+function get_pixels(t::SDLTexture;rect=C_NULL,unlock=false,ren=nothing)
 	
 	# We start by initializing the rect(the surface we want to get the pixels)
 	rect != C_NULL && (rect = SDL_Rect(rect.x,rect.y,rect.w,rect.h))
 
+    if t.data.access == TEXTURE_TARGET
+    	w = Cint(t.rect.w); h = Cint(t.rect.h)
+    	p = w*sizeof(UInt32)
+    	pixels = t.static.pixels
+
+    	ta = SDL_GetRenderTarget(ren.renderer)
+    	SetRenderTarget(ren,t)
+    	if 0 != SDL_RenderReadPixels(ren.renderer, rect,t.data.format,pointer(pixels),p)
+    	    # We get the error
+			err= _get_SDL_Error()
+
+			# And throw it as a warning
+			HORIZON_WARNING.emit = ("Failed to get texture $t pixels.",err)
+			return nothing
+	    end
+		
+    	SDL_SetRenderTarget(ren.renderer, ta)
+
+    	return pixels
+    end
+	
 	# Then we create the necessary variable
-	pixels_ref = Ref{Ptr{Cvoid}}() # Will conatain a pointer to the pixels
+	pixels_ref = Ref{Ptr{Cvoid}}() # Will contain a pointer to the pixels
 	pitch = Ref{Cint}(0) # Will contain the pitch of the texture
+
 
 	# Then we Lock the Texture and check that no error happened
 	if (0 != SDL_LockTexture(_get_texture(t),rect,pixels_ref,pitch))
@@ -279,7 +349,7 @@ function get_pixels(t::SDLTexture;rect=C_NULL,unlock=false)
 		ptr :: Ptr{UInt32} = pixels_ref[] # We then convert the Ptr{Cvoid} to a Ptr{UInt32}(or Ptr{Cuint})
 		
 		# Get the pixels from the pointer
-		pixels = unsafe_wrap(Array,ptr,t.rect.w*t.rect.h)
+		pixels = unsafe_wrap(Base.Array{UInt32},ptr,t.rect.w*t.rect.h)
 		
 		# Mark that we have get the pixels
 		t.static.getted = true
@@ -324,7 +394,7 @@ function get_pixels(s::Surface;unlock=false)
 	src :: Ptr{UInt32} = s.pixels
 
 	# And get the pixels from the pointer
-	pixels = unsafe_wrap(Array,src,s.rect.w*s.rect.h)
+	pixels = unsafe_wrap(Base.Array{UInt32},src,s.rect.w*s.rect.h)
 
 	# If `unlock` have been passed as true, we unlock the texture
 	unlock && SDL_UnlockSurface(surf_ptr)
@@ -342,14 +412,7 @@ Create a Color8 object with the value of `c` all mapped fro 0 to 255
 
 Do the same as above.
 """
-_rearrange_color(c::Color8) = begin
-	r = floor(_to_color_value(c.r))
-	g = floor(_to_color_value(c.g))
-	b = floor(_to_color_value(c.b))
-	a = floor(_to_color_value(c.a))
-
-	return Color8(r,g,b,a)
-end
+_rearrange_color(c::Color8) = c
 _rearrange_color(c::Color) = begin
 	r = floor(_to_color_value(c.r;type=:float) * 255)
 	g = floor(_to_color_value(c.g;type=:float) * 255)
@@ -364,8 +427,10 @@ end
 
 A SDL shader that does nothing. he return the color passed in inputs
 """
-function identity_shader(color,_,_)
+function identity_shader(color,args...)
 	return Color8(color...)
 end
 
+(::SDLShader)(color,args...) = identity_shader(color,args...)
+need_pixeldata(s::SDLShader) = nothing
 include("Shaders.jl")
