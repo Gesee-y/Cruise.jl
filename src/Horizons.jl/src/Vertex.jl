@@ -109,7 +109,7 @@ mutable struct Mesh{T<:AbstractMeshData}
 	visible :: Bool
 	tranform :: AbstractTranformation
 	data :: AbstractMeshData
-	attribute :: HDict{String,Int}
+	attribute :: Dict{String,Int}
 	extra :: Vector{Tuple}
 
 	# Constructors #
@@ -117,7 +117,7 @@ mutable struct Mesh{T<:AbstractMeshData}
 	function Mesh{T}(v::Vector{Vertex},ind::Vector{UInt32},tex=[],
 				visible=true;data=NoMeshData(),tranform = HTransform()) where T <: AbstractMeshData
 		extra = Vector{Tuple}(undef,length(v))
-		new{T}(v,ind,tex,visible,tranform,data,HDict{String,Int}(),extra)
+		new{T}(v,ind,tex,visible,tranform,data,Dict{String,Int}(),extra)
 	end
 end
 
@@ -132,8 +132,8 @@ end
 
 This function will create a rect2D primitive. useful for images in 2D world
 """
-Rectangle2D(T::Type{<:AbstractMeshData},w::Real,h::Real,@nospecialize(pos),data::AbstractMeshData=NoMeshData()) = Rectangle2D(T,w,h,HVec3(pos),data)
-function Rectangle2D(T::Type{<:AbstractMeshData},w::Real,h::Real,pos::HVec3,data::AbstractMeshData=NoMeshData())
+Rectangle2D(T::Type{<:AbstractMeshData},w::Real,h::Real,@nospecialize(pos),data::AbstractMeshData=NoMeshData()) = Rectangle2D(T,w,h,Vec3(pos),data)
+function Rectangle2D(T::Type{<:AbstractMeshData},w::Real,h::Real,pos::Vec3,data::AbstractMeshData=NoMeshData())
 
 	# We set up the vertices of the primitives
 	v1 = Vertex((pos.x,pos.y,pos.z),to_tex_coord(T,(0,0)),(0,0,1))
@@ -153,8 +153,8 @@ This function will generate a polygon mesh of type `T` at the position `pos` whi
 any container that can be indexed and should have 3 elements. `size` is the size of the
 polygon and `side` is the number of side of the polygon.
 """
-Poly2D(T::Type{<:AbstractMeshData},size::Real,@nospecialize(pos),side::Int=4,data=NoMeshData()) = Poly2D(T,size,HVec3(pos),side,data)
-function Poly2D(T::Type{<:AbstractMeshData},size::Real,center::HVec3,side::Int=4,data=NoMeshData())
+Poly2D(T::Type{<:AbstractMeshData},size::Real,@nospecialize(pos),side::Int=4,data=NoMeshData()) = Poly2D(T,size,Vec3(pos),side,data)
+function Poly2D(T::Type{<:AbstractMeshData},size::Real,center::Vec3,side::Int=4,data=NoMeshData())
 
 	# We set up the vertices of the primitives
 	Vert = Vector{Vertex}(undef,side+1)
@@ -200,7 +200,7 @@ SetAttribute(m::Mesh,n::Int,data::Tuple) = (getfield(m,:extra)[n] = convert.(Flo
 function _generate_regular_polygon_indices(side::Int)
 	indices = Vector{UInt32}(undef,side*3)
 
-	# We iset th
+	# We set the
 	indices[1] = 0
 	indices[2] = 1
 	indices[3] = 2

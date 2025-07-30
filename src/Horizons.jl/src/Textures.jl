@@ -23,28 +23,6 @@ texture and help creating aliases.
 abstract type TextureData end
 
 """
-	mutable struct HRect
-		w :: Int
-		h :: Int
-		x :: Int
-		y :: Int
-
-A struct representing a rect. Can be created from an array
-"""
-mutable struct HRect
-	w :: Int
-	h :: Int
-	x :: Int
-	y :: Int
-
-	# Constructors #
-
-	HRect(w,h,x,y) = new(w,h,x,y)
-	HRect(t::Tuple) = new(t[1],t[2],t[3],t[4])
-	HRect(A::AbstractArray) = new(A[1],A[2],A[4],A[3])
-end 
-
-"""
 	mutable struct Color8
 		r :: Int
 		g :: Int
@@ -79,6 +57,10 @@ struct Color
 	Color(arr::Vector) = new(arr[1], arr[2], arr[3], arr[4])
 end
 
+Base.length(::Color8) = 4
+Base.length(::Color) = 4
+Base.getindex(c::Color8,i::Int) = getfield(c, fieldnames(Color8)[i])
+Base.getindex(c::Color,i::Int) = getfield(c, fieldnames(Color)[i])
 
 """
 	mutable struct StaticTextureInfo
@@ -97,6 +79,7 @@ mutable struct StaticTextureInfo
 
 	StaticTextureInfo() = new(false,false,UInt32[],false)
 	StaticTextureInfo(static) = new(static,false,UInt32[],false)
+	StaticTextureInfo(static,w,h) = new(static,false,Vector{UInt32}(undef,w*h),false)
 end
 
 """
@@ -109,9 +92,8 @@ end
 This struct purpose is to contain texture's data. When creating your own type of texture
 all you have to do is just defining his `TextureData` and add it in the `data` field.
 """
-mutable struct Texture{T <: TextureData}
-	name :: String
-	id :: Tuple
+mutable struct Texture{T <: TextureData} <: AbstractResource
+	id :: Int
 	rect :: Rect2D{Float32}
 	data :: T
 	renderable :: Bool
@@ -119,8 +101,8 @@ mutable struct Texture{T <: TextureData}
 
 	# Constructors #
 
-	Texture{T}(name::String,id,w,h,data,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(name,id,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static))
-    Texture(name::String,id,w,h,data::T,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(name,id,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static))
+	Texture{T}(w,h,data,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(0,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static,w,h))
+    Texture(w,h,data::T,renderable=true;x=0,y=0,static=false) where T <: TextureData = new{T}(0,Rect2Df(Vec2f(x,y),Vec2f(w,h)),data,renderable,StaticTextureInfo(static,w,h))
 
 end
 
@@ -149,3 +131,6 @@ When creating your own style of renderer, you should create a dispatch of this f
 and emit the notification `HORIZON_TEXTURE_DESTROYED`.
 """
 function DestroyTexture(tex::Texture) end
+
+get_name(::Texture) = :texture
+get_id(t::Texture) = getfield(t,:id)

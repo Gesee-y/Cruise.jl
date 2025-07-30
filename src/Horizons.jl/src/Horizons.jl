@@ -16,8 +16,6 @@ export HORIZON_BACKEND_INITED, HORIZON_BACKEND_DESTROYED
 export HORIZON_ERROR, HORIZON_WARNING, HORIZON_INFO
 export InitBackend, UpdateRender, DestroyBackend
 
-include("SimpleMaths.jl")
-
 using ..MathLib
 using ..Notifyers
 using ..NodeTree
@@ -25,6 +23,7 @@ using ..NodeTree
 const HDict{N,M} = NodeTree.SimpleDict{N,M}
 
 abstract type AbstractRenderer end
+abstract type AbstractResource end
 
 #=
 	Now, how will the transition between the backend will be done ?
@@ -77,6 +76,14 @@ new backend.
 """
 InitBackend(::Type{AbstractRenderer},win,args...) = (HORIZON_BACKEND_INITED.emit = win)
 
+include("CommandBuffer.jl")
+include("Textures.jl")
+include("Objects.jl")
+include("viewport.jl")
+include("Renderer.jl")
+include("Commands.jl")
+include("Vertex.jl")
+
 """
 	UpdateRender(backend::AbstractBackend)
 
@@ -84,7 +91,20 @@ Update the screen for a given backend.
 If you are going to create a new backend, you should create a dispatch of this one to initialize
 your backend.
 """
-function UpdateRender(backend::AbstractRenderer) end
+function UpdateRender(backend::HRenderer)
+	ExecuteCommands(backend)
+	RenderObject(backend,backend.viewport.screen;viewport=false)
+	PresentRender(backend)
+	clear!(get_commandbuffer(backend))
+end
+
+"""
+    PresentRender(::HRenderer)
+
+This present the current render to the screen.
+Each backend should overload this method to update their screen.
+"""
+PresentRender(::HRenderer) = nothing
 
 """
 	DestroyBackend(backend)
@@ -96,11 +116,5 @@ new backend.
 """
 DestroyBackend(backend) = (HORIZON_BACKEND_DESTROYED.emit = backend)
 
-include("Textures.jl")
-include("Objects.jl")
-include("viewport.jl")
 include(joinpath("SDLHorizon","SDLH.jl"))
-include("Vertex.jl")
-include(joinpath("GLHorizon","GLH.jl"))
-
 end #module

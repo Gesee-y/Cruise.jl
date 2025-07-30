@@ -2,6 +2,9 @@
 ################################################## COMMAND BUFFER #####################################################
 #######################################################################################################################
 
+export CommandBuffer, CommandAction, RenderCommand, CommandQuery
+export add_command!, remove_command!, remove_all_command!
+
 #=
 
 Ok, first what's a command buffer ?
@@ -49,10 +52,6 @@ Seems fair
 I think we need to take a brute
 =#
 
-const BITBLOCK_SIZE = 32
-const BITBLOCK_MASK = (1 << BITBLOCK_SIZE) - 1
-const COMMAND_ACTIONS = Type{<:CommandAction}[]
-
 """
     abstract type CommandAction end
 
@@ -60,6 +59,10 @@ Supertype of everu possible action of the rendering engine.
 To create a new action, use `@commandaction`
 """
 abstract type CommandAction end
+
+const BITBLOCK_SIZE = 32
+const BITBLOCK_MASK = (1 << BITBLOCK_SIZE) - 1
+const COMMAND_ACTIONS = Type{<:CommandAction}[]
 
 """
 	struct CommandQuery
@@ -120,27 +123,31 @@ When implementing you renderer, You should make it in such way that it can execu
 - `target`: The id of the object on which the command is applied.
 - `priority`: Whether the command should be executed before or after another one.
 - `caller`: The id of the object requesting the command. `0` usually means there is no caller object.
-- `command`: The actual command that should be executed.
+- `commands`: All the actual command that should be executed.
 
 ## Constructors
 
-    RenderCommand(tid::Int, p::Int, cid::Int, command::T)
+    RenderCommand(tid::Int, p::Int, cid::Int)
 
 Create a new command for the renderer.
 - `tid`: The id of the target.
 - `p`: The priority of the command.
 - `cid`: The id of the caller object, `0` means no object is calling.
-- `command`: The instruction that should be executed.
 """
 struct RenderCommand{T}
 	target::Int
 	priority::Int
 	caller::Int
-	command::T
+	commands::Vector{T}
 
 	## Constructors
 
-	RenderCommand(tid::Int, p::Int, cid::Int, command::T) where T <: CommandAction = new{T}(tid, p, cid, command)
+	function RenderCommand{T}(tid::Int, p::Int, cid::Int) where T <: CommandAction
+	    @assert tid >= 0 && tid <= BITBLOCK_MASK "Target ID out of range"
+	    @assert p >= 0 && p <= BITBLOCK_MASK "Priority out of range"
+	    @assert cid >= 0 && cid <= BITBLOCK_MASK "Caller ID out of range"
+	    new{T}(tid, p, cid, T[])
+	end
 end
 
 
@@ -157,11 +164,12 @@ This is the root of a command buffer. The signature of a render command directly
 Create a new empty root for a command buffer.
 """
 mutable struct CommandBufferRoot
-	tree::Dict{UInt128, Vector{<:RenderCommand}}
+	tree::Dict{Symbol,Dict{UInt128, RenderCommand}}
 
 	## Constructor
 
-	CommandBufferRoot() = Dict{UInt128, Vector{RenderCommand}}()
+	CommandBufferRoot() = new(Dict{Symbol,Dict{UInt128, RenderCommand}}(:render => Dict{UInt128, RenderCommand}(),
+		:postprocess => Dict{UInt128, RenderCommand}()))
 end
 
 """
@@ -172,6 +180,10 @@ Create a new command buffer. This object is responsible for the management of re
 """
 mutable struct CommandBuffer
 	root::CommandBufferRoot
+
+	## Constructor
+
+	CommandBuffer() = new(CommandBufferRoot())
 end
 
 """
@@ -198,18 +210,32 @@ end
 
 ####################################################### FUNCTIONS ######################################################
 
+function ExecuteCommands(ren)
+	cb = get_commandbuffer(ren)
+	
+	for pass in pass_order(ren)
+		commands = sorted_command_bypriority(cb;pass=pass)
+		for (signature, batch) in commands
+			targetid = get_cmd_targetid(signature)
+			callerid = get_cmd_commandid(signature)
+
+			execute_command(ren, targetid, callerid, batch.commands)
+		end
+	end
+end
+
 """
     add_command!(cb::CommandBuffer, r::RenderCommand{T}) where T <: CommandAction
 
 This will add the render command `r` to it's correct set in the command buffer `cb`
 """
-function add_command!(cb::CommandBuffer, r::RenderCommand{T}) where T <: CommandAction
-    key = encode_command(r)
-    if haskey(cb.root.tree, key)
-        push!(cb.root.tree[key], r)
-    else
-        cb.root.tree[key] = RenderCommand{T}[r]
+function add_command!(cb::CommandBuffer,target,priority,caller, r::T;pass=:render) where T <: CommandAction
+    key = encode_command(T,target,priority,caller)
+    tree = cb.root.tree[pass]
+    if !haskey(tree, key)
+        tree[key] = RenderCommand{T}(target, priority,caller)
     end
+    push!(tree[key].commands, r)
 end
 
 """
@@ -217,15 +243,11 @@ end
 
 Remove given command from his list list.
 """
-function remove_command!(cb::CommandBuffer, r::RenderCommand)
-    key = encode_command(r)
-    if haskey(cb.root.tree, key)
-        deleteat!(cb.root.tree[key], findfirst(==(r), cb.root.tree[key]))
-        isempty(cb.root.tree[key]) && delete!(cb.root.tree, key)
-    end
+function remove_a_command!(r::RenderCommand{T}, c::T;pass=:render) where T <: CommandAction
+    deleteat!(r.commands, findfirst(==(c), r.commands))
 end
 
-remove_all_command!(cb::CommandBuffer, r::RenderCommand) = delete!(cb.root.tree, encode_command(r))
+remove_command!(cb::CommandBuffer, r::RenderCommand;pass=:render) = delete!(cb.root.tree[pass], encode_command(r))
 
 """
     commands_iterator(cb::CommandBuffer, query::CommandQuery)
@@ -233,7 +255,7 @@ remove_all_command!(cb::CommandBuffer, r::RenderCommand) = delete!(cb.root.tree,
 Return an iterator of commands in the CommandBuffer `cb` matching the given `query`.
 """
 function commands_iterator(cb::CommandBuffer, query::CommandQuery)
-	results = Vector{RenderCommand}[]
+	results = RenderCommand[]
 	for (k, v) in cb.root.tree
 		if (k & query.mask) == query.ref
 			push!(results, v)
@@ -243,8 +265,77 @@ function commands_iterator(cb::CommandBuffer, query::CommandQuery)
 	return results
 end
 
+extract_field(key::UInt128, offset) = (key >> (offset * BITBLOCK_SIZE)) & BITBLOCK_MASK 
+
+function field_iterator(cb::CommandBuffer, offset)
+    result = UInt32[]
+    for key in keys(cb.root.tree)
+        push!(result, extract_field(key, offset))
+    end
+    return unique!(result)
+end
+
+function tuple_iterator(cb::CommandBuffer, offsets::Tuple{Vararg{Int}}; pass=:render)
+    result = Set{NTuple{length(offsets), UInt32}}()
+    for key in keys(cb.root.tree[pass])
+        values = ntuple(i -> UInt32(extract_field(key, offsets[i])), length(offsets))
+        push!(result, values)
+    end
+    return collect(result)
+end
+
+"""
+    sorted_command_groups(cb::CommandBuffer; by=default_key)
+
+Returns a vector of commands vector `Vector{Vector{RenderCommand}}`,
+where each group is an unique signature,
+and groups are sorted following the traits given in `by`.
+
+# Arguments
+- `cb`: The `CommandBuffer` to analyze
+- `by`: A function `UInt128 -> SortKey`, sort by default by `(target, priority, commandid)`
+
+# Example
+    `sorted_command_groups(cb)`
+    `sorted_command_groups(cb; by = k -> decode_command(k)[1:2])  # sort by (target, priority)`
+"""
+function sorted_command_groups(cb::CommandBuffer; by = default_key, pass=:render)
+    groups = collect(cb.root.tree[pass])
+    sort!(groups, by = x -> by(x[1]))
+    return groups
+end
+sorted_command_bypriority(cb::CommandBuffer;pass=:render) = sorted_command_groups(cb; by=get_cmd_priority, pass=pass)
+
+"""
+    get_sortkey(::CommandAction)
+
+Return the sort key for a fiven command. Par défaut, retourne `nothing`, ce qui signifie "pas de tri".
+"""
+function get_sortkey(cmd::CommandAction)
+    return nothing
+end
+
+
+default_key(key::UInt128) = decode_command(key)
+
+target_iterator(cb::CommandBuffer)    = field_iterator(cb, 3)
+priority_iterator(cb::CommandBuffer)  = field_iterator(cb, 2)
+caller_iterator(cb::CommandBuffer)    = field_iterator(cb, 1)
+commandid_iterator(cb::CommandBuffer) = field_iterator(cb, 0)
+
+target_priority_iterator(cb::CommandBuffer)    = tuple_iterator(cb, (3, 2))
+target_commandid_iterator(cb::CommandBuffer)   = tuple_iterator(cb, (3, 0))
+caller_priority_iterator(cb::CommandBuffer)    = tuple_iterator(cb, (1, 2))
+target_priority_command_iterator(cb::CommandBuffer) = tuple_iterator(cb, (3, 2, 0))
+
 function clear!(cb::CommandBuffer)
-    empty!(cb.root.tree)
+    tree = cb.root.tree
+    for key in keys(tree)
+    	cmd = tree[key]
+    	for c in values(cmd)
+    		empty!(c.commands)
+    	end
+    end
 end
 
 
@@ -255,13 +346,32 @@ encode_command(c::RenderCommand{T}) where T <: CommandAction = (c.target << (BIT
 	(c.priority << (BITBLOCK_SIZE*2)) |
 	(c.caller << BITBLOCK_SIZE) |
 	get_commandid(T)
+encode_command(::Type{T},target, priority, caller) where T <: CommandAction = (target << (BITBLOCK_SIZE*3)) |
+	(priority << (BITBLOCK_SIZE*2)) |
+	(caller << BITBLOCK_SIZE) |
+	get_commandid(T)
+
 
 function decode_command(v::UInt128)
 	commandid = v & BITBLOCK_MASK
-	callerid = (v & (BITBLOCK_MASK << BITBLOCK_SIZE)) >> BITBLOCK_SIZE
-	priority = (v & (BITBLOCK_MASK << (BITBLOCK_SIZE*2))) >> (BITBLOCK_SIZE*2)
-	targetid = (v & (BITBLOCK_MASK << (BITBLOCK_SIZE*3))) >> (BITBLOCK_SIZE*3)
+	callerid = (v >> BITBLOCK_SIZE) & BITBLOCK_MASK
+	priority = (v >> (BITBLOCK_SIZE*2)) & BITBLOCK_MASK
+	targetid = (v >> (BITBLOCK_SIZE*3)) & BITBLOCK_MASK
 
 	return (targetid, priority, callerid, commandid)
 end
+get_cmd_targetid(v::UInt128) = (v >> (BITBLOCK_SIZE*3)) & BITBLOCK_MASK
+get_cmd_priority(v::UInt128) = (v >> (BITBLOCK_SIZE*2)) & BITBLOCK_MASK
+get_cmd_callerid(v::UInt128) = (v >> BITBLOCK_SIZE) & BITBLOCK_MASK
+get_cmd_commandid(v::UInt128) = v & BITBLOCK_MASK
 get_command_fromid(i::Int) = COMMAND_ACTIONS[i]
+
+pass_order(ren) = (:render, :postprocess)
+add_pass(cb::CommandBuffer, name::String) = (cb.root.tree[name] = Dict{UInt128, RenderCommand}())
+
+fast_haskey(dict::Dict, key) = begin
+    hsh = hash(key)::UInt
+    idx = (((hsh % Int) & (length(dict.keys)-1)) + 1)::Int
+    
+    isdefined(dict.keys, idx) && isequal(dict.keys[idx], key)
+end
