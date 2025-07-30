@@ -10,16 +10,16 @@ export DestroySurface, GetSurfacePtr, FillRect, BlitSurface, LoadImage, ToTextur
 
 mutable struct Surface
 	obj :: Ptr{SDL_Surface}
-	rect :: HRect
+	rect :: Rect2Df
 	depth :: Int
 	mask :: Nothing # for now
-	clip :: HRect
+	clip :: Rect2Df
 	pixels :: Ptr{Cvoid}
 	format :: Ptr{SDL_PixelFormat}
 
 	# Constructors #
 
-	function Surface(w,h,d,clip=HRect(0,0,0,0);masks=nothing,flags=0)
+	function Surface(w,h,d,clip=Rect2Df(0,0,0,0);masks=nothing,flags=0)
 
 		# We create te surface
 		surf = _create_surface(w,h,d,masks)
@@ -31,32 +31,32 @@ mutable struct Surface
 			ss = unsafe_load(surf)
 
 			# And use it to create the Surface
-			return new(surf,HRect(w,h,0,0),d,masks,ss.pixels,ss.format)
+			return new(surf,Rect2Df(w,h,0,0),d,masks,ss.pixels,ss.format)
 		end
 	end
-	function Surface(surf,w,h,d,clip=HRect(0,0,0,0);masks=nothing)
+	function Surface(surf,w,h,d,clip=Rect2Df(0,0,0,0);masks=nothing)
 
 		# We get the surface object
 		ss = unsafe_load(surf)
 
 		# And use it to create the Surface
-		new(surf,HRect(w,h,0,0),d,masks,clip,ss.pixels,ss.format)
+		new(surf,Rect2Df(w,h,0,0),d,masks,clip,ss.pixels,ss.format)
 	end
 end
 
 """
-	FillRect(s::Surface,rect::HRect,color)
+	FillRect(s::Surface,rect::Rect2Df,color)
 
 This function draw a filled rect on a surface and is the only drawing operation that 
-can be done on surface.`rect` is the size an position of the rect see `HRect`. `color` 
+can be done on surface.`rect` is the size an position of the rect see `Rect2Df`. `color` 
 should be a container of integer with at least 3 elements.
 """
-function FillRect(s::Surface,rect::HRect,color)
+function FillRect(s::Surface,rect::Rect2Df,color)
 	
 	# Getting the SDL_Surface pointed
 	surf = GetSurfacePtr(s)
 
-	# Converting the HRect into an SDL_Rect
+	# Converting the Rect2Df into an SDL_Rect
 	r = SDL_Rect(rect.x,r.y,rect.w,rect.h)
 
 	# And getting the color of the rect
@@ -67,14 +67,14 @@ function FillRect(s::Surface,rect::HRect,color)
 end
 
 """
-	BlitSurface(s1::Surface,s2::Surface,srcrect=C_NULL,dstrect=HRect(0,0,0,0))
+	BlitSurface(s1::Surface,s2::Surface,srcrect=C_NULL,dstrect=Rect2Df(0,0,0,0))
 
 Use this function to copy the content of the Surface `s1` on the Surface `s2`. `srcrect` is
-the rect representing the part of the image to copy it should be an `HRect`. `dstrect` is 
+the rect representing the part of the image to copy it should be an `Rect2Df`. `dstrect` is 
 the where that content should be copied (since Surface don't do resizing, only the position 
 is important.)
 """
-function BlitSurface(s1::Surface,s2::Surface,srcrect=C_NULL,dstrect=HRect(0,0,0,0))
+function BlitSurface(s1::Surface,s2::Surface,srcrect=C_NULL,dstrect=Rect2Df(0,0,0,0))
 	
 	# If the source rect is not a Null pointer (C_NULL)
 	# We convert it into an SDL_Rect

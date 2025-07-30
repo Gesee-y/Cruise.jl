@@ -28,7 +28,7 @@ function BlankTexture(ren::SDLRender,w,h;x=0,y=0,access=TEXTURE_STREAMING,format
 	f = (format === nothing) ? SDL_PIXELFORMAT_RGBA8888 : format
 	
 	# We create the SDL_Texture
-	tex_ptr = SDL_CreateTexture(ren.renderer,f,a,w,h)
+	tex_ptr = SDL_CreateTexture(ren.data.renderer,f,a,w,h)
 
 	# If the texture creation failed
 	if (C_NULL == tex_ptr)
@@ -43,18 +43,21 @@ function BlankTexture(ren::SDLRender,w,h;x=0,y=0,access=TEXTURE_STREAMING,format
 	data = SDLTextureData(tex_ptr,access,f)
 
 	# We finally construct the texture
-	texture = Texture{SDLTextureData}(name,(0,),w,h,data;x=x,y=y,static=static)
+	texture = Texture{SDLTextureData}(w,h,data;x=x,y=y,static=static)
+    register_resource(ren, texture)
 
 	return texture
 end
 function Texture(backend::SDLRender,img::ImageCrate,x=0,y=0,static=false)
-	tex = SDL_CreateTextureFromSurface(backend.renderer, img.obj)
+	tex = SDL_CreateTextureFromSurface(backend.data.renderer, img.obj)
 	
 	if (C_NULL != tex)
 		info = _get_texture_info(tex)
 		data = SDLTextureData(tex, _to_horizon_access(info[4]),info[3])
 
-		return Texture{SDLTextureData}(_generate_texture_name(),(0,),img.width,img.height,data;x=x,y=y,static=static)
+		texture = Texture{SDLTextureData}(img.width,img.height,data;x=x,y=y,static=static)
+		register_resource(ren, texture)
+		return texture
     end
 end
 
@@ -208,7 +211,7 @@ function _render_a_texture(b::SDLRender,obj::SDLObject)
 		r = t.rect
 		rect = SDL_FRect(ro.x,ro.y,r.w*ro.w,r.h*ro.h)
 		_set_rendered(t,true)
-		SDL_RenderCopyF(b.renderer,_get_texture(t),C_NULL,Ref(rect))
+		SDL_RenderCopyF(b.data.renderer,_get_texture(t),C_NULL,Ref(rect))
 	end
 end
 

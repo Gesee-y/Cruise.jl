@@ -143,6 +143,10 @@ mutable struct CRTDistortionShader <: SDLShader
     scanline_strength::Float32
     scanline_frequency::Float32
     data::ShaderPixelData
+
+    ## Constructor
+
+    CRTDistortionShader(c,ss,sf) = new(c,ss,sf)
 end
 need_pixeldata(shader::CRTDistortionShader) = :data
 
@@ -186,7 +190,7 @@ function (::InvertColorsShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     return Color8(255 - r, 255 - g, 255 - b, a)
 end
 
-function (::Sepia)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
+function (::SepiaShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     r, g, b, a = color
     # Sepia conversion formula
     r_out = clamp(round(Int, r * 0.393 + g * 0.769 + b * 0.189), 0, 255)
@@ -335,9 +339,9 @@ const CRTr_ref = Ref{UInt8}(0)
 const CRTg_ref = Ref{UInt8}(0)
 const CRTb_ref = Ref{UInt8}(0)
 const CRTa_ref = Ref{UInt8}(0)
-function (shader::CRTDistortionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{3,Float32})
+function (shader::CRTDistortionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     x, y = pos
-    pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
+    pixels, (w, h), format = shader.data.pixels, shader.data.size, shader.data.format
     curvature, scanline_strength, scanline_frequency = shader.curvature, shader.scanline_strength, shader.scanline_frequency
 
     # Appliquer une distorsion de type CRT (courbure)
@@ -365,7 +369,7 @@ function (shader::CRTDistortionShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Flo
     return Color8(r, g, b, a)
 end
 
-function (shader::GlitchEffectShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32})
+function (shader::GlitchEffectShader)(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)
     time, shake_intensity, block_size, block_shift = shader.time, shader.shake_intensity, shader.block_size, shader.block_shift
@@ -401,7 +405,7 @@ const kernel = [
         1 2 1
     ] ./ 16
 
-function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64}, extra::NTuple{4,Float32})
+function BloomShader(color::NTuple{4,UInt8}, pos::NTuple{2,Float64})
     pixels, w, h, format = shader.data.pixels, shader.data.size, shader.data.format
 
     x, y = round(Int, pos[1] * w), round(Int, pos[2] * h)

@@ -41,7 +41,6 @@ Object(pos::Vec2f, size::Vec2f, texture::SDLTexture) = begin
     obj.data = SDLObjectData(texture)
     return obj
 end
-
 DestroyObject(obj::SDLObject) = SDL_DestroyTexture(_get_texture(obj.data.texture))
 
 get_texture(obj::SDLObject) = obj.data.texture

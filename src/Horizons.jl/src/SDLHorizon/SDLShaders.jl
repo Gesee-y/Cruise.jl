@@ -7,12 +7,12 @@ abstract type SDLShader end
 struct ShaderPixelData
 	pixels::Vector{UInt32}
 	size::NTuple{2, Int}
-	format::SDL_PixelFormat
+	format::Ptr{SDL_PixelFormat}
 
 	## Constructors
 
 	ShaderPixelData() = new()
-	ShaderPixelData(pixels, w, h, format) = new(pixels, (w, h), format)
+	ShaderPixelData(pixels, size, format) = new(pixels, size, format)
 end
 
 """
@@ -84,7 +84,7 @@ function ProcessPixels(shader::SDLShader,t::SDLTexture,extra=();rect=C_NULL,ren=
 		# And we can finally unlock the texture
 		SDL_UnlockTexture(_get_texture(t))
 	else
-		ta = SDL_GetRenderTarget(ren.renderer)
+		ta = SDL_GetRenderTarget(ren.data.renderer)
 		SetRenderTarget(ren, t)
 		results = Dict{Color8, Vector{SDL_Point}}()
 		@inbounds for idx in eachindex(pixels)
@@ -116,14 +116,14 @@ function ProcessPixels(shader::SDLShader,t::SDLTexture,extra=();rect=C_NULL,ren=
 			#SetDrawColor(ren, result)
 			#DrawPoint(ren, (i-1,j-1))
 		end
-
+        
 		for key in keys(results)
 			points = results[key]
 			SetDrawColor(ren,key)
-			SDL_RenderDrawPoints(ren.renderer, points, length(points))
+			SDL_RenderDrawPoints(ren.data.renderer, points, length(points))
 		end
 
-		SDL_SetRenderTarget(ren.renderer, ta)
+		SDL_SetRenderTarget(ren.data.renderer, ta)
     end
 	# Once the loop finished, we no longer need the format object
 	SDL_FreeFormat(format)
@@ -320,9 +320,9 @@ function get_pixels(t::SDLTexture;rect=C_NULL,unlock=false,ren=nothing)
     	p = w*sizeof(UInt32)
     	pixels = t.static.pixels
 
-    	ta = SDL_GetRenderTarget(ren.renderer)
+    	ta = SDL_GetRenderTarget(ren.data.renderer)
     	SetRenderTarget(ren,t)
-    	if 0 != SDL_RenderReadPixels(ren.renderer, rect,t.data.format,pointer(pixels),p)
+    	if 0 != SDL_RenderReadPixels(ren.data.renderer, rect,t.data.format,pointer(pixels),p)
     	    # We get the error
 			err= _get_SDL_Error()
 
@@ -331,7 +331,7 @@ function get_pixels(t::SDLTexture;rect=C_NULL,unlock=false,ren=nothing)
 			return nothing
 	    end
 		
-    	SDL_SetRenderTarget(ren.renderer, ta)
+    	SDL_SetRenderTarget(ren.data.renderer, ta)
 
     	return pixels
     end
