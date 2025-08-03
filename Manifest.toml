@@ -33,15 +33,40 @@ version = "1.0.0"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
+[[deps.FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "b66970a70db13f45b7e57fbda1736e1cf72174ea"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.17.0"
+
+    [deps.FileIO.extensions]
+    HTTPExt = "HTTP"
+
+    [deps.FileIO.weakdeps]
+    HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+
+[[deps.GLFW]]
+deps = ["GLFW_jll"]
+git-tree-sha1 = "35dbc482f0967d8dceaa7ce007d16f9064072166"
+uuid = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
+version = "3.4.1"
+
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
 
-[[deps.OrderedCollections]]
-git-tree-sha1 = "05868e21324cede2207c6f0f466b4bfef6d5e7ee"
-uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.8.1"
+[[deps.LibSndFile]]
+deps = ["FileIO", "Libdl", "LinearAlgebra", "Printf", "SampledSignals", "libsndfile_jll"]
+git-tree-sha1 = "955515227165d2a276abb017bafd0b4e93d0eded"
+uuid = "b13ce0c6-77b0-50c6-a2db-140568b8d1a5"
+version = "2.4.0"
+
+[[deps.PortAudio]]
+deps = ["LinearAlgebra", "SampledSignals", "Suppressor", "alsa_plugins_jll", "libportaudio_jll"]
+git-tree-sha1 = "1c485addb6c281f039d406137a71394afdcb3585"
+uuid = "80ea8bcb-4634-5cb3-8ee8-a132660d1d2d"
+version = "1.3.0"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -59,6 +84,12 @@ version = "1.2.2"
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
+
+[[deps.SampledSignals]]
+deps = ["Base64", "Compat", "DSP", "FFTW", "FixedPointNumbers", "IntervalSets", "LinearAlgebra", "Random", "TreeViews", "Unitful"]
+git-tree-sha1 = "0eaf25f56d43267dc58f6989fc79e2043a649ab6"
+uuid = "bd7594eb-a658-542f-9e75-4c4d8908c167"
+version = "2.1.4"
 
 [[deps.StructArrays]]
 deps = ["ConstructionBase", "DataAPI", "Tables"]
