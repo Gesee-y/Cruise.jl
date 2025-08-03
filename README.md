@@ -1,4 +1,4 @@
-# Cruise.jl v0.1.5 — A 2D/3D Game Engine for Julia
+# Cruise.jl v0.2.0 — A 2D/3D Game Engine for Julia
 
 Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
 
@@ -49,6 +49,8 @@ Cruise is a **composable game engine** built on a set of specialized modules. Ea
 | [`Arceus`](https://github.com/Gesee-y/Arceus.jl)                                 | Bitboard-based behavioral logic system (static decision graphs)            |
 | [`Interactions`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Interations) | 2D/3D physics engine: particles, collisions, resolution                    |
 | [`Horizons`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Horizons.jl)     | Multi-backend renderer (SDL implemented, OpenGL coming)                    |
+| [`Waves`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Waves)              | Full audio system supporting mixing, effects and more                      |
+| [`Reanimation`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Reanimation)  | Animation module with interpolations, easing and more                      |
 
 ---
 
@@ -87,6 +89,16 @@ end
 ```
 
 ---
+
+## Roadmap
+
+From now on, I will focus on testing, documenting and patching. But here is a list of the incoming features:
+
+- [] Animation Graph
+- [] Sprites, AnimatedSprite, Skeletal animations
+- [] Spatial sound
+- [] 3D Physics
+- [] 3D Render
 
 ## Contribution
 
