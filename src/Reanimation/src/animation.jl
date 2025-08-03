@@ -2,6 +2,9 @@
 ###################################################### ANIMATIONS ###################################################
 #####################################################################################################################
 
+export RAnimation
+export animate!
+
 ######################################################### CORE ######################################################
 
 struct RAnimation
@@ -52,4 +55,26 @@ function at(anim::RAnimation, t::Real)
 
     # If the animation has already ended, we clamp
     return value(last(anim.animation).k2)
+end
+
+"""
+    animate!(anim::RAnimation, obj, property;
+             start=0.0, speed=1/60, delay=speed, loop=1)
+
+Run the animation in a task.
+"""
+function animate!(anim::RAnimation, obj, property;
+                  start=0.0, speed=1/60, delay=speed, loop=1)
+    loop < 0 && error("Loop count must be ≥ 0")
+    binding = AbstractBinding(obj, property)
+    d = duration(anim)
+
+    return @async begin
+        for _ in 1:(loop == 0 ? typemax(Int) : loop)  # loop==0 → infinite
+            for t in range(start, start+d, step=speed)
+                set!(binding, at(anim, t))
+                sleep(delay)
+            end
+        end
+    end
 end

@@ -4,6 +4,7 @@
 
 export AbstractKeyframe
 export Keyframe
+export @keyframe
 export value, keytime
 
 ######################################################## CORE #######################################################
@@ -21,6 +22,16 @@ A keyframe is an intant of an animation. Something like the `value` of the anima
 struct Keyframe{T} <: AbstractKeyframe{T}
     time::Float64
     value::T
+end
+
+macro keyframe(expr)
+    # pattern : t => value
+    if expr isa Expr && expr.head == :call && expr.args[1] == :(=>)
+        t, v = expr.args[2], expr.args[3]
+        return :(Keyframe($(esc(t)), $(esc(v))))
+    else
+        error("Invalid syntax. Use `@keyframe t => value`.")
+    end
 end
 
 ###################################################### FUNCTIONS #####################################################
