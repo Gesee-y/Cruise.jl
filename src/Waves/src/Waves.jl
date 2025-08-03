@@ -1,6 +1,8 @@
 module Waves
 
+using FileIO: load, loadstreaming
 using LibSndFile
+using SampledSignals
 using PortAudio
 using DSP
 using LinearAlgebra
@@ -44,11 +46,12 @@ ws = init_waves(44100.0, 1024)
 ```
 """
 function init_waves(sample_rate::Float64=44100.0, buffer_size::Int=1024)
-    try
+    #try
+        PortAudio.initialize()
         return WavesSystem(sample_rate, buffer_size)
-    catch e
-        throw(AudioError("Impossible d'initialiser le système audio: $(e.msg)"))
-    end
+    #catch e
+    #    throw(AudioError("Failed to initialize the audio system: $(showerror(stdout,e))"))
+    #end
 end
 
 """
@@ -61,11 +64,25 @@ Start the audio system.
 """
 function start!(system::WavesSystem)
     if system.is_running
-        @warn "Le système audio est déjà en cours d'exécution"
+        @warn "Audio system is already running"
         return
     end
 
     system.is_running = true
+    audio_task = Threads.@spawn begin
+        while system.is_running
+            output = take!(system.writing_channel)
+            try
+                stream = system.stream
+                write(stream, output)
+            catch e
+                system.metrics.underrun_count += 1
+                @warn "Audio underrun detected"
+                rethrow(e)
+            end
+        end
+    end
+
     system.audio_thread = @async begin
         try
             sample_time = system.buffer_size / system.sample_rate
@@ -78,18 +95,14 @@ function start!(system::WavesSystem)
                 process_time = time() - start_time
                 system.metrics.cpu_usage = process_time / sample_time * 100
 
-                remaining_time = sample_time - process_time
-                if remaining_time > 0
-                    sleep(remaining_time)
-                end
             end
         catch e
-            @error "Erreur dans le thread audio: $e"
+            @error "In audio thread: $(showerror(stdout, e))"
             system.is_running = false
         end
     end
 
-    @info "Système audio démarré"
+    @info "Audio system lauched."
 end
 
 """

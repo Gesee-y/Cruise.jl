@@ -101,13 +101,14 @@ Represents a streaming audio source that loads data from disk in chunks.
 """
 mutable struct StreamingAudioSource <: AbstractAudioSource
     file_path::String
+    source::LibSndFile.SndFileSource
     sample_rate::Float64
     channels::Int
     total_samples::Int
     buffer::Matrix{Float32}
     buffer_start::Int
     buffer_samples::Int
-    position::Float64
+    position::Int
     speed::Float64
     volume::Float64
     target_volume::Float64
@@ -121,9 +122,9 @@ mutable struct StreamingAudioSource <: AbstractAudioSource
     lock::ReentrantLock
 
     function StreamingAudioSource(file_path, sr, channels, total_samples, id="")
-        buffer_samples = 65536  # ~1.5s at 44.1kHz
-        buffer = zeros(Float32, channels, buffer_samples)
-        new(file_path, sr, channels, total_samples, buffer, 0, buffer_samples,
+        buffer_samples = 4096*4*4*4*4*4#65536  # ~1.5s at 44.1kHz
+        buffer = zeros(Float32, buffer_samples, channels)
+        new(file_path, loadstreaming(file_path), sr, channels, total_samples, buffer, 0, buffer_samples,
             1.0, 1.0, 1.0, 1.0, 0, 0, STOPPED, false, 1.0, total_samples,
             isempty(id) ? string(hash(file_path)) : id, ReentrantLock())
     end
@@ -274,16 +275,23 @@ mutable struct WavesSystem
     metrics::AudioMetrics
     limiter_enabled::Bool
     limiter_threshold::Float64
+    writing_channel::Channel{Matrix{Float32}}
+    delay::Float32
 
-    function WavesSystem(sample_rate=44100.0, buffer_size=1024)
-        stream = PortAudioStream(0, 2; samplerate=sample_rate)
+    function WavesSystem(sample_rate=44100.0, buffer_size=1024, delay=0.0001, max_chunk_buffer = 64)
+        input_device = PortAudio.devices()[1]
+        output_device = PortAudio.get_device(PortAudio.get_default_output_index())
+        #dev = filter(x -> x.maxinchans == 2 && x.maxoutchans == 2, devices)[1]
+        stream = PortAudioStream(input_device, output_device,0; warn_xruns=false)
         buffers = Dict(
-            "master" => zeros(Float32, 2, buffer_size),
-            "bus_temp" => zeros(Float32, 2, buffer_size),
-            "group_temp" => zeros(Float32, 2, buffer_size),
-            "aux_temp" => zeros(Float32, 2, buffer_size)
+            "master" => zeros(Float32, buffer_size, 2),
+            "bus_temp" => zeros(Float32, buffer_size, 2),
+            "group_temp" => zeros(Float32, buffer_size, 2),
+            "aux_temp" => zeros(Float32, buffer_size, 2)
         )
+        wc = Channel{Matrix{Float32}}(64)
+        write(stream, buffers["master"])
         new(AudioBus[], Dict{String, AudioBus}(), stream, 1.0, sample_rate,
-            buffer_size, false, nothing, buffers, AudioMetrics(), true, 0.95)
+            buffer_size, false, nothing, buffers, AudioMetrics(), true, 0.95, wc, delay)
     end
 end

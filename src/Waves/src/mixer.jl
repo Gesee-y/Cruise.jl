@@ -39,75 +39,35 @@ function mix_sources!(system::WavesSystem)
     group_buffer = system.pre_allocated_buffers["group_temp"]
     aux_buffer = system.pre_allocated_buffers["aux_temp"]
 
-    fill!(output, 0.0f0)
+    buses::Vector{AudioBus} = system.buses
 
-    has_solo_bus = any(bus -> bus.solo, system.buses)
+    fill!(output, 0.0f0)
+    process_bus(buses, bus_buffer, group_buffer, aux_buffer, output, N)
+    
+    output .*= system.master_volume
+    
+    if system.limiter_enabled
+        apply_limiter!(output, system.limiter_threshold)
+    end
+
+    update_metrics!(system.metrics, output)
+
+    put!(system.writing_channel, output)
+end
+
+function process_bus(buses::Vector{AudioBus}, bus_buffer::Matrix{Float32}, group_buffer::Matrix{Float32},
+    aux_buffer::Matrix{Float32}, output::Matrix{Float32}, buffer_size)
+    has_solo_bus = any(is_solo, buses)
 
     # Process main buses
-    @inbounds for bus in system.buses
+    @inbounds for bus in buses
         if bus.mute || (has_solo_bus && !bus.solo)
             continue
         end
 
         fill!(bus_buffer, 0.0f0)
-        process_fade!(bus)
-
-        has_solo_group = any(group -> group.solo, bus.groups)
-
-        for group in bus.groups
-            if group.mute || (has_solo_group && !group.solo)
-                continue
-            end
-
-            fill!(group_buffer, 0.0f0)
-            process_fade!(group)
-
-            for src in group.sources
-                if src.state != PLAYING
-                    continue
-                end
-
-                process_fade!(src)
-                channels = src isa AudioSource ? size(src.data, 1) : src.channels
-                total_samples = src isa AudioSource ? size(src.data, 2) : src.total_samples
-
-                for i in 1:N
-                    if src.position >= src.end_offset
-                        if src.loop
-                            src.position = src.start_offset
-                        else
-                            lock(src.lock)
-                            try
-                                src.state = STOPPED
-                            finally
-                                unlock(src.lock)
-                            end
-                            break
-                        end
-                    end
-
-                    for ch in 1:min(channels, 2)
-                        sample = src isa AudioSource ?
-                            interpolate_sample(src.data, src.position, ch) :
-                            get_streaming_sample(src, src.position, ch)
-                        group_buffer[ch, i] += sample * src.volume
-                    end
-
-                    src.position += src.speed
-                end
-            end
-
-            for effect in group.effects
-                if effect isa ModulableEffect
-                    process_modulable_effect!(effect)
-                end
-                for ch in 1:2
-                    @views group_buffer[ch, :] = effect(group_buffer[ch, :])
-                end
-            end
-
-            @views bus_buffer .+= group_buffer .* group.volume
-        end
+        #process_fade!(bus)
+        process_group(bus.groups, group_buffer, bus_buffer, buffer_size)
 
         for effect in bus.effects
             if effect isa ModulableEffect
@@ -117,7 +77,7 @@ function mix_sources!(system::WavesSystem)
                 @views bus_buffer[ch, :] = effect(bus_buffer[ch, :])
             end
         end
-
+        
         for (aux_id, send_level) in bus.sends
             if haskey(system.auxiliary_buses, aux_id)
                 aux_bus = system.auxiliary_buses[aux_id]
@@ -139,19 +99,51 @@ function mix_sources!(system::WavesSystem)
 
         @views output .+= bus_buffer .* bus.volume
     end
+end
 
-    output .*= system.master_volume
+function process_group(groups::Vector{AudioGroup}, group_buffer::Matrix{Float32}, bus_buffer::Matrix{Float32}, N)
+    has_solo_group = any(is_solo, groups)
 
-    if system.limiter_enabled
-        apply_limiter!(output, system.limiter_threshold)
-    end
+    for group in groups
+        if group.mute || (has_solo_group && !group.solo)
+            continue
+        end
 
-    update_metrics!(system.metrics, output)
+        fill!(group_buffer, 0.0f0)
+        #process_fade!(group)
 
-    try
-        write(system.stream, permutedims(output))
-    catch e
-        system.metrics.underrun_count += 1
-        @warn "Underrun audio détecté"
+        for src in group.sources
+            if src.state != PLAYING
+                continue
+            end
+
+            #process_fade!(src)
+            channels = src isa AudioSource ? size(src.data, 1) : src.channels
+            total_samples = src isa AudioSource ? size(src.data, 2) : src.total_samples
+
+            get_streaming_buffer!(src, N)
+            buffer::Matrix{Float32} = src.buffer
+            pos = src.buffer_start+1
+            group_buffer .+= buffer[pos:(pos+N-1),:]*src.volume
+            src.buffer_start += N
+
+            src.position += src.speed
+        end
+
+        for effect in group.effects
+            if effect isa ModulableEffect
+                process_modulable_effect!(effect)
+            end
+            for ch in 1:2
+                @views group_buffer[ch, :] = effect(group_buffer[ch, :])
+            end
+        end
+
+        bus_buffer .+= group_buffer .* group.volume
     end
 end
+
+is_solo(bus::AudioBus) = bus.solo
+is_solo(group::AudioGroup) = group.solo
+get_sample(src::AudioSource) = interpolate_sample(src)
+get_sample(src::StreamingAudioSource) = get_streaming_sample(src)

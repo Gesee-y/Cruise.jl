@@ -95,3 +95,16 @@ function update_metrics!(metrics::AudioMetrics, signal::Matrix{Float32})
         end
     end
 end
+
+function sleep_ns(v::Real;sec=true)
+    factor = sec ? 10 ^ 9 : 1
+    t = UInt(floor(v * factor))
+    
+    t1 = time_ns()
+    while true
+        if time_ns() - t1 >= t
+            break
+        end
+        yield()
+    end
+end

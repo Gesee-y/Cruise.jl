@@ -1,4 +1,6 @@
-
+#####################################################################################################################
+####################################################### OPERATIONS ##################################################
+#####################################################################################################################
 
 """
     load_audio(file_path::String, id::String="", stream::Bool=false)
@@ -34,13 +36,13 @@ function load_audio(file_path::String, id::String="", stream::Bool=false)
         else
             audio, rate = loadsndfile(file_path)
             if size(audio, 2) > 8
-                @warn "Fichier avec $(size(audio, 2)) canaux, réduction à stéréo"
+                @warn "File with $(size(audio, 2)) channels, reduced to stereo"
                 audio = audio[:, 1:min(2, size(audio, 2))]
             end
             data = convert(Matrix{Float32}, audio')
             max_val = maximum(abs.(data))
             if max_val > 1.0
-                @warn "Audio clippé détecté, normalisation appliquée"
+                @warn "Clipped audio detected, normalization applied"
                 data ./= max_val
             end
             return AudioSource(data, rate, id)
@@ -54,10 +56,6 @@ function load_audio(file_path::String, id::String="", stream::Bool=false)
     end
 end
 
-
-
-# ─────────────────────────────────────────────
-# Contrôles améliorés avec fades et thread safety
 
 """
     play!(src::AbstractAudioSource, fade_time::Float64=0.0)
@@ -278,9 +276,6 @@ function fade_out!(src::AbstractAudioSource, time::Float64)
     end
 end
 
-# ─────────────────────────────────────────────
-# Gestion des groupes et bus améliorée
-
 """
     create_group(id::String="")
 
@@ -482,24 +477,22 @@ function cubic_interpolate(y0::Float32, y1::Float32, y2::Float32, y3::Float32, t
     return a0 * t^3 + a1 * t^2 + a2 * t + a3
 end
 
-function interpolate_sample(data::Matrix{Float32}, position::Float64, channel::Int)
-    idx = floor(Int, position)
-    frac = Float32(position - idx)
+function interpolate_sample(data::Matrix{Float32}, channel::Int)
+    idx = src.position
     _, total_samples = size(data)
     if idx < 2 || idx > total_samples - 2
         if idx >= total_samples
             return 0.0f0
         end
         s1 = data[channel, idx]
-        s2 = idx < total_samples ? data[channel, idx+1] : 0.0f0
-        return (1 - frac) * s1 + frac * s2
+        return s1
     else
         return cubic_interpolate(
             data[channel, idx-1],
             data[channel, idx],
             data[channel, idx+1],
             data[channel, idx+2],
-            frac
+            0
         )
     end
 end
@@ -507,37 +500,40 @@ end
 function load_streaming_buffer!(src::StreamingAudioSource, position::Int)
     lock(src.lock)
     try
-        file = SndFile(src.file_path)
-        seek(file, src.buffer_start)
+        file = src.source
         samples_to_read = min(src.buffer_samples, src.total_samples - src.buffer_start)
-        data = read(file, Float32, samples_to_read * src.channels)
-        close(file)
-        if length(data) < samples_to_read * src.channels
-            data = vcat(data, zeros(Float32, samples_to_read * src.channels - length(data)))
-        end
-        src.buffer .= reshape(data, src.channels, samples_to_read)
+        
+        data = read(file, samples_to_read)
+        
+        src.buffer_start = 0
+        src.buffer = data.data
+    catch e
+        showerror(stdout, e)
     finally
         unlock(src.lock)
     end
 end
 
-function get_streaming_sample(src::StreamingAudioSource, position::Float64, channel::Int)
-    idx = floor(Int, position)
-    if idx < src.buffer_start || idx >= src.buffer_start + src.buffer_samples
-        src.buffer_start = max(0, idx - div(src.buffer_samples, 4))
+function get_streaming_buffer!(src::StreamingAudioSource, buffer_size)
+    if iszero(src.buffer_start) || src.buffer_start >= src.buffer_samples
+        load_streaming_buffer!(src, src.position)
+    end
+    return src.buffer
+end
+
+function get_streaming_sample(src::StreamingAudioSource)
+    idx = src.position
+    if iszero(src.buffer_start) || src.buffer_start >= src.buffer_samples
         load_streaming_buffer!(src, idx)
     end
-    buffer_idx = idx - src.buffer_start + 1
-    if buffer_idx < 1 || buffer_idx > src.buffer_samples
-        return 0.0f0
-    end
-    frac = Float32(position - idx)
-    if buffer_idx >= src.buffer_samples
-        s1 = src.buffer[channel, buffer_idx]
-        s2 = 0.0f0
-    else
-        s1 = src.buffer[channel, buffer_idx]
-        s2 = src.buffer[channel, buffer_idx+1]
-    end
-    return (1 - frac) * s1 + frac * s2
+    buffer_idx = src.buffer_start + 1
+    src.buffer_start += 1
+    @view src.buffer[buffer_idx, :]
+end
+
+sample_position(src::StreamingAudioSource) = src.position*src.buffer_samples
+eof(src::StreamingAudioSource) = sample_position(src) >= nframes(src.source)
+reset(src::StreamingAudioSource) = begin
+    src.position = 0
+    seek(src.source, 1)
 end
