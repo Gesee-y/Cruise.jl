@@ -43,14 +43,14 @@ Cruise is a **composable game engine** built on a set of specialized modules. Ea
 | [`Outdoors`](https://github.com/Gesee-y/Outdoors.jl)                             | Backend-agnostic window management using a microkernel pattern             |
 | [`Notifyers`](https://github.com/Gesee-y/Notifyers.jl)                           | Reactive event system with states and signal-like behavior                 |
 | [`ReactiveECS`](https://github.com/Gesee-y/ReactiveECS.jl)                       | High-performance ECS with reactive pipelines and runtime system injection  |
-| [`MathLib`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/MathLib.jl)       | Vector/matrix math library tailored for game development                   |
+| [`MathLib`](https://github.com/Gesee-y/GDMathLib.jl)       | Vector/matrix math library tailored for game development                   |
 | [`NodeTree`](https://github.com/Gesee-y/NodeTree.jl)                             | Generic scene/tree graph manager, used for scene traversal and hierarchies |
 | [`Crates`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Crates)            | Asset/resource loader and lifecycle manager                                |
 | [`Arceus`](https://github.com/Gesee-y/Arceus.jl)                                 | Bitboard-based behavioral logic system (static decision graphs)            |
-| [`Interactions`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Interations) | 2D/3D physics engine: particles, collisions, resolution                    |
-| [`Horizons`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Horizons.jl)     | Multi-backend renderer (SDL implemented, OpenGL coming)                    |
-| [`Waves`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Waves)              | Full audio system supporting mixing, effects and more                      |
-| [`Reanimation`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Reanimation)  | Animation module with interpolations, easing and more                      |
+| [`Interactions`](https://github.com/Gesee-y/Interations.jl) | 2D/3D physics engine: particles, collisions, resolution                    |
+| [`Horizons`](https://github.com/Gesee-y/Horizons.jl)     | Multi-backend renderer (SDL implemented, OpenGL coming)                    |
+| [`Waves`](https://github.com/Gesee-y/WavesFlow.jl)              | Full audio system supporting mixing, effects and more                      |
+| [`Reanimation`](https://github.com/Gesee-y/ReAnimation.jl)  | Animation module with interpolations, easing and more                      |
 
 ---
 
