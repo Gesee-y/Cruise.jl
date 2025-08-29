@@ -47,7 +47,7 @@ Cruise is a **composable game engine** built on a set of specialized modules. Ea
 | [`NodeTree`](https://github.com/Gesee-y/NodeTree.jl)                             | Generic scene/tree graph manager, used for scene traversal and hierarchies |
 | [`Crates`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Crates)            | Asset/resource loader and lifecycle manager                                |
 | [`Arceus`](https://github.com/Gesee-y/Arceus.jl)                                 | Bitboard-based behavioral logic system (static decision graphs)            |
-| [`Interactions`](https://github.com/Gesee-y/Interations.jl) | 2D/3D physics engine: particles, collisions, resolution                    |
+| [`Interactions`](https://github.com/Gesee-y/Interactions.jl) | 2D/3D physics engine: particles, collisions, resolution                    |
 | [`Horizons`](https://github.com/Gesee-y/Horizons.jl)     | Multi-backend renderer (SDL implemented, OpenGL coming)                    |
 | [`Waves`](https://github.com/Gesee-y/WavesFlow.jl)              | Full audio system supporting mixing, effects and more                      |
 | [`Reanimation`](https://github.com/Gesee-y/ReAnimation.jl)  | Animation module with interpolations, easing and more                      |
