@@ -2,12 +2,7 @@
 ######################################################### CRUISE GAME ENGINE ##############################################################
 ###########################################################################################################################################
 
-"""
-    module Cruise
 
-A game engine built in Julia, designed for creating immersive and interactive experiences.
-Provides tools for reactive systems, graphics, and narrative storytelling.
-"""
 module Cruise
 
 export HelloCruise!!
