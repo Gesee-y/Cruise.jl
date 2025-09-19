@@ -128,6 +128,14 @@ end
 
 ---
 
+## Untested features
+
+- **Complete modern OpenGL abstraction + bindless textures** from Bplus engine, inspired from Unreal engine rendering engine. Not yet linked to Horizons.jl.  
+
+- **Skia 2D rendering backend** from Skia.jl. Just needs its interface implemented in Horizons.jl.  
+
+- **3D physics**: Still needs to be tested on real-world cases.
+
 ## Roadmap
 
 From now on, I will focus on testing, documenting and patching. But here is a list of the incoming features:
