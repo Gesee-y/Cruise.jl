@@ -27,42 +27,48 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Why Cruise?
 
-There are some interesting game engine being made in Julia like [B+ engine]() by William Mannings, [Julgame]() by Kyjor or even [GameZero]().
-So why making another engine instead of contributing to them?
+There are some interesting game engines being made in Julia, like [B+ engine]() by William Mannings, [Julgame]() by Kyjor, or even [GameZero]().  
+So why create another engine instead of contributing to them?
 
-Well if I put the aside the learning treasure that is the construction of an engine, I would say that none of them matched my vision.
+Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine build for compatibility, modularity and performances. It's build in a way the users is not bounded to any given library or rendering backend. This way, game are made only one time with Cruise and can be run EVERYWHERE (julia can run), from your old computer to a brand new one on every plateform (except mobile and consoles for now).
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run — from your old computer to a brand-new one — on every platform (except mobile and consoles for now).
 
 ## Modules
 
-> The following structure is just abstract, Cruise.jl isn't really structured in such set of tools. It's just a way to illustrate it's internal.
+> The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.
 
 ### Core
 
-- [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains gamedev functions (lerp, slerp, etc), stack-allocated structure for optimized performances, vectors and quaternions manipulation, optimized matrix manipulation, box and circles, extensible coordinate system, colors and more.
+- [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains game-dev functions (lerp, slerp, etc.), stack-allocated structures for optimized performance, vector and quaternion manipulation, optimized matrix operations, boxes and circles, an extensible coordinate system, colors, and more.
 
-- [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Trees manipulation to create `SceneTree`s and any parent-child relationship.
+- [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
 
-- [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allow you to create events with a Godot like syntax (`@Notifyer MY_EVENT(x::int)`) and manipulate them by modifying their states in an OpenGL like manner, allowing easy traceability, support for synchronous and asynchronous callbacks, patent-child relationships,  states serialization/deserialization and more.
+- [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allows you to create events with a Godot-like syntax (`@Notifyer MY_EVENT(x::Int)`) and manipulate them by modifying their states in an OpenGL-like manner. Features include easy traceability, support for synchronous and asynchronous callbacks, parent–child relationships, state serialization/deserialization, and more.
 
 ### Swappable Modules
 
-- [Arceus.jl](https://github.com/Gesee-y/Arceus.jl): A decision making system based on `trait`s and relying on bitboard. It's made to get the behavior corresponding to a given combination of traits in less than 20ns (for the slowest backend, the best one can reach 2-3 ns), saving us from endless branching.
+- [Arceus.jl](https://github.com/Gesee-y/Arceus.jl): A decision-making system based on `trait`s and relying on bitboards. It's designed to get the behavior corresponding to a given combination of traits in less than 20 ns (for the slowest backend; the fastest one can reach 2–3 ns), avoiding endless branching.
 
-- [ReAnimation.jl](https://github.com/Gesee-y/ReAnimation.jl): An animation system. It's built with a layer architecture where low level structures compose themselves to form high level structures (from mere keyframes to multitracks player). This offers tons of interpolations and easing with and easy to extend structure, animation frame, async/parallel animation, bindings (to bound a mutable object to an animation), animation player, tracks and soon blend tree, animation graphs and more.
+- [ReAnimation.jl](https://github.com/Gesee-y/ReAnimation.jl): An animation system built with a layered architecture where low-level structures compose into high-level ones (from simple keyframes to multi-track players). This offers tons of interpolations and easing with an easy-to-extend structure, animation frames, async/parallel animation, bindings (to bind a mutable object to an animation), animation players, tracks, and soon blend trees, animation graphs, and more.
 
-- [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl]: This is an audio engine. It offers audio streaming, effects, audio groups and bus, mixing and soon spatial audio.
+- [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl): An audio engine. It offers audio streaming, effects, audio groups and buses, mixing, and soon spatial audio.
 
-- [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It support particles, collisions detection, forces, contacts resolution, integration using Verlet Integrator, constraints and more.
+- [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It supports particles, collision detection, forces, contact resolution, integration using a Verlet integrator, constraints, and more.
 
-- [ReactiveECS.jl](https://github.com/Gesee-y/ReactiveECS.jl): A modular and high performance reactive ECS. It's based on a reactive pipeline where systems register to a given query and at each tick, the manager dispatch the data to the systems. Using a database like storage system + partitioning, this ECS can produce industry grade performance (even the fastest ECS on some operations) while offering extreme flexibility with systems chaining, runtime system injection (even in chains) and `HierarchicalLock` for manual but granular concurrency safety.
+- [ReactiveECS.jl](https://github.com/Gesee-y/ReactiveECS.jl): A modular and high-performance reactive ECS. It's based on a reactive pipeline where systems register to a given query, and at each tick, the manager dispatches data to the systems. Using a database-like storage system plus partitioning, this ECS can deliver industry-grade performance (even the fastest ECS on some operations) while offering extreme flexibility with system chaining, runtime system injection (even in chains), and `HierarchicalLock` for manual but granular concurrency safety.
 
 ### Core Systems
 
-> This doesn't mean that Cruise.jl is too much bounded to these system, it just mean that the best way to interact with Cruise.jl is through them.
+> This doesn't mean that Cruise.jl is strictly bound to these systems — it just means that the best way to interact with Cruise.jl is through them.
 
-- [Outdoors.jl]()
+- [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
+
+- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or create new actions for them to build your own rendering backend.
+
+- [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
+
+- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own modules and manage their lifecycle in the game loop, a `@gameloop` macro, linking modules together, and managing their processing order.
 
 ## Example: Moving an Image with Input
 
