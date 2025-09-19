@@ -1,13 +1,13 @@
 # Project is paused
 Until I get a new computer.
 
-# Cruise.jl v0.2.0 — A 2D/3D Game Engine for Julia
+# Cruise.jl v0.2.0 : A 2D/3D Game Engine for Julia
 
 Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
 
 **Cruise.jl** fills that gap.
 
-It’s not just a wrapper or a framework — Cruise is a modular, performant, and backend-agnostic game engine written entirely in Julia. With Cruise, Julia isn't just a language for science anymore — it becomes a serious tool for building games.
+It’s not just a wrapper or a framework — Cruise is a modular, performant, and backend-agnostic game engine written entirely in Julia. With Cruise, Julia isn't just a language for science anymore, it becomes a serious tool for building games.
 
 ---
 
@@ -27,35 +27,24 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Why Cruise?
 
-> Most Julia game libraries doesn't provide all the tools you need in order to make a games.
+There are some interesting game engine being made in Julia like [B+ engine]() by William Mannings, [Julgame]() by Kyjor or even [GameZero]().
+So why making another engine instead of contributing to them?
 
-Cruise gives you **complete control** with modular pieces that fit together naturally. It’s designed for developers who want **performance**, **clarity**, and **power** — without being locked into a monolithic architecture.
+Well if I put the aside the learning treasure that is the construction of an engine, I would say that none of them matched my vision.
 
-If you’ve ever wanted to build a game engine, experiment with rendering pipelines, or just explore real-time systems in Julia...
+Cruise is a game engine build for compatibility, modularity and performances. It's build in a way the users is not bounded to any given library or rendering backend. This way, game are made only one time with Cruise and can be run EVERYWHERE (julia can run), from your old computer to a brand new one on every plateform (except mobile and consoles for now).
 
-Cruise isn’t just a tool — it’s a playground.
+## Modules
 
----
+> The following structure is just abstract, Cruise.jl isn't really structured in such set of tools. It's just a way to illustrate it's internal.
 
-## Architecture Overview
+### Core
 
-Cruise is a **composable game engine** built on a set of specialized modules. Each one can be used independently, but Cruise connects them into a coherent system.
+- [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains gamedev functions (lerp, slerp, etc), stack-allocated structure for optimized performances, vectors and quaternions manipulation, optimized matrix manipulation, box and circles, extensible coordinate system, colors and more.
 
-| Module                                                                           | Purpose                                                                    |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [`Outdoors`](https://github.com/Gesee-y/Outdoors.jl)                             | Backend-agnostic window management using a microkernel pattern             |
-| [`Notifyers`](https://github.com/Gesee-y/Notifyers.jl)                           | Reactive event system with states and signal-like behavior                 |
-| [`ReactiveECS`](https://github.com/Gesee-y/ReactiveECS.jl)                       | High-performance ECS with reactive pipelines and runtime system injection  |
-| [`MathLib`](https://github.com/Gesee-y/GDMathLib.jl)       | Vector/matrix math library tailored for game development                   |
-| [`NodeTree`](https://github.com/Gesee-y/NodeTree.jl)                             | Generic scene/tree graph manager, used for scene traversal and hierarchies |
-| [`Crates`](https://github.com/Gesee-y/Cruise.jl/blob/main/src/Crates)            | Asset/resource loader and lifecycle manager                                |
-| [`Arceus`](https://github.com/Gesee-y/Arceus.jl)                                 | Bitboard-based behavioral logic system (static decision graphs)            |
-| [`Interactions`](https://github.com/Gesee-y/Interactions.jl) | 2D/3D physics engine: particles, collisions, resolution                    |
-| [`Horizons`](https://github.com/Gesee-y/Horizons.jl)     | Multi-backend renderer (SDL implemented, OpenGL coming)                    |
-| [`Waves`](https://github.com/Gesee-y/WavesFlow.jl)              | Full audio system supporting mixing, effects and more                      |
-| [`Reanimation`](https://github.com/Gesee-y/ReAnimation.jl)  | Animation module with interpolations, easing and more                      |
+- [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Trees manipulation to create `SceneTree`s and any parent-child relationship.
 
----
+-[EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allow you to create events with a Godot like syntax (`@Notifyer MY_EVENT(x::int)`) and manipulate them by modifying their states in an OpenGL like manner, allowing easy traceability, support for synchronous and asynchronous callbacks, patent-child relationships,  states serialization/deserialization and more.
 
 ## Example: Moving an Image with Input
 
@@ -109,8 +98,6 @@ Each Cruise module is **self-contained** and can be developed in isolation. Whet
 
 * Choose the module you want to improve.
 * Fork, hack, PR. Simple.
-
-> I’m not a physicist nor a rendering expert, so any contribution from people with deep experience in those areas would be highly valuable to push Cruise further.
 
 ---
 
