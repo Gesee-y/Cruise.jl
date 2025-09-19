@@ -39,7 +39,22 @@ So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run — from your old computer to a brand-new one — on every platform (except mobile and consoles for now).
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run, from your old computer to a brand-new one, on every platform (except mobile and consoles for now).
+
+## What does Cruise represent ?
+
+I was kind of surprised when I realized that Cruise has a double impact:
+
+- An ambitious Julia game engine.  
+- An ambitious African game engine.  
+
+Not only is it a big plus for the Julia ecosystem, but also a demonstration that Africa can produce massive and complex industry-grade tools.
+
+Making a game is a long and tortuous journey with many ups and downs. Building a game engine is often a necessary step, but it's easy to lose the desire to make the actual game.  
+
+So Cruise is your boat, helping you navigate the vast ocean of ideas and build your own journey.  
+
+I built Cruise because game development has often made me feel intense emotions, and I want newcomers to be just as amazed as I was when I first started making games.
 
 ## Modules
 
