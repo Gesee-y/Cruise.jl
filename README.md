@@ -64,7 +64,7 @@ Cruise is a game engine built for compatibility, modularity, and performance. It
 
 - [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
 
-- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or create new actions for them to build your own rendering backend.
+- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing,  upscaling/downscaling, object hierarchy and logging.
 
 - [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
