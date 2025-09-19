@@ -25,6 +25,13 @@ julia> ] add Cruise
 julia> ] add https://github.com/Gesee-y/Cruise.jl
 ```
 
+## Why Julia
+
+It's certainly the question most people ask themselves. And that's why I chose Julia, because it *“wasn't meant for games.”*  
+Julia is a breath of fresh air, far from the thousands of C/C++ engines, finally allowing us to explore how a JIT-compiled language can perform in game development.  
+
+Julia is fast and offers interesting features like multiple dispatch, a powerful macro system, and more, all with an easy-to-learn syntax.
+
 ## Why Cruise?
 
 There are some interesting game engines being made in Julia, like [B+ engine]() by William Mannings, [Julgame]() by Kyjor, or even [GameZero]().  
