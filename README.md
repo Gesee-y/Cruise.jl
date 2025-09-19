@@ -44,7 +44,25 @@ Cruise is a game engine build for compatibility, modularity and performances. It
 
 - [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Trees manipulation to create `SceneTree`s and any parent-child relationship.
 
--[EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allow you to create events with a Godot like syntax (`@Notifyer MY_EVENT(x::int)`) and manipulate them by modifying their states in an OpenGL like manner, allowing easy traceability, support for synchronous and asynchronous callbacks, patent-child relationships,  states serialization/deserialization and more.
+- [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allow you to create events with a Godot like syntax (`@Notifyer MY_EVENT(x::int)`) and manipulate them by modifying their states in an OpenGL like manner, allowing easy traceability, support for synchronous and asynchronous callbacks, patent-child relationships,  states serialization/deserialization and more.
+
+### Swappable Modules
+
+- [Arceus.jl](https://github.com/Gesee-y/Arceus.jl): A decision making system based on `trait`s and relying on bitboard. It's made to get the behavior corresponding to a given combination of traits in less than 20ns (for the slowest backend, the best one can reach 2-3 ns), saving us from endless branching.
+
+- [ReAnimation.jl](https://github.com/Gesee-y/ReAnimation.jl): An animation system. It's built with a layer architecture where low level structures compose themselves to form high level structures (from mere keyframes to multitracks player). This offers tons of interpolations and easing with and easy to extend structure, animation frame, async/parallel animation, bindings (to bound a mutable object to an animation), animation player, tracks and soon blend tree, animation graphs and more.
+
+- [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl]: This is an audio engine. It offers audio streaming, effects, audio groups and bus, mixing and soon spatial audio.
+
+- [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It support particles, collisions detection, forces, contacts resolution, integration using Verlet Integrator, constraints and more.
+
+- [ReactiveECS.jl](https://github.com/Gesee-y/ReactiveECS.jl): A modular and high performance reactive ECS. It's based on a reactive pipeline where systems register to a given query and at each tick, the manager dispatch the data to the systems. Using a database like storage system + partitioning, this ECS can produce industry grade performance (even the fastest ECS on some operations) while offering extreme flexibility with systems chaining, runtime system injection (even in chains) and `HierarchicalLock` for manual but granular concurrency safety.
+
+### Core Systems
+
+> This doesn't mean that Cruise.jl is too much bounded to these system, it just mean that the best way to interact with Cruise.jl is through them.
+
+- [Outdoors.jl]()
 
 ## Example: Moving an Image with Input
 
