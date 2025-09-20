@@ -64,6 +64,18 @@ So Cruise is your boat, helping you navigate the vast ocean of ideas and build y
 
 I built Cruise because game development has often made me feel intense emotions, and I want newcomers to be just as amazed as I was when I first started making games.
 
+## Architecture 
+
+Cruise itself is built as a minimal core, allowing you to plug modules into the game lifecycle to add new features.  
+So how do the modules communicate?
+
+Each core module (windowing, rendering, physics, etc.) offers a high-level API that other systems can connect to or consume.  
+For example, the windowing system exposes an event stream that any other system can subscribe to and consume.  
+
+This architecture is inspired by [Starlight.jl](), but instead of a central message dispatcher, each system exposes its own stream of data.  
+
+I call it a **Multi-Stream Architecture (MSA)**, where each system provides a custom stream of data, and the central object (Cruise itself) is only responsible for managing subscriptions between systems.
+
 ## Modules
 
 > The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.
