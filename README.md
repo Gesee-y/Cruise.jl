@@ -41,7 +41,7 @@ It also makes it possible to run your game and adjust it directly from an intera
 
 ## Why Cruise?
 
-There are some interesting game engines being made in Julia, like [B+ engine](https://github.com/heyx3/Bplus.jl) by William Mannings, [Julgame](https://github.com/Kyjor/JulGame.jl) by Kyjor, or even [GameZero]().  
+There are some interesting game engines being made in Julia, like [B+ engine](https://github.com/heyx3/Bplus.jl) by William Mannings, [Julgame](https://github.com/Kyjor/JulGame.jl) by Kyjor, or even [GameZero](https://github.com/aviks/GameZero.jl).  
 So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
@@ -71,7 +71,7 @@ So how do the modules communicate?
 Each core module (windowing, rendering, physics, etc.) offers a high-level API that other systems can connect to or consume.  
 For example, the windowing system exposes an event stream that any other system can subscribe to and consume.  
 
-This architecture is inspired by [Starlight.jl](), but instead of a central message dispatcher, each system exposes its own stream of data.  
+This architecture is inspired by [Starlight.jl](https://github.com/jhigginbotham64/Starlight.jl), but instead of a central message dispatcher, each system exposes its own stream of data.  
 
 I call it a **Multi-Stream Architecture (MSA)**, where each system provides a custom stream of data, and the central object (Cruise itself) is only responsible for managing subscriptions between systems.
 
@@ -162,7 +162,7 @@ end
 
 ## Common Concerns  
 
-- **JIT startup latency**: Julia is already making great progress on this front, and packages like [PrecompileTools.jl]() provide effective solutions.  
+- **JIT startup latency**: Julia is already making great progress on this front, and packages like [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl) provide effective solutions.  
 
 - **Performance**: Cruise is optimized for maximum speed (static structures, SIMD, multithreading, cache optimization, etc.) and aims to reach the level of industry-grade solutions (ReactiveECS is a good example).
 
