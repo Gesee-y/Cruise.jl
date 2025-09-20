@@ -32,9 +32,17 @@ Julia is a breath of fresh air, far from the thousands of C/C++ engines, finally
 
 Julia is fast and offers interesting features like multiple dispatch, a powerful macro system, and more, all with an easy-to-learn syntax.
 
+Using a JIT-ed language offers interesting features like :
+
+- **Live coding**: Code your game and the results instantly appear.
+
+- **Fast prototyping**: The simple syntax and powerful code injection allow you to build and tweak your games quickly.
+
+It would be great to run your game and tweak it directly with an interactive REPL.
+
 ## Why Cruise?
 
-There are some interesting game engines being made in Julia, like [B+ engine]() by William Mannings, [Julgame]() by Kyjor, or even [GameZero]().  
+There are some interesting game engines being made in Julia, like [B+ engine](https://github.com/heyx3/Bplus.jl) by William Mannings, [Julgame](https://github.com/Kyjor/JulGame.jl) by Kyjor, or even [GameZero]().  
 So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
@@ -140,11 +148,11 @@ end
 
 From now on, I will focus on testing, documenting and patching. But here is a list of the incoming features:
 
-- [] Animation Graph
-- [] Sprites, AnimatedSprite, Skeletal animations
-- [] Spatial sound
-- [] 3D Physics
-- [] 3D Render
+- [ ] Animation Graph
+- [ ] Sprites, AnimatedSprite, Skeletal animations
+- [ ] Spatial sound
+- [ ] 3D Physics
+- [ ] 3D Render
 
 ## Contribution
 
