@@ -157,7 +157,7 @@ Each Cruise module is **self-contained** and can be developed in isolation. Whet
 
 ## License
 
-Cruise is released under the **GNU GPL v3.0**.
+Cruise is released under the **MIT License**.
 See [LICENSE](https://github.com/Gesee-y/Cruise.jl/blob/main/LICENSE) for details.
 
 ---
