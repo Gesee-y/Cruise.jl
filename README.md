@@ -75,6 +75,11 @@ This architecture is inspired by [Starlight.jl](), but instead of a central mess
 
 I call it a **Multi-Stream Architecture (MSA)**, where each system provides a custom stream of data, and the central object (Cruise itself) is only responsible for managing subscriptions between systems.
 
+But that's not the end. You can also add an ECS alongside this architecture.  
+Cruise.jl provides **ReactiveECS.jl**, which follows the same principle: systems subscribe to queries, and at each tick the ECS pushes the query results to the relevant systems.  
+
+This way, systems don’t need to know each other directly, they interact through a reactive pipeline, making the whole architecture extremely flexible.
+
 ## Modules
 
 > The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.
