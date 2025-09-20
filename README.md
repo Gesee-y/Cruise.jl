@@ -160,6 +160,12 @@ end
 
 - **3D physics**: Still needs to be tested on real-world cases.
 
+## Common Concerns  
+
+- **JIT startup latency**: Julia is already making great progress on this front, and packages like [PrecompileTools.jl]() provide effective solutions.  
+
+- **Performance**: Cruise is optimized for maximum speed (static structures, SIMD, multithreading, cache optimization, etc.) and aims to reach the level of industry-grade solutions (ReactiveECS is a good example).
+
 ## Roadmap
 
 From now on, I will focus on testing, documenting and patching. But here is a list of the incoming features:
