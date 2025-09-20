@@ -32,13 +32,12 @@ Julia is a breath of fresh air, far from the thousands of C/C++ engines, finally
 
 Julia is fast and offers interesting features like multiple dispatch, a powerful macro system, and more, all with an easy-to-learn syntax.
 
-Using a JIT-ed language offers interesting features like :
+Using a JIT-compiled language offers some interesting features, such as:
 
-- **Live coding**: Code your game and the results instantly appear.
+- **Live coding**: Write your game code and see the results instantly.  
+- **Fast prototyping**: Thanks to Julia’s simple syntax and powerful code injection, you can build and tweak your games quickly.  
 
-- **Fast prototyping**: The simple syntax and powerful code injection allow you to build and tweak your games quickly.
-
-It would be great to run your game and tweak it directly with an interactive REPL.
+It also makes it possible to run your game and adjust it directly from an interactive REPL.
 
 ## Why Cruise?
 
