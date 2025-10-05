@@ -1,6 +1,3 @@
-# Project is paused
-Until I get a new computer.
-
 # Cruise.jl v0.2.0 : A 2D/3D Game Engine for Julia
 
 Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
