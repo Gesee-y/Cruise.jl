@@ -22,6 +22,12 @@ julia> ] add Cruise
 julia> ] add https://github.com/Gesee-y/Cruise.jl
 ```
 
+## Philosophy 
+
+Cruise is built with a strong emphasis on modularity. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
+
+Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
+
 ## Why Julia
 
 It's certainly the question most people ask themselves. And that's why I chose Julia, because it *“wasn't meant for games.”*  
@@ -175,7 +181,7 @@ From now on, I will focus on testing, documenting and patching. But here is a li
 
 ## Contribution
 
-Each Cruise module is **self-contained** and can be developed in isolation. Whether you're fixing bugs, writing documentation, or improving performance — you're welcome to contribute.
+Core Cruise's modules are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance — you're welcome to contribute.
 
 * Choose the module you want to improve.
 * Fork, hack, PR. Simple.
