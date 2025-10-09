@@ -155,6 +155,12 @@ end
 
 ---
 
+## Example games
+
+More game examples are available in [there](https://github.com/Gesee-y/Cruise-examples)
+
+---
+
 ## Games made with Cruise
 
 - **[Insane Pong](https://github.com/Gesee-y/Pong-GS)**: Which is an insane and rythmic version of pong with tons of shaders, events triggered by music, complex mechanics (gameplay change with the music) and more. All that with just the SDL backend.
