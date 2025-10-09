@@ -117,7 +117,7 @@ This way, systems don’t need to know each other directly, they interact throug
 
 - [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
-- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own modules and manage their lifecycle in the game loop, a `@gameloop` macro, linking modules together, and managing their processing order.
+- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own modules and manage their lifecycle in the game loop, a `@gameloop` macro, linking modules together, and managing their processing order. Provides utilities like do while loops, dynamic structs and more.
 
 ## Example: Moving an Image with Input
 
