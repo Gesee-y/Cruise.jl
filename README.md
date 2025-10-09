@@ -155,6 +155,10 @@ end
 
 ---
 
+## Games made with Cruise
+
+- **[Insane Pong](https://github.com/Gesee-y/Pong-GS)**: Which is an insane and rythmic version of pong with tons of shaders, events triggered by music, complex mechanics (gameplay change with the music) and more.
+
 ## Untested features
 
 - **Complete modern OpenGL abstraction + bindless textures** from Bplus engine, inspired from Unreal engine rendering engine. Not yet linked to Horizons.jl.  
