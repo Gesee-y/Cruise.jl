@@ -4,7 +4,7 @@ Julia has proven itself in fields like scientific computing, machine learning, a
 
 **Cruise.jl** fills that gap.
 
-It’s not just a wrapper or a framework — Cruise is a modular, performant, and backend-agnostic game engine written entirely in Julia. With Cruise, Julia isn't just a language for science anymore, it becomes a serious tool for building games.
+It’s not just a wrapper or a framework, Cruise is a modular, performant, and backend-agnostic game engine written entirely in Julia. With Cruise, Julia isn't just a language for science anymore, it becomes a serious tool for building games.
 
 ---
 
@@ -113,7 +113,7 @@ This way, systems don’t need to know each other directly, they interact throug
 
 - [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
 
-- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing,  upscaling/downscaling, object hierarchy and logging.
+- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing,  upscaling/downscaling, object hierarchy and logging.
 
 - [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
