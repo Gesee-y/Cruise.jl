@@ -157,7 +157,9 @@ end
 
 ## Games made with Cruise
 
-- **[Insane Pong](https://github.com/Gesee-y/Pong-GS)**: Which is an insane and rythmic version of pong with tons of shaders, events triggered by music, complex mechanics (gameplay change with the music) and more.
+- **[Insane Pong](https://github.com/Gesee-y/Pong-GS)**: Which is an insane and rythmic version of pong with tons of shaders, events triggered by music, complex mechanics (gameplay change with the music) and more. All that with just the SDL backend.
+
+---
 
 ## Untested features
 
