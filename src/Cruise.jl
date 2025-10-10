@@ -9,20 +9,12 @@ export HelloCruise!!
 
 ##########################################################################################################################################
 
-using SimpleDirectMediaLayer.LibSDL2
 using Reexport
 
-include(joinpath("NodeTree.jl", "src", "NodeTree.jl"))
-include(joinpath("Notifyers.jl", "src", "Notifyers.jl"))
-include(joinpath("MathLib.jl","src","MathLib.jl"))
-
-@reexport using .Notifyers
-@reexport using .NodeTree
-@reexport using .MathLib
-
-include(joinpath("Crates","src","Crates.jl"))
-
-@reexport using .Crates
+@reexport using EventNotifiers
+@reexport using NodeTree
+@reexport using GDMathLib
+@reexport using Crates
 
 include("utilities.jl")
 include("App.jl")
