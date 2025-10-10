@@ -69,19 +69,16 @@ I built Cruise because game development has often made me feel intense emotions,
 ## Architecture 
 
 Cruise itself is built as a minimal core, allowing you to plug modules into the game lifecycle to add new features.  
-So how do the modules communicate?
 
-Each core module (windowing, rendering, physics, etc.) offers a high-level API that other systems can connect to or consume.  
-For example, the windowing system exposes an event stream that any other system can subscribe to and consume.  
+But how does the system communicate?  
+With Cruise, the engine architecture is itself a plugin.
 
-This architecture is inspired by [Starlight.jl](https://github.com/jhigginbotham64/Starlight.jl), but instead of a central message dispatcher, each system exposes its own stream of data.  
+This means that since every module in Cruise is decoupled, there is no fixed architecture connecting them. You write a plugin to orchestrate the systems and build your game.
 
-I call it a **Multi-Stream Architecture (MSA)**, where each system provides a custom stream of data, and the central object (Cruise itself) is only responsible for managing subscriptions between systems.
+For example, you can create an ECS, plug it into Cruise, and get an ECS-driven game engine.  
+Or you can create a SceneTree and have a completely different architecture.
 
-But that's not the end. You can also add an ECS alongside this architecture.  
-Cruise.jl provides **ReactiveECS.jl**, which follows the same principle: systems subscribe to queries, and at each tick the ECS pushes the query results to the relevant systems.  
-
-This way, systems don’t need to know each other directly, they interact through a reactive pipeline, making the whole architecture extremely flexible.
+Cruise already comes with two default architectures: ECS and SceneTree.
 
 ## Modules
 
