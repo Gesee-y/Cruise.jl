@@ -2,7 +2,7 @@
 ################################################### AUDIO CRATE IMPORTER ##############################################
 #######################################################################################################################
 
-export SoundCrate
+export SoundCrate, PlaySound, AudioCrate, AudioStreamCrate
 
 ######################################################### CORE ########################################################
 
@@ -14,6 +14,18 @@ export SoundCrate
 struct SoundCrate <: AbstractCrate
     chunk::Ptr{Mix_Chunk}
     volume::Int
+end
+
+struct AudioCrate <: AbstractCrate
+    data::Matrix{Float32}
+    rate::Int
+end
+
+struct AudioStreamCrate <: AbstractCrate
+    path::String
+    samplerate::Int
+    channels::Int
+    frames::Int
 end
 
 ###################################################### FUNCTIONS ######################################################
@@ -37,8 +49,8 @@ function Load(::Type{SoundCrate}, path::String, volume=128, args...)
     # Load the sound with SDL_mixer
     chunk = Mix_LoadWAV(path)
     if chunk == C_NULL
-        err = Mix_GetError()
-        HORIZON_WARNING.emit = ("Failed to load sound at $path.", err)
+        err = ""#Mix_GetError()
+        @warn "Failed to load sound at $path."
         return nothing
     end
     
@@ -47,6 +59,42 @@ function Load(::Type{SoundCrate}, path::String, volume=128, args...)
     
     # Create and return SoundCrate
     SoundCrate(chunk, volume)
+end
+
+function Load(::Type{AudioCrate}, path::String, args...)
+    # Gotta make sure it's the good extension.
+    valid_extensions = [".wav", ".ogg"]
+    ext = lowercase(splitext(path)[2])
+    if !(ext in valid_extensions)
+        error("Unsupported audio format for $path. Supported formats are: $(join(valid_extensions, ", "))")
+    end
+    
+    audio = load(path)
+    if size(audio, 2) > 8
+        @warn "File with $(size(audio, 2)) channels, reduced to stereo"
+        audio = audio[:, 1:min(2, size(audio, 2))]
+    end
+    data = convert(Matrix{Float32}, audio.data)#')
+
+    max_val = maximum(abs.(data))
+
+    if max_val > 1.0
+        @warn "Clipped audio detected, normalization applied"
+        data ./= max_val
+    end
+    return AudioCrate(data, audio.samplerate)
+end
+
+function Load(::Type{AudioStreamCrate}, path::String, args...)
+    # Gotta make sure it's the good extension.
+    valid_extensions = [".wav", ".ogg"]
+    ext = lowercase(splitext(path)[2])
+    if !(ext in valid_extensions)
+        error("Unsupported audio format for $path. Supported formats are: $(join(valid_extensions, ", "))")
+    end
+    
+    info = loadstreaming(path).sfinfo
+    return AudioStreamCrate(path, info.samplerate, info.channels, info.frames)
 end
 
 """
@@ -67,7 +115,7 @@ Play the sound crate with the specified number of `loops` (0 for single play, -1
 function PlaySound(sound::SoundCrate; loops::Int=0, channel::Int=-1)
     channel = Mix_PlayChannel(channel, sound.chunk, loops)
     if channel == -1
-        @warn "Error while playing the sound: $(Mix_GetError())"
+        @warn "Error while playing the sound: "#$(Mix_GetError())"
     end
     return channel
 end
@@ -107,5 +155,3 @@ function SetDistance(sound::SoundCrate, channel::Int, distance::Int, angle::Int)
         @warn "No channel assigned for the sound. Play it first."
     end
 end
-
-end # module

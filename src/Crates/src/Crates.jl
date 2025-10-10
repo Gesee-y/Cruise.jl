@@ -5,6 +5,8 @@
 module Crates
 
 using ..LibSDL2
+using FileIO: load, save, loadstreaming
+using LibSndFile
 
 ######################################################### CORE ######################################################## 
 

@@ -2,19 +2,9 @@
 ################################################### AUDIO CRATE IMPORTER ##############################################
 #######################################################################################################################
 
-export SoundCrate, MusicCrate, InitAudioCrates
+export MusicCrate, PlayMusic, PauseMusic
 
 ######################################################### CORE ########################################################
-
-"""
-    struct SoundCrate <: AbstractCrate
-        chunk::Ptr{Mix_Chunk}
-        volume::Int
-"""
-struct SoundCrate <: AbstractCrate
-    chunk::Ptr{Mix_Chunk}
-    volume::Int
-end
 
 """
     struct MusicCrate <: AbstractCrate
@@ -29,25 +19,6 @@ end
 ###################################################### FUNCTIONS ######################################################
 
 """
-    InitAudioCrates()
-Initialize SDL_mixer with support for WAV, MP3, and OGG formats.
-Warns if MP3 or OGG support is not available.
-"""
-function InitAudioCrates()
-    SDL_Init(SDL_INIT_AUDIO)
-    flags = Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG)
-    if (flags & MIX_INIT_MP3) == 0
-        @warn "MP3 support not available: $(Mix_GetError())"
-    end
-    if (flags & MIX_INIT_OGG) == 0
-        @warn "OGG support not available: $(Mix_GetError())"
-    end
-    if Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0
-        error("Erreur lors de l'initialisation de SDL_mixer: $(Mix_GetError())")
-    end
-end
-
-"""
     Load(::Type{MusicCrate}, path::String, args...)
 
 Load a new music crate at the given `path`. Supported formats are `.mp3` and `.ogg`.
@@ -55,18 +26,17 @@ Load a new music crate at the given `path`. Supported formats are `.mp3` and `.o
 
 Throws an error if the file extension is not supported.
 """
-function Load(::Type{MusicCrate}, path::String, args...)
+function Load(::Type{MusicCrate}, path::String, volume=128, args...)
     valid_extensions = [".mp3", ".ogg"]
     ext = lowercase(splitext(path)[2])
     if !(ext in valid_extensions)
         error("Unsupported music format for $path. Supported formats are: $(join(valid_extensions, ", "))")
     end
     
-    volume = get(args, :volume, 128)
     music = Mix_LoadMUS(path)
     if music == C_NULL
-        err = Mix_GetError()
-        HORIZON_WARNING.emit = ("Failed to load music at $path.", err)
+        err = ""#Mix_GetError()
+        @warn "Failed to load music at $path."
         return nothing
     end
     
@@ -130,5 +100,3 @@ function SetMusicVolume(music::MusicCrate, volume::Int)
     Mix_VolumeMusic(clamp(volume, 0, 128))
     music.volume = volume
 end
-
-end # module
