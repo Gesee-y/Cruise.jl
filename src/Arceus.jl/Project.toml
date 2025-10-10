@@ -1,7 +1,0 @@
-name = "Arceus"
-uuid = "08e7514f-ca82-464e-87ac-2695b20ad902"
-authors = ["AliceRoselia <63040919+AliceRoselia@users.noreply.github.com>"]
-version = "0.1.0"
-
-[deps]
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
