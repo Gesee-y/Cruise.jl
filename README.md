@@ -1,4 +1,4 @@
-# Cruise.jl v0.2.0 : A 2D/3D Game Engine for Julia
+# Cruise.jl v0.3.0 : A 2D/3D Game Engine for Julia
 
 Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
 
@@ -82,13 +82,14 @@ Cruise already comes with two default architectures: ECS and SceneTree.
 
 ## Plugins
 
-In order  to extend itself, Cruise rely on a **plugin system**.
-In Cruise, the systems (or modules) executions are driven by an DAG (Direct Acyclic Graph) which represent the dependcies between modules and their execution order. Then a given graph is assigned to a specific part of the gameloop (before update, after update, etc.).
-So a **plugin** is basically a given subgraph that just have to be merged at a given part of the gameloop in the main graph to be used.
+In order to extend itself, Cruise relies on a **plugin system**.  
+In Cruise, system (or module) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between modules and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).  
 
-This way we can build a renderer plugin, an ECS plugin,a Scene tree plugin, a physic plugin or event a bundles of plugins (Complete ECS architecture plugin).
+A **plugin** is essentially a subgraph that can be merged into the main graph at a specific point in the game loop to be used.  
 
-## Modules
+This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a physics plugin, or even a bundle of plugins (like a complete ECS architecture plugin or a visual editor plugin).
+
+## Provided Modules
 
 > The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.
 
