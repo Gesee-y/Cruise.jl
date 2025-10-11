@@ -22,6 +22,8 @@ julia> ] add Cruise
 julia> ] add https://github.com/Gesee-y/Cruise.jl
 ```
 
+---
+
 ## Philosophy 
 
 Cruise is built with a strong emphasis on modularity. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
@@ -49,7 +51,7 @@ So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run, from your old computer to a brand-new one, on every platform (except mobile and consoles for now).
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run, from your old dying computer to a brand-new one, on every platform (except mobile and consoles for now).
 
 ## What does Cruise represent ?
 
@@ -83,7 +85,7 @@ Cruise already comes with two default architectures: ECS and SceneTree.
 ## Plugins
 
 In order to extend itself, Cruise relies on a **plugin system**.  
-In Cruise, system (or module) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between modules and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).  
+In Cruise, system (or module) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between modules and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).
 
 A **plugin** is essentially a subgraph that can be merged into the main graph at a specific point in the game loop to be used.  
 
@@ -119,7 +121,7 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 - [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
 
-- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing,  upscaling/downscaling, object hierarchy and logging.
+- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing, upscaling/downscaling and logging.
 
 - [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
