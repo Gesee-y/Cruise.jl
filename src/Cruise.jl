@@ -10,12 +10,14 @@ export HelloCruise!!
 ##########################################################################################################################################
 
 using Reexport
+using Graph
 
 @reexport using EventNotifiers
 @reexport using NodeTree
 @reexport using GDMathLib
 @reexport using Crates
 
+include("graph.jl")
 include("utilities.jl")
 include("App.jl")
 include("object.jl")
