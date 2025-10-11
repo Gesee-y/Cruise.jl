@@ -80,6 +80,14 @@ Or you can create a SceneTree and have a completely different architecture.
 
 Cruise already comes with two default architectures: ECS and SceneTree.
 
+## Plugins
+
+In order  to extend itself, Cruise rely on a **plugin system**.
+In Cruise, the systems (or modules) executions are driven by an DAG (Direct Acyclic Graph) which represent the dependcies between modules and their execution order. Then a given graph is assigned to a specific part of the gameloop (before update, after update, etc.).
+So a **plugin** is basically a given subgraph that just have to be merged at a given part of the gameloop in the main graph to be used.
+
+This way we can build a renderer plugin, an ECS plugin,a Scene tree plugin, a physic plugin or event a bundles of plugins (Complete ECS architecture plugin).
+
 ## Modules
 
 > The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.

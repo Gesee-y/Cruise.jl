@@ -21,7 +21,7 @@ end
 mutable struct CruiseApp
 	const inst::ODApp
 	const ecs::ECSManager
-	const manager::CrateManager
+	#const manager::CrateManager
 	inited_style::Vector{Type{<:AbstractStyle}}
 	windows::Dict{Int,CRWindow}
 	running::Bool
@@ -36,7 +36,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(ODApp(), ECSManager(), CrateManager(), Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
+	    app[] = CruiseApp(ODApp(), ECSManager(), #=CrateManager(),=# Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
 	end
 	unlock(app_lock)
 	return app[]	
