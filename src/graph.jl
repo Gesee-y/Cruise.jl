@@ -24,10 +24,12 @@ Returns a new SysNode from the given obj
 """
 mutable struct SysNode{T}
     obj::T
+    deps::Dict{DataType, Bool}
+    children::Vector{SysNode}
 
     ## Constructors
 
-    SysNode(obj::T) where T = new{T}(obj)
+    SysNode(obj::T) where T = new{T}(obj, Dict{DataType, Bool}(), SysNode[])
 end
 
 """
@@ -135,7 +137,12 @@ This also set the execution order.
 If creating the dependency would create a cycle, then the function returns false and nothing is done.
 """
 function add_dependency!(sg::SysGraph, from::Int, to::Int)
-    add_edge_checked!(sg.graph, from, to)
+    if add_edge_checked!(sg.graph, from, to)
+        p = sg.idtonode[from]
+        c = sg.idtonode[to]
+        c.deps[typeof(p.obj)] = c
+        push!(p.children, c)
+    end
 end
 
 """
@@ -145,6 +152,14 @@ Removes a dependency between the system with the ids from and to.
 """
 function remove_dependency!(sg::SysGraph, from::Int, to::Int)
     rem_edge!(sg.graph, from, to)
+    p = sg.idtonode[from]
+    c = sg.idtonode[to]
+    delete!(c.deps,typeof(p.obj))
+    idx = findfirst(p.children, c)
+    if idx != -1
+        p.children[end], p.children[idx] = p.children[idx], p.children[end]
+        pop!(p.children)
+    end
 end
 
 """
@@ -193,9 +208,10 @@ end
 Iterate topologically on the graph and apply the function f on it sequentially.
 """
 function smap!(f, sg::SysGraph)
+    success = 0
     for id in topological_sort(sg.graph)
         node = sg.idtonode[id]
-        f(node.obj)
+        success = f(node.obj, success)
     end
 end
 

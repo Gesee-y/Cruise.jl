@@ -9,6 +9,8 @@ export init_appstyle, context, instance
 
 ####################################################### CORE ##############################################################
 
+@Notifyer ON_CRUISE_STARTUP()
+
 """
     mutable struct CRWindow{S}
 		const win::ODWindow{S}
@@ -20,7 +22,7 @@ mutable struct CRWindow{S}
 
 	## Constructor
 
-	CRWindow{S}(win::ODWindow{S}) where {S <: AbstractStyle, T <: AbstractRenderer} = new{S,T}(win)
+	CRWindow{S}(win::ODWindow{S}) where {S <: AbstractStyle} = new{S}(win)
 end
 
 """
@@ -77,7 +79,7 @@ end
 """
     awake!(a::CruiseApp)
 
-Initiliaze the CruiseApp and all his plugins.
+Initialize the CruiseApp and all his plugins.
 
     awake!(sg::SysGraph)
 
@@ -88,8 +90,27 @@ function awake!(a::CruiseApp)
 	for sg in values(a.plugins)
 		awake!(sg)
 	end
+
+	ON_CRUISE_STARTUP.emit
 end
 awake!(sg::SysGraph) = smap!(awake!, sg)
+
+"""
+    update!(a::CruiseApp)
+
+Update for the current frame the CruiseApp and all his plugins.
+
+    update!(sg::SysGraph)
+
+Update for the current frame all the systems in the given SysGraph.
+"""
+function update!(a::CruiseApp, dt) 
+	for sg in values(a.plugins)
+		update!(sg, dt)
+	end
+end
+update!(a::CruiseApp, phase::Symbol, dt) = update!(a.plugins[phase], dt)
+update!(sg::SysGraph, dt) = smap!(update!, sg)
 
 """
     shutdown!(a::CruiseApp)
@@ -133,7 +154,11 @@ function init_appstyle(app, S::Type{<:AbstractStyle})
 end
 init_appstyle(app, c::Container{Type{<:AbstractStyle}}) = init_appstyle.(app,c)
 
+"""
+    CreateWindow(app::CruiseApp, ::Type{S}, title, w, h, args...; kwargs...)
 
+Create a new CRWindows of style S.
+"""
 function Outdoors.CreateWindow(app::CruiseApp, ::Type{S}, title, w, h, 
 	args...; kwargs...) where {S <: AbstractStyle}
 	
