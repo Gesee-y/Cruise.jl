@@ -2,6 +2,15 @@
 ####################################################### GRAPH ###########################################################
 #########################################################################################################################
 
+struct StopExec end
+
+@enum SysNodeStatus begin
+    OFF
+    DEPRECATED
+    OK
+    ERR
+end
+
 """
     abstract type AbstractSysGraph
 
@@ -22,14 +31,18 @@ Represent a node in the system graph.
 
 Returns a new SysNode from the given obj
 """
-mutable struct SysNode{T}
+mutable struct SysNode{T,S}
+    id::Int
     obj::T
-    deps::Dict{DataType, Bool}
+    deps::Dict{DataType, WeakRef}
     children::Vector{SysNode}
+    status::SysNodeStatus
+    result::S
 
     ## Constructors
 
-    SysNode(obj::T) where T = new{T}(obj, Dict{DataType, Bool}(), SysNode[])
+    SysNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), SysNode[], SysNodeStatus.OFF)
+    SysNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), SysNode[], SysNodeStatus.OFF)
 end
 
 """
@@ -56,15 +69,21 @@ mutable struct SysGraph <: AbstractSysGraph
     graph::DiGraph
     free_ids::Vector{Int}
     current_max::Int
+    sort_cache::Vector{Int}
 
     ## Constructors
 
-    SysGraph() = new(Dict{Int, SysNode}(), DiGraph(), Int[], 0)
+    SysGraph() = new(Dict{Int, SysNode}(), DiGraph(), Int[], 0, Int[])
 end
 
 #######################################################################################################################
 ################################################# OPERATIONS ##########################################################
 #######################################################################################################################
+
+isinitialized(s::SysNode) = s.status == SysNodeStatus.OK
+isuninitialized(s::SysNode) = s.status == SysNodeStatus.OFF
+isdeprecated(s::SysNode) = s.status == SysNodeStatus.DEPRECATED
+hasfailed(s::SysNode) = s.status == SysNodeStatus.ERR
 
 """
     get_available_id(sg::SysGraph)
@@ -112,10 +131,13 @@ get_graph(sg::SysGraph) = sg.graph
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::SysGraph, obj)
+function add_system!(sg::SysGraph, obj; sort=true)
     id = get_available_id(sg)
-    add_node!(sg, id, SysNode(obj))
+    node = SysNode(obj)
+    add_node!(sg, id, node)
     add_vertex!(sg.graph)
+    node.id = id
+    sort && (sg.sort_cache = topological_sort(sg))
     return id
 end
 
@@ -124,9 +146,10 @@ end
 
 Removes the system corresponding to id from the system graph.
 """
-function remove_system!(sg::SysGraph, id::Int)
+function remove_system!(sg::SysGraph, id::Int; sort=true)
     remove_node!(sg, id)
     rem_vertex!(sg.graph, id)
+    sort && (sg.sort_cache = topological_sort(sg))
 end
 
 """
@@ -136,21 +159,22 @@ Add a dependency between the system with the ids from and to.
 This also set the execution order.
 If creating the dependency would create a cycle, then the function returns false and nothing is done.
 """
-function add_dependency!(sg::SysGraph, from::Int, to::Int)
+function add_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
     if add_edge_checked!(sg.graph, from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
-        c.deps[typeof(p.obj)] = c
+        c.deps[typeof(p.obj)] = WeakRef(p)
         push!(p.children, c)
+        sort && (sg.sort_cache = topological_sort(sg))
     end
 end
 
 """
-    remove_dependency!(sg::SysGraph, from::Int, to::Int)
+    remove_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
 
 Removes a dependency between the system with the ids from and to.
 """
-function remove_dependency!(sg::SysGraph, from::Int, to::Int)
+function remove_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
     rem_edge!(sg.graph, from, to)
     p = sg.idtonode[from]
     c = sg.idtonode[to]
@@ -160,6 +184,7 @@ function remove_dependency!(sg::SysGraph, from::Int, to::Int)
         p.children[end], p.children[idx] = p.children[idx], p.children[end]
         pop!(p.children)
     end
+    sort && (sg.sort_cache = topological_sort(sg))
 end
 
 """
@@ -168,7 +193,7 @@ end
 Merges 2 SysGraph together. The node of the second one will be added to the first one.
 If both graph have the samem system, one will be kept and the other will connect on it.
 """
-function merge_graphs!(sg1::SysGraph, sg2::SysGraph)
+function merge_graphs!(sg1::SysGraph, sg2::SysGraph; sort=true)
     offset = sg1.current_max
     obj_to_id = Dict{DataType, Int}()
 
@@ -199,6 +224,8 @@ function merge_graphs!(sg1::SysGraph, sg2::SysGraph)
         end
     end
 
+    sort && (sg.sort_cache = topological_sort(sg))
+
     return sg1
 end
 
@@ -208,10 +235,9 @@ end
 Iterate topologically on the graph and apply the function f on it sequentially.
 """
 function smap!(f, sg::SysGraph)
-    success = 0
-    for id in topological_sort(sg.graph)
+    for id in sg.sort_cache
         node = sg.idtonode[id]
-        success = f(node.obj, success)
+        f(node.obj)
     end
 end
 
