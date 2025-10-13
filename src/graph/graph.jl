@@ -2,12 +2,5 @@
 ####################################################### GRAPH ###########################################################
 #########################################################################################################################
 
-mutable struct CRPlugin{P}
-	data::P
-	graph::SysGraph
-	deps::Dict{DataType, Bool}
-
-	## Constructor
-
-	CRPlugin(obj::P, sg=SysGraph(), deps=Dict{DataType, Bool}()) where P = new{P}(obj, sg, deps)
-end
+include("core.jl")
+include("operations.jl")

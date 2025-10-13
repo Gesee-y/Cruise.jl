@@ -1,97 +1,20 @@
-#########################################################################################################################
-####################################################### GRAPH ###########################################################
-#########################################################################################################################
-
-struct StopExec end
-
-@enum SysNodeStatus begin
-    OFF
-    DEPRECATED
-    OK
-    ERR
-end
-
-"""
-    abstract type AbstractSysGraph
-
-Supertype of any kind of system graph.
-"""
-abstract type AbstractSysGraph end
-
-"""
-    mutable struct SysNode{T}
-        obj::T
-
-Represent a node in the system graph.
-'obj' represent a system that support the functions awake!, run! and shutdown!.
-
-## Constructor
-
-    SysNode(obj)
-
-Returns a new SysNode from the given obj
-"""
-mutable struct SysNode{T,S}
-    id::Int
-    obj::T
-    deps::Dict{DataType, WeakRef}
-    children::Vector{SysNode}
-    status::SysNodeStatus
-    result::S
-
-    ## Constructors
-
-    SysNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), SysNode[], SysNodeStatus.OFF)
-    SysNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), SysNode[], SysNodeStatus.OFF)
-end
-
-"""
-    mutable struct SysGraph <: AbstractSysGraph
-	    idtonode::Dict{Int, SysNode}
-	    graph::DiGraph
-	    free_ids::Vector{Int}
-	    current_max::Int
-
-Represent the systems graph. It represent the depencies and execution order of the systems.
-- idtonode map an id to a given SysNode
-- graph is a Directed graph representing the dependencies and execution order between the systems
-- free_ids is the set of available id for new systems to take
-- current_max is the value of the node with the highest id
-
-## Constructor
-
-    SysGraph()
-
-This will return a new empty system graph.
-"""
-mutable struct SysGraph <: AbstractSysGraph
-    idtonode::Dict{Int, SysNode}
-    graph::DiGraph
-    free_ids::Vector{Int}
-    current_max::Int
-    sort_cache::Vector{Int}
-
-    ## Constructors
-
-    SysGraph() = new(Dict{Int, SysNode}(), DiGraph(), Int[], 0, Int[])
-end
-
 #######################################################################################################################
 ################################################# OPERATIONS ##########################################################
 #######################################################################################################################
 
-isinitialized(s::SysNode) = s.status == SysNodeStatus.OK
-isuninitialized(s::SysNode) = s.status == SysNodeStatus.OFF
-isdeprecated(s::SysNode) = s.status == SysNodeStatus.DEPRECATED
-hasfailed(s::SysNode) = s.status == SysNodeStatus.ERR
+isinitialized(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.OK
+isuninitialized(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.OFF
+isdeprecated(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.DEPRECATED
+hasfailed(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.ERR
+getstatus(s::CRPluginNode) = s.status[]
 
 """
-    get_available_id(sg::SysGraph)
+    get_available_id(sg::CRPlugin)
 
 Return an available id for a new system to take.
-This will update the internal data of the SysGraph so between 2 calls it may not return the same value.
+This will update the internal data of the CRPlugin so between 2 calls it may not return the same value.
 """
-function get_available_id(sg::SysGraph)
+function get_available_id(sg::CRPlugin)
     if isempty(sg.free_ids)
         sg.current_max += 1
         return sg.current_max
@@ -101,39 +24,39 @@ function get_available_id(sg::SysGraph)
 end
 
 """
-    add_node!(sg::SysGraph, id::Int, node::SysNode)
+    add_node!(sg::CRPlugin, id::Int, node::CRPluginNode)
 
 Will map the given node to the id and add it in the graph.
 """
-function add_node!(sg::SysGraph, id::Int, node::SysNode)
+function add_node!(sg::CRPlugin, id::Int, node::CRPluginNode)
     sg.idtonode[id] = node
 end
 
 """
-    remove_node!(sg::SysGraph, id::Int)
+    remove_node!(sg::CRPlugin, id::Int)
 
 Will remove the system corresponding to the given id from the graph
 """
-function remove_node!(sg::SysGraph, id::Int)
+function remove_node!(sg::CRPlugin, id::Int)
     delete!(sg.idtonode, id)
     push!(sg.free_ids, id)
 end
 
 """
-    get_graph(sg::SysGraph)
+    get_graph(sg::CRPlugin)
 
 Return the DiGraph of the system graph
 """
-get_graph(sg::SysGraph) = sg.graph
+get_graph(sg::CRPlugin) = sg.graph
 
 """
-    add_system!(sg::SysGraph, obj)
+    add_system!(sg::CRPlugin, obj)
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::SysGraph, obj; sort=true)
+function add_system!(sg::CRPlugin, obj; sort=true)
     id = get_available_id(sg)
-    node = SysNode(obj)
+    node = CRPluginNode(obj)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
@@ -142,24 +65,24 @@ function add_system!(sg::SysGraph, obj; sort=true)
 end
 
 """
-    remove_system!(sg::SysGraph, id::Int)
+    remove_system!(sg::CRPlugin, id::Int)
 
 Removes the system corresponding to id from the system graph.
 """
-function remove_system!(sg::SysGraph, id::Int; sort=true)
+function remove_system!(sg::CRPlugin, id::Int; sort=true)
     remove_node!(sg, id)
     rem_vertex!(sg.graph, id)
     sort && (sg.sort_cache = topological_sort(sg))
 end
 
 """
-    add_dependency!(sg::SysGraph, from::Int, to::Int)
+    add_dependency!(sg::CRPlugin, from::Int, to::Int)
 
 Add a dependency between the system with the ids from and to.
 This also set the execution order.
 If creating the dependency would create a cycle, then the function returns false and nothing is done.
 """
-function add_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
+function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     if add_edge_checked!(sg.graph, from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
@@ -170,11 +93,11 @@ function add_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
 end
 
 """
-    remove_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
+    remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
 
 Removes a dependency between the system with the ids from and to.
 """
-function remove_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
+function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     rem_edge!(sg.graph, from, to)
     p = sg.idtonode[from]
     c = sg.idtonode[to]
@@ -188,12 +111,12 @@ function remove_dependency!(sg::SysGraph, from::Int, to::Int; sort=true)
 end
 
 """
-    merge_graphs!(sg1::SysGraph, sg2::SysGraph)
+    merge_graphs!(sg1::CRPlugin, sg2::CRPlugin)
 
-Merges 2 SysGraph together. The node of the second one will be added to the first one.
+Merges 2 CRPlugin together. The node of the second one will be added to the first one.
 If both graph have the samem system, one will be kept and the other will connect on it.
 """
-function merge_graphs!(sg1::SysGraph, sg2::SysGraph; sort=true)
+function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
     offset = sg1.current_max
     obj_to_id = Dict{DataType, Int}()
 
@@ -230,11 +153,11 @@ function merge_graphs!(sg1::SysGraph, sg2::SysGraph; sort=true)
 end
 
 """
-    smap!(f, sg::SysGraph)
+    smap!(f, sg::CRPlugin)
 
 Iterate topologically on the graph and apply the function f on it sequentially.
 """
-function smap!(f, sg::SysGraph)
+function smap!(f, sg::CRPlugin)
     for id in sg.sort_cache
         node = sg.idtonode[id]
         f(node.obj)
@@ -242,11 +165,11 @@ function smap!(f, sg::SysGraph)
 end
 
 """
-    pmap!(f, sg::SysGraph)
+    pmap!(f, sg::CRPlugin)
 
 Iterate topologically on the graph and apply the function f on it concurrently.
 """
-function pmap!(f, sg::SysGraph)
+function pmap!(f, sg::CRPlugin)
     indeg = indegree(sg.graph)
     ready = [v for v in vertices(sg.graph) if indeg[v] == 0]
 
