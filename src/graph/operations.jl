@@ -8,6 +8,8 @@ isdeprecated(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.DEPRECATED
 hasfailed(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.ERR
 getstatus(s::CRPluginNode) = s.status[]
 
+serialize(::CRPluginNode) = ""
+
 """
     get_available_id(sg::CRPlugin)
 
