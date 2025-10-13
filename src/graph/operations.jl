@@ -7,6 +7,11 @@ isuninitialized(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.OFF
 isdeprecated(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.DEPRECATED
 hasfailed(s::CRPluginNode) = getstatus(s) == CRPluginNodeStatus.ERR
 getstatus(s::CRPluginNode) = s.status[]
+setstatus(s::CRPluginNode, st::CRPluginNodeStatus) = (s.status[] = st)
+setresult(s::CRPluginNode, r) = (s.result = r)
+hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginNodeStatus.ERR, values(s.deps))
+hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginNodeStatus.OFF, values(s.deps))
+hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginNodeStatus.O, values(s.deps))
 
 serialize(::CRPluginNode) = ""
 
