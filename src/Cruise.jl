@@ -17,8 +17,9 @@ using Base.Threads
 ## @reexport using GDMathLib
 ## @reexport using AssetCrates
 
+include("events.jl")
 include("graph.jl")
-#include("utilities.jl")
+include("utilities.jl")
 include("App.jl")
 include("object.jl")
 include("game_loop.jl")
