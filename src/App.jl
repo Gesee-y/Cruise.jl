@@ -28,7 +28,7 @@ end
 """
     mutable struct CruiseApp
 		const inst::ODApp
-		const plugins::Dict{Symbol, SysGraph}
+		const plugins::Dict{Symbol, CRPlugin}
 		const manager::CrateManager
 		inited_style::Vector{Type{<:AbstractStyle}}
 		windows::Dict{Int,CRWindow}
@@ -51,7 +51,7 @@ The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
 	const inst::ODApp
-	const plugins::Dict{Symbol, SysGraph}
+	const plugins::Dict{Symbol, CRPlugin}
 	const manager::CrateManager
 	inited_style::Vector{Type{<:AbstractStyle}}
 	windows::Dict{Int,CRWindow}
@@ -67,7 +67,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(ODApp(), Dict{Symbol, SysGraph}(:preupdate => SysGraph(), :postupdate => SysGraph), 
+	    app[] = CruiseApp(ODApp(), Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin), 
 	    	CrateManager(), Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
 	end
 	unlock(app_lock)
@@ -81,9 +81,9 @@ end
 
 Initialize the CruiseApp and all his plugins.
 
-    awake!(sg::SysGraph)
+    awake!(sg::CRPlugin)
 
-Initialize all the systems in the given SysGraph.
+Initialize all the systems in the given CRPlugin.
 """
 function awake!(a::CruiseApp) 
 	a.running = true
@@ -93,16 +93,17 @@ function awake!(a::CruiseApp)
 
 	ON_CRUISE_STARTUP.emit
 end
-awake!(sg::SysGraph) = smap!(awake!, sg)
+awake!(sg::CRPlugin) = smap!(awake!, sg)
+awake!(n::CRPluginNode) = (n.status[] = CRPluginStatus.OK)
 
 """
     update!(a::CruiseApp)
 
 Update for the current frame the CruiseApp and all his plugins.
 
-    update!(sg::SysGraph)
+    update!(sg::CRPlugin)
 
-Update for the current frame all the systems in the given SysGraph.
+Update for the current frame all the systems in the given CRPlugin.
 """
 function update!(a::CruiseApp, dt) 
 	for sg in values(a.plugins)
@@ -110,16 +111,17 @@ function update!(a::CruiseApp, dt)
 	end
 end
 update!(a::CruiseApp, phase::Symbol, dt) = update!(a.plugins[phase], dt)
-update!(sg::SysGraph, dt) = smap!(update!, sg)
+update!(sg::CRPlugin, dt) = smap!(update!, sg)
+update!(n::CRPluginNode) = nothing
 
 """
     shutdown!(a::CruiseApp)
 
 This function will stop Cruise, his plugins and clean up the resources.
 
-	shutdown!(sg::SysGraph)
+	shutdown!(sg::CRPlugin)
 
-This will stop the given system graph b topologically calling shutdown! on the systems.
+This will stop the given system graph by topologically calling shutdown! on the systems.
 """
 function shutdown!(a::CruiseApp)
     if on(a)
@@ -132,7 +134,8 @@ function shutdown!(a::CruiseApp)
         QuitOutdoor(a.inst)
     end
 end
-shutdown!(sg::SysGraph) = smap!(shutdown!, sg)
+shutdown!(sg::CRPlugin) = smap!(shutdown!, sg)
+shutdown!(n::CRPluginNode) = (n.status[] = CRPluginStatus.OFF)
 
 """
     on(a::CruiseApp)
