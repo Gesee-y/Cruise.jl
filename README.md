@@ -26,7 +26,7 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Philosophy 
 
-Cruise is built with a strong emphasis on modularity. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
+Cruise is built with a strong emphasis on modularity enabled by his powerful core built around DAG(Direct Acyclic Graph) of plugins. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
 
 Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
 
@@ -51,7 +51,7 @@ So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given library or rendering backend. This way, games are made only once with Cruise and can be run EVERYWHERE Julia can run, from your old dying computer to a brand-new one, on every platform (except mobile and consoles for now).
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made  with Cruise by choosing the optimal tools for every task. A SceneTree for UI and an ECS for the logics.
 
 ## What does Cruise represent ?
 
@@ -70,21 +70,24 @@ I built Cruise because game development has often made me feel intense emotions,
 
 ## Architecture 
 
-Cruise itself is built as a minimal core, allowing you to plug modules into the game lifecycle to add new features.  
+Cruise itself is built as a minimal core, allowing you to add plugin (which is a graph of execution) into the game lifecycle to add new features.  
 
-But how does the system communicate?  
-With Cruise, the engine architecture is itself a plugin.
+But how does the system communicate?
+Using the DAG.
 
-This means that since every module in Cruise is decoupled, there is no fixed architecture connecting them. You write a plugin to orchestrate the systems and build your game.
+Each plugin can access the data of his dependencies, their states and more.
+This itself form dataflow based architecture when each plugin pass data to the dependents ones.
 
-For example, you can create an ECS, plug it into Cruise, and get an ECS-driven game engine.  
-Or you can create a SceneTree and have a completely different architecture.
+But that's not everything about it.
+You can make plugins for different types of architectures.
+For example make an ECSPlugin and other plugins and logics requiring an ECS will work smoothly
+Same with SceneTree.
 
 Cruise already comes with two default architectures: ECS and SceneTree.
 
 ## Plugins
 
-In order to extend itself, Cruise relies on a **plugin system**.  
+So in order to extend itself, Cruise relies on a **plugin system**.  
 In Cruise, system (or module) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between modules and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).
 
 A **plugin** is essentially a subgraph that can be merged into the main graph at a specific point in the game loop to be used.  
