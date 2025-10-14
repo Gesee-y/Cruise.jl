@@ -11,7 +11,7 @@ setstatus(s::CRPluginNode, st::CRPluginStatus) = (s.status[] = st)
 setresult(s::CRPluginNode, r) = (s.result = r)
 hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.ERR, values(s.deps))
 hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.OFF, values(s.deps))
-hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.O, values(s.deps))
+hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.OK, values(s.deps))
 
 serialize(::CRPluginNode) = ""
 
@@ -118,12 +118,12 @@ function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
 end
 
 """
-    merge_graphs!(sg1::CRPlugin, sg2::CRPlugin)
+    merge_plugins!(sg1::CRPlugin, sg2::CRPlugin)
 
 Merges 2 CRPlugin together. The node of the second one will be added to the first one.
 If both graph have the samem system, one will be kept and the other will connect on it.
 """
-function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
+function merge_plugins!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
     offset = sg1.current_max
     obj_to_id = Dict{DataType, Int}()
 
