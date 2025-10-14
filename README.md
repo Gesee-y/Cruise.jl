@@ -33,7 +33,6 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 Cruise is built around a modular DAG (Directed Acyclic Graph) of plugins, this means you can easily extend or replace any part of the engine without breaking your project.
 Want to swap your renderer from SDL to Vulkan? Just change a plugin.
 Need a pure ECS game instead of SceneTree? Just load the ECS plugin.
-Cruise gives you control, not constraints.
 
 Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
 
@@ -63,7 +62,7 @@ Cruise is a game engine built for compatibility, modularity, and performance. It
 What Cruise gives you
 
 - **Modular Architecture**: Plug in only what you need. Swap systems without refactoring.
-- **Customizable Workflow**: ECS or SceneTree? Or both. You choose.
+- **Customizable Workflow**: ECS or SceneTree? Or both and more. You choose.
 - **Hot Reloading**: Edit your code or assets while your game is running.
 - **Reactive Systems**: Real-time responsiveness powered by ReactiveECS.
 - **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
@@ -102,23 +101,24 @@ No boilerplate. No manual sync. Just data flowing between systems.
 But that's not everything about it.
 You can make plugins for different types of architectures.
 For example make an ECSPlugin and other plugins and logics requiring an ECS will work smoothly
-Same with SceneTree.
+Same with SceneTree or any crazy game architecture you have always dreamed of.
 
-Cruise already comes with two default architectures: ECS and SceneTree.
+Cruise already comes with two architectures: ECS and SceneTree.
 
 ## Plugins
 
-So in order to extend itself, Cruise relies on a **plugin system**.  
-In Cruise, system (or module) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between modules and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).
+So in order to extend itself, Cruise relies on a **DAG-driven architecture**.  
+So in Cruise, system (or plugin) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between them and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).
 
 A **plugin** is essentially a subgraph that can be merged into the main graph at a specific point in the game loop to be used.  
 
-This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a physics plugin, or even a bundle of plugins (like a complete ECS architecture plugin or a visual editor plugin).
+This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a physics plugin, or even a bundle of plugins (like a visual editor plugin).
 
-## Provided Modules
+## Provided Tools
 
 ### Core
 
+> These modules are included into Cruise when you add it with the package manager
 - [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains game-dev functions (lerp, slerp, etc.), stack-allocated structures for optimized performance, vector and quaternion manipulation, optimized matrix operations, boxes and circles, an extensible coordinate system, colors, and more.
 
 - [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
@@ -129,7 +129,9 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 - **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, dynamic structs and more.
 
-### Swappable Modules
+### Modules
+
+> Should be added when needed into Cruise. They don't depend on the game lifecycle
 
 - [Arceus.jl](https://github.com/Gesee-y/Arceus.jl): A decision-making system based on `trait`s and relying on bitboards. It's designed to get the behavior corresponding to a given combination of traits in less than 20 ns (for the slowest backend; the fastest one can reach 2–3 ns), avoiding endless branching.
 
@@ -137,7 +139,7 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 - [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl): An audio engine. It offers audio streaming, effects, audio groups and buses, mixing, and soon spatial audio.
 
-### Default plugins
+### Plugins
 
 - [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
 
@@ -201,7 +203,7 @@ More game examples are available in [there](https://github.com/Gesee-y/Cruise-ex
 
 ## Untested features
 
-- **Complete modern OpenGL abstraction + bindless textures** from Bplus engine, inspired from Unreal engine rendering engine. Not yet linked to Horizons.jl.  
+- **Complete modern OpenGL abstraction + bindless textures** backend from Bplus engine, inspired from Unreal engine rendering engine. Not yet linked to Horizons.jl.  
 
 - **Skia 2D rendering backend** from Skia.jl. Just needs its interface implemented in Horizons.jl.  
 
