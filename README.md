@@ -57,12 +57,12 @@ So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, etc.
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, Dataflow for processing, your own architecture for custom mechanics, etc.
 
 What Cruise gives you
 
 - **Modular Architecture**: Plug in only what you need. Swap systems without refactoring.
-- **Customizable Workflow**: ECS or SceneTree? Or both and more. You choose.
+- **Customizable Workflow**: DataFlow, ECS or SceneTree? Or all of them. You choose what suits you or even build your dream architecture.
 - **Hot Reloading**: Edit your code or assets while your game is running.
 - **Event Systems**: Full reactive pipeline and event system with EventNotifiers
 - **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
@@ -103,7 +103,8 @@ You can make plugins for different types of architectures.
 For example make an ECSPlugin and other plugins and logics requiring an ECS will work smoothly
 Same with SceneTree or any crazy game architecture you have always dreamed of.
 
-Cruise already comes with two architectures: ECS and SceneTree.
+Cruise already comes with 3 architectures: Dataflow, ECS and SceneTree.
+Just waiting for you to add your own idea.
 
 ## Plugins
 
