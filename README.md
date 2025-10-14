@@ -64,7 +64,7 @@ What Cruise gives you
 - **Modular Architecture**: Plug in only what you need. Swap systems without refactoring.
 - **Customizable Workflow**: ECS or SceneTree? Or both and more. You choose.
 - **Hot Reloading**: Edit your code or assets while your game is running.
-- **Reactive Systems**: Real-time responsiveness powered by ReactiveECS.
+- **Event Systems**: Full reactive pipeline and event system with EventNotifiers
 - **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
 - **Full Julia Power**: REPL-driven dev, live code injection, and JIT-level speed.
 
