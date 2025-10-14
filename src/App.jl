@@ -12,20 +12,6 @@ export init_appstyle, context, instance
 @Notifyer ON_CRUISE_STARTUP()
 
 """
-    mutable struct CRWindow{S}
-		const win::ODWindow{S}
-
-Represent a windows for Cruise. S is the style of the window following the Outdoors packages conventions.
-"""
-mutable struct CRWindow{S}
-	const win::ODWindow{S}
-
-	## Constructor
-
-	CRWindow{S}(win::ODWindow{S}) where {S <: AbstractStyle} = new{S}(win)
-end
-
-"""
     mutable struct CruiseApp
 		const inst::ODApp
 		const plugins::Dict{Symbol, CRPlugin}
@@ -127,8 +113,6 @@ function shutdown!(a::CruiseApp)
 		    shutdown!(sg)
 	    end
         DestroyAllCrates!(a.manager)
-        QuitStyle.(a.inited_style)
-        QuitOutdoor(a.inst)
     end
 end
 shutdown!(sg::CRPlugin) = smap!(shutdown!, sg)
@@ -147,12 +131,6 @@ on(a::CruiseApp) = a.running
 Rtuens true if the CruiseApp isn't running.
 """
 off(a::CruiseApp) = !a.running
-
-function init_appstyle(app, S::Type{<:AbstractStyle})
-	InitOutdoor(S)
-	push!(app.inited_style, S)
-end
-init_appstyle(app, c::Container{Type{<:AbstractStyle}}) = init_appstyle.(app,c)
 
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]
