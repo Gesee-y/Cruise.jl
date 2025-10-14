@@ -103,7 +103,7 @@ You can make plugins for different types of architectures.
 For example make an ECSPlugin and other plugins and logics requiring an ECS will work smoothly
 Same with SceneTree or any crazy game architecture you have always dreamed of.
 
-The DAG has been choosen for Cruise because it's a more fundamental architecture that allows greater flexibility than locking the user in something like a SceneTree or an ECS in the sense that it allows the other architecture to be added on top of it with a clear separation of concerns.
+The DAG has been choosen for Cruise because it's a more fundamental architecture that allows greater flexibility than locking the user in something like a SceneTree or an ECS in the sense that it allows the other architecture to be added on top of it with a clear separation of concerns simply by making them as plugins.
 
 Cruise already comes with 3 architectures: Dataflow, ECS and SceneTree.
 Just waiting for you to add your own idea.
