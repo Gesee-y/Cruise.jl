@@ -26,7 +26,7 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Philosophy 
 
-Cruise is built with a strong emphasis on modularity enabled by his powerful core built around DAG(Direct Acyclic Graph) of plugins. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
+Cruise is built with a strong emphasis on modularity enabled by its powerful core built around DAG (Direct Acyclic Graph) of plugins. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
 
 Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
 
@@ -51,7 +51,7 @@ So why create another engine instead of contributing to them?
 
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made  with Cruise by choosing the optimal tools for every task. A SceneTree for UI and an ECS for the logics.
+Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, etc.
 
 ## What does Cruise represent ?
 
@@ -70,13 +70,15 @@ I built Cruise because game development has often made me feel intense emotions,
 
 ## Architecture 
 
+> With Cruise, there is a difference between a module and a plugin. A plugin is added in the game lifecycle while a module is independent from that.
+
 Cruise itself is built as a minimal core, allowing you to add plugin (which is a graph of execution) into the game lifecycle to add new features.  
 
 But how does the system communicate?
 Using the DAG.
 
 Each plugin can access the data of his dependencies, their states and more.
-This itself form dataflow based architecture when each plugin pass data to the dependents ones.
+This itself form dataflow based architecture when each plugin passes data to the dependent ones.
 
 But that's not everything about it.
 You can make plugins for different types of architectures.
@@ -96,8 +98,6 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 ## Provided Modules
 
-> The following structure is just abstract. Cruise.jl isn't really structured as such a set of tools. It's just a way to illustrate its internals.
-
 ### Core
 
 - [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains game-dev functions (lerp, slerp, etc.), stack-allocated structures for optimized performance, vector and quaternion manipulation, optimized matrix operations, boxes and circles, an extensible coordinate system, colors, and more.
@@ -105,6 +105,10 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 - [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
 
 - [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allows you to create events with a Godot-like syntax (`@Notifyer MY_EVENT(x::Int)`) and manipulate them by modifying their states in an OpenGL-like manner. Features include easy traceability, support for synchronous and asynchronous callbacks, parent–child relationships, state serialization/deserialization, and more.
+
+- [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
+
+- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, dynamic structs and more.
 
 ### Swappable Modules
 
@@ -114,21 +118,15 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 - [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl): An audio engine. It offers audio streaming, effects, audio groups and buses, mixing, and soon spatial audio.
 
-- [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It supports particles, collision detection, forces, contact resolution, integration using a Verlet integrator, constraints, and more.
-
-- [ReactiveECS.jl](https://github.com/Gesee-y/ReactiveECS.jl): A modular and high-performance reactive ECS. It's based on a reactive pipeline where systems register to a given query, and at each tick, the manager dispatches data to the systems. Using a database-like storage system plus partitioning, this ECS can deliver industry-grade performance (even the fastest ECS on some operations) while offering extreme flexibility with system chaining, runtime system injection (even in chains), and `HierarchicalLock` for manual but granular concurrency safety.
-
-### Core Systems
-
-> This doesn't mean that Cruise.jl is strictly bound to these systems — it just means that the best way to interact with Cruise.jl is through them.
+### Default plugins
 
 - [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
 
 - [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing, upscaling/downscaling and logging.
 
-- [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
+- [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It supports particles, collision detection, forces, contact resolution, integration using a Verlet integrator, constraints, and more.
 
-- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own modules and manage their lifecycle in the game loop, a `@gameloop` macro, linking modules together, and managing their processing order. Provides utilities like do while loops, dynamic structs and more.
+- [ReactiveECS.jl](https://github.com/Gesee-y/ReactiveECS.jl): A modular and high-performance reactive ECS. It's based on a reactive pipeline where systems register to a given query, and at each tick, the manager dispatches data to the systems. Using a database-like storage system plus partitioning, this ECS can deliver industry-grade performance (even the fastest ECS on some operations) while offering extreme flexibility with system chaining, runtime system injection (even in chains), and `HierarchicalLock` for manual but granular concurrency safety.
 
 ## Example: Moving an Image with Input
 
@@ -137,6 +135,10 @@ using Cruise
 
 # We create a new app
 app = CruiseApp()
+enable_plugins()
+
+add_plugin(app, OutdoorPlugin; phase=:preupdate)
+add_plugin(app, HorizonPlugin)
 
 # Initialise SDL style window with a SDL renderer
 win = CreateWindow(app, SDLStyle, SDLRender, "Example", 640, 480)
@@ -190,7 +192,7 @@ More game examples are available in [there](https://github.com/Gesee-y/Cruise-ex
 
 - **JIT startup latency**: Julia is already making great progress on this front, and packages like [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl) provide effective solutions.  
 
-- **Performance**: Cruise is optimized for maximum speed (static structures, SIMD, multithreading, cache optimization, etc.) and aims to reach the level of industry-grade solutions (ReactiveECS is a good example).
+- **Performance**: Cruise is optimized for maximum speed (static structures, SIMD, multithreading, cache optimization, etc.) and aims to reach the level of industry-grade solutions (ReactiveECS plugin is a good example).
 
 ## Roadmap
 
@@ -204,7 +206,7 @@ From now on, I will focus on testing, documenting and patching. But here is a li
 
 ## Contribution
 
-Core Cruise's modules are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance — you're welcome to contribute.
+Core Cruise's modules and plugins are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance — you're welcome to contribute.
 
 * Choose the module you want to improve.
 * Fork, hack, PR. Simple.
