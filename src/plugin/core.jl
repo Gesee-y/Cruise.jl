@@ -19,7 +19,7 @@ Supertype of any kind of system graph.
 abstract type AbstractPlugin end
 
 """
-    mutable struct CRPlugin{T}
+    mutable struct CRPluginNode{T}
         obj::T
 
 Represent a node in the system graph.
@@ -27,22 +27,22 @@ Represent a node in the system graph.
 
 ## Constructor
 
-    CRPlugin(obj)
+    CRPluginNode(obj)
 
 Returns a new CRPlugin from the given obj
 """
-mutable struct CRPlugin{T,S}
+mutable struct CRPluginNode{T,S}
     id::Int
     obj::T
     deps::Dict{DataType, WeakRef}
-    children::Vector{CRPlugin}
+    children::Vector{CRPluginNode}
     status::CRSubject{CRPluginStatus}
     result::S
 
     ## Constructors
 
-    CRPlugin(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPlugin[], CRSubject(CRPluginStatus.OFF))
-    CRPlugin{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPlugin[], CRSubject(CRPluginStatus.OFF))
+    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(CRPluginStatus.OFF))
+    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(CRPluginStatus.OFF))
 end
 
 """
