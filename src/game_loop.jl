@@ -109,26 +109,12 @@ macro gameloop(args...)
         while on(app)
 
             # First pump events and initialize every windows
-            EventLoop(od_app)
-            windows = values(app.windows)
-            for win in windows
-                SetDrawColor(win.backend,WHITE)
-                ClearViewport(win.backend)
-            end
+            update!(app.plugins[:preupdate])
 
             # Then execute the loop code
             $code
 
-            # Send data to each subsystem if there are some
-            # To avoid softlocking the loop
-            if !isempty(world.queries)
-                dispatch_data(world)
-                blocker(world) # And wait for them to be done
-            end
-            # Then we update rendering for each window
-            for win in windows
-                UpdateRender(win.backend)
-            end
+            update!(app.plugins[:postupdate])
 
             # Advance the timer.
             LOOP_VAR.frame_idx += 1

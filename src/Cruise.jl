@@ -14,11 +14,11 @@ using Base.Threads
 
 @reexport using EventNotifiers
 @reexport using NodeTree
-## @reexport using GDMathLib
-## @reexport using AssetCrates
+@reexport using GDMathLib
+@reexport using AssetCrates
 
 include("events.jl")
-include("graph.jl")
+include(joinpath("plugin", "plugin.jl"))
 include("utilities.jl")
 include("App.jl")
 include("object.jl")

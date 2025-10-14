@@ -50,11 +50,8 @@ Will create a new global instance of a CruiseApp. Note that a program can only h
 The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
-	const inst::ODApp
 	const plugins::Dict{Symbol, CRPlugin}
 	const manager::CrateManager
-	inited_style::Vector{Type{<:AbstractStyle}}
-	windows::Dict{Int,CRWindow}
 	running::Bool
 end
 
@@ -67,8 +64,8 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(ODApp(), Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin), 
-	    	CrateManager(), Type{<:AbstractStyle}[], Dict{Int,CRWindow}(), false)
+	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin), 
+	    	CrateManager(), false)
 	end
 	unlock(app_lock)
 	return app[]	
@@ -157,52 +154,5 @@ function init_appstyle(app, S::Type{<:AbstractStyle})
 end
 init_appstyle(app, c::Container{Type{<:AbstractStyle}}) = init_appstyle.(app,c)
 
-"""
-    CreateWindow(app::CruiseApp, ::Type{S}, title, w, h, args...; kwargs...)
-
-Create a new CRWindows of style S.
-"""
-function Outdoors.CreateWindow(app::CruiseApp, ::Type{S}, title, w, h, 
-	args...; kwargs...) where {S <: AbstractStyle}
-	
-	S in app.inited_style || init_appstyle(app, S)
-    win = CRWindow{S,T}(CreateWindow(app.inst, S, title, w, h, args...; kwargs...))
-    app.windows[GetWindowID(win.win)] = win
-
-    return win
-end
-
-instance(w::CRWindow) = w.win
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]
-################################################### Event Handling ########################################################
-
-export on_backend_error, on_backend_info, on_backend_warning, on_backend_debug
-export on_window_error, on_window_warning, on_window_debug, on_window_info
-export on_style_inited, on_style_quitted
-export on_app_quit
-
-on_backend_error(msg, err) = error(msg*err)
-on_backend_warning(msg, err) = @warn msg*err
-on_backend_info(msg, err) = @info msg*err
-on_backend_debug(msg, err) = @debug msg*err
-
-on_window_error(msg, err) = error(msg*err)
-on_window_warning(msg, err) = @warn msg*err
-on_window_info(msg, err) = @info msg*err
-on_window_debug(msg, err) = @debug msg*err
-
-on_style_inited(style) = nothing
-on_style_quitted(style) = nothing
-on_app_quit() = shutdown!(app[])
-
-Horizons.connect(on_backend_error,HORIZON_ERROR)
-Horizons.connect(on_backend_warning,HORIZON_WARNING)
-Horizons.connect(on_backend_info,HORIZON_INFO)
-
-Outdoors.connect(on_style_inited, NOTIF_OUTDOOR_INITED)
-Outdoors.connect(on_style_quitted, NOTIF_OUTDOOR_STYLE_QUITTED)
-Outdoors.connect(on_app_quit,NOTIF_QUIT_EVENT)
-Outdoors.connect(on_window_error,NOTIF_ERROR)
-Outdoors.connect(on_window_warning,NOTIF_WARNING)
-Outdoors.connect(on_window_info,NOTIF_INFO)

@@ -11,12 +11,12 @@ mutable struct CRSubject{T}
     Subject(value::T) where T = new{T}(value, Observer[])
 end
 
-function subscribe!(s::Subject, f::Observer)
+function connect(s::Subject, f::Observer)
     push!(s.observers, f)
     return f
 end
 
-function unsubscribe!(s::Subject, f::Observer)
+function disconnect(s::Subject, f::Observer)
     idx = findfirst(==(f), s.observers)
     idx !== nothing && deleteat!(s.observers, idx)
 end
