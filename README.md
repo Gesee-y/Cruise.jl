@@ -1,5 +1,9 @@
 # Cruise.jl v0.3.0 : A 2D/3D Game Engine for Julia
 
+[![Build Status](https://github.com/Gesee-y/Cruise.jl/actions/workflows/CI.yml/badge.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
+
 Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
 
 **Cruise.jl** fills that gap.
@@ -26,7 +30,10 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Philosophy 
 
-Cruise is built with a strong emphasis on modularity enabled by its powerful core built around DAG (Direct Acyclic Graph) of plugins. Every user should feel as free as possible to use, modify, or replace components of the engine without much difficulty.
+Cruise is built around a modular DAG (Directed Acyclic Graph) of plugins, this means you can easily extend or replace any part of the engine without breaking your project.
+Want to swap your renderer from SDL to Vulkan? Just change a plugin.
+Need a pure ECS game instead of SceneTree? Just load the ECS plugin.
+Cruise gives you control, not constraints.
 
 Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
 
@@ -52,6 +59,15 @@ So why create another engine instead of contributing to them?
 Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
 
 Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, etc.
+
+What Cruise gives you
+
+- **Modular Architecture**: Plug in only what you need. Swap systems without refactoring.
+- **Customizable Workflow**: ECS or SceneTree? Or both. You choose.
+- **Hot Reloading**: Edit your code or assets while your game is running.
+- **Reactive Systems**: Real-time responsiveness powered by ReactiveECS.
+- **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
+- **Full Julia Power**: REPL-driven dev, live code injection, and JIT-level speed.
 
 ## What does Cruise represent ?
 
@@ -79,6 +95,9 @@ Using the DAG.
 
 Each plugin can access the data of his dependencies, their states and more.
 This itself form dataflow based architecture when each plugin passes data to the dependent ones.
+For example, when the Physics plugin updates object positions,
+the Renderer plugin automatically gets the new data through the DAG.
+No boilerplate. No manual sync. Just data flowing between systems.
 
 But that's not everything about it.
 You can make plugins for different types of architectures.
