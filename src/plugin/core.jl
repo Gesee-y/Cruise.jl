@@ -2,6 +2,8 @@
 ######################################################## CORE ###########################################################
 #########################################################################################################################
 
+export CRPluginNode, CRPlugin, CRPluginStatus
+
 struct StopExec end
 
 @enum CRPluginStatus begin
@@ -19,7 +21,7 @@ Supertype of any kind of system graph.
 abstract type AbstractPlugin end
 
 """
-    mutable struct CRPluginNode{T}
+    mutable struct CRPlugin{T}
         obj::T
 
 Represent a node in the system graph.
@@ -41,8 +43,8 @@ mutable struct CRPluginNode{T,S}
 
     ## Constructors
 
-    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(CRPluginStatus.OFF))
-    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(CRPluginStatus.OFF))
+    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(OFF))
+    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(OFF))
 end
 
 """
@@ -65,13 +67,16 @@ Represent the systems graph. It represent the depencies and execution order of t
 This will return a new empty system graph.
 """
 mutable struct CRPlugin <: AbstractPlugin
-    idtonode::Dict{Int, CRPlugin}
-    graph::DiGraph
+    idtonode::Dict{Int, CRPluginNode}
+    graph::SimpleDiGraph{Int}
     free_ids::Vector{Int}
     current_max::Int
     sort_cache::Vector{Int}
 
     ## Constructors
 
-    CRPlugin() = new(Dict{Int, CRPlugin}(), DiGraph(), Int[], 0, Int[])
+    CRPlugin() = begin
+        G = SimpleDiGraph{Int}()
+        new(Dict{Int, CRPlugin}(), G, Int[], 0, Int[])
+    end
 end

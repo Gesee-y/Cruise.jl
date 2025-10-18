@@ -2,6 +2,10 @@
 ################################################# OPERATIONS ##########################################################
 #######################################################################################################################
 
+export add_system!, remove_system!, add_dependency!, remove_dependency!, merge_graphs!, pmap!, smap!
+export isinitialized, isuninitialized, isdeprecated, hasfailed, getstatus, setstatus, setresult
+export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized
+
 isinitialized(s::CRPluginNode) = getstatus(s) == CRPluginStatus.OK
 isuninitialized(s::CRPluginNode) = getstatus(s) == CRPluginStatus.OFF
 isdeprecated(s::CRPluginNode) = getstatus(s) == CRPluginStatus.DEPRECATED
@@ -67,7 +71,7 @@ function add_system!(sg::CRPlugin, obj; sort=true)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
-    sort && (sg.sort_cache = topological_sort(sg))
+    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     return id
 end
 
@@ -79,7 +83,7 @@ Removes the system corresponding to id from the system graph.
 function remove_system!(sg::CRPlugin, id::Int; sort=true)
     remove_node!(sg, id)
     rem_vertex!(sg.graph, id)
-    sort && (sg.sort_cache = topological_sort(sg))
+    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
 end
 
 """
@@ -90,12 +94,12 @@ This also set the execution order.
 If creating the dependency would create a cycle, then the function returns false and nothing is done.
 """
 function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
-    if add_edge_checked!(sg.graph, from, to)
+    if add_edge_checked!(IncrementalCycleTracker(sg.graph), from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
         c.deps[typeof(p.obj)] = WeakRef(p)
         push!(p.children, c)
-        sort && (sg.sort_cache = topological_sort(sg))
+        sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     end
 end
 
@@ -114,16 +118,16 @@ function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
         p.children[end], p.children[idx] = p.children[idx], p.children[end]
         pop!(p.children)
     end
-    sort && (sg.sort_cache = topological_sort(sg))
+    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
 end
 
 """
-    merge_plugins!(sg1::CRPlugin, sg2::CRPlugin)
+    merge_graphs!(sg1::CRPlugin, sg2::CRPlugin)
 
 Merges 2 CRPlugin together. The node of the second one will be added to the first one.
 If both graph have the samem system, one will be kept and the other will connect on it.
 """
-function merge_plugins!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
+function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
     offset = sg1.current_max
     obj_to_id = Dict{DataType, Int}()
 
@@ -154,7 +158,7 @@ function merge_plugins!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
         end
     end
 
-    sort && (sg.sort_cache = topological_sort(sg))
+    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
 
     return sg1
 end
@@ -167,7 +171,7 @@ Iterate topologically on the graph and apply the function f on it sequentially.
 function smap!(f, sg::CRPlugin)
     for id in sg.sort_cache
         node = sg.idtonode[id]
-        f(node.obj)
+        f(node)
     end
 end
 
@@ -186,7 +190,7 @@ function pmap!(f, sg::CRPlugin)
         @sync for v in ready
             @spawn begin
                 node = sg.idtonode[v]
-                f(node.obj)
+                f(node)
 
                 for child in outneighbors(sg.graph, v)
                     indeg[child] -= 1
