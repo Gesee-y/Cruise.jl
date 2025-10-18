@@ -76,3 +76,31 @@ end
 ```
 
 You should be seeing our plugin merrily doing it's job and printing numbers
+
+## Advanced Features
+
+### Querying a node
+
+You can use `getnodeid(plugin, symbol)` to get the id of a given node type. `symbol` is the node tpe as a Symbol.
+
+### Dependencies
+
+Each plugin node store a `WeakRef` to its dependencies. You can access them like this:
+
+```julia
+node.deps[TYPE] # Will return a weakref to the dependency of type `TYPE`
+```
+
+From there you can access the status of the dependency (`getstatus(node.deps[TYPE].value)`), the last result it returned (`getresult(node.deps[TYPE].value)`), it's instance (`node.deps[TYPE].value.obj`), etc.
+
+* `isinitialized(s::CRPluginNode)`
+* `isuninitialized(s::CRPluginNode)`
+* `isdeprecated(s::CRPluginNode)`
+* `hasfailed(s::CRPluginNode)`
+* `getstatus(s::CRPluginNode)`
+* `setstatus(s::CRPluginNode, st::CRPluginStatus)`
+* `setresult(s::CRPluginNode, r)`
+* `hasfaileddeps(s::CRPluginNode)`
+* `hasuninitializeddeps(s::CRPluginNode)`
+* `hasalldepsinitialized(s::CRPluginNode)`
+

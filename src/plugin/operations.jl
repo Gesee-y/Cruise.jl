@@ -21,7 +21,7 @@ serialize(::CRPluginNode) = ""
 
 function getnodeid(p::CRPluginNode, s::Symbol)
     for (i, n) in p.idtonode
-        if typeof(n.obj) == s
+        if Symbol(typeof(n.obj)) == s
             return i
         end
     end
