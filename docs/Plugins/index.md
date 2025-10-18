@@ -67,6 +67,8 @@ Finally you need to merge your plugin into Cruise at the correct phase.
 merge_plugin!(app, plugin, :preupdate)
 ```
 
+> Note that even if a plugin has been merged into the graph, you can still manage it from the `CRPlugin` you created.
+
 You are done, just run Cruise's gameloop.
 
 ```julia
@@ -119,3 +121,10 @@ end
 ```
 
 Each time a plugin node change status, an event is sent. you can use `add_status_callback(f, node)` to call the function `f` each time the node changes its status.
+
+## Applying a function on a plugin
+
+We provide 2 function to apply a function on a plugin:
+
+- `smap!(f, plugin)` : It will topologically and sequentially apply the function `f` on the node of the plugin
+- `pmap!(f, plugin)` : It will topologically apply the function `f` on the node of the plugin. It will run nofe that are a the same level in parallel.
