@@ -85,7 +85,7 @@ You can use `getnodeid(plugin, symbol)` to get the id of a given node type. `sym
 
 ### Dependencies
 
-Each plugin node store a `WeakRef` to its dependencies. You can access them like this:
+Each plugin node store a `WeakRef` to its dependencies. WeakRef are used because a plugin isn't supposed to keep his dependencies alive, if they are deleted, the plugin should see that his deps is no more there. You can access them like this:
 
 ```julia
 node.deps[TYPE] # Will return a weakref to the dependency of type `TYPE`
@@ -99,8 +99,23 @@ From there you can access the status of the dependency (`getstatus(node.deps[TYP
 * `hasfailed(s::CRPluginNode)`
 * `getstatus(s::CRPluginNode)`
 * `setstatus(s::CRPluginNode, st::CRPluginStatus)`
+* `getresult(s::CRPluginNode)`
 * `setresult(s::CRPluginNode, r)`
 * `hasfaileddeps(s::CRPluginNode)`
 * `hasuninitializeddeps(s::CRPluginNode)`
 * `hasalldepsinitialized(s::CRPluginNode)`
 
+### Plugins Status
+
+Plugins status gives informations about the current state of a plugin. It's in fact an enumeration:
+
+```julia
+@enum CRPluginStatus begin
+    PLUGIN_OFF # The plugin is not initialized
+    PLUGIN_DEPRECATED # The plugin result are deprecated
+    PLUGIN_OK # The plugin is inited
+    PLUGIN_ERR # The plugin encountered an error
+end
+```
+
+Each time a plugin node change status, an event is sent. you can use `add_status_callback(f, node)` to call the function `f` each time the node changes its status.

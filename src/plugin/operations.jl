@@ -12,11 +12,13 @@ isdeprecated(s::CRPluginNode) = getstatus(s) == PLUGIN_DEPRECATED
 hasfailed(s::CRPluginNode) = getstatus(s) == PLUGIN_ERR
 getstatus(s::CRPluginNode) = s.status[]
 setstatus(s::CRPluginNode, st::CRPluginStatus) = (s.status[] = st)
+getresult(s::CRPluginNode) = s.result
 setresult(s::CRPluginNode, r) = (s.result = r)
 hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(s.deps))
 hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(s.deps))
 hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(s.deps))
 
+add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
 serialize(::CRPluginNode) = ""
 
 function getnodeid(p::CRPluginNode, s::Symbol)
