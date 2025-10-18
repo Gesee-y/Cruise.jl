@@ -7,10 +7,10 @@ export CRPluginNode, CRPlugin, CRPluginStatus
 struct StopExec end
 
 @enum CRPluginStatus begin
-    OFF
-    DEPRECATED
-    OK
-    ERR
+    PLUGIN_OFF
+    PLUGIN_DEPRECATED
+    PLUGIN_OK
+    PLUGIN_ERR
 end
 
 """
@@ -43,8 +43,8 @@ mutable struct CRPluginNode{T,S}
 
     ## Constructors
 
-    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(OFF))
-    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(OFF))
+    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(PLUGIN_OFF))
+    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(PLUGIN_OFF))
 end
 
 """

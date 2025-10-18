@@ -6,18 +6,28 @@ export add_system!, remove_system!, add_dependency!, remove_dependency!, merge_g
 export isinitialized, isuninitialized, isdeprecated, hasfailed, getstatus, setstatus, setresult
 export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized
 
-isinitialized(s::CRPluginNode) = getstatus(s) == CRPluginStatus.OK
-isuninitialized(s::CRPluginNode) = getstatus(s) == CRPluginStatus.OFF
-isdeprecated(s::CRPluginNode) = getstatus(s) == CRPluginStatus.DEPRECATED
-hasfailed(s::CRPluginNode) = getstatus(s) == CRPluginStatus.ERR
+isinitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OK
+isuninitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OFF
+isdeprecated(s::CRPluginNode) = getstatus(s) == PLUGIN_DEPRECATED
+hasfailed(s::CRPluginNode) = getstatus(s) == PLUGIN_ERR
 getstatus(s::CRPluginNode) = s.status[]
 setstatus(s::CRPluginNode, st::CRPluginStatus) = (s.status[] = st)
 setresult(s::CRPluginNode, r) = (s.result = r)
-hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.ERR, values(s.deps))
-hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.OFF, values(s.deps))
-hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == CRPluginStatus.OK, values(s.deps))
+hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(s.deps))
+hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(s.deps))
+hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(s.deps))
 
 serialize(::CRPluginNode) = ""
+
+function getnodeid(p::CRPluginNode, s::Symbol)
+    for (i, n) in p.idtonode
+        if typeof(n.obj) == s
+            return i
+        end
+    end
+
+    return -1
+end
 
 """
     get_available_id(sg::CRPlugin)

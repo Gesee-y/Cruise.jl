@@ -4,12 +4,10 @@
 
 export CruiseApp
 export awake!, run!, shutdown!
-export on, off
+export on, off, merge_plugin!
 export init_appstyle, context, instance
 
 ####################################################### CORE ##############################################################
-
-const DEFAULT_PLUGIN_DIR = joinpath("..", "plugins")
 
 @Notifyer ON_CRUISE_STARTUP()
 
@@ -61,17 +59,6 @@ end
 
 ##################################################### FUNCTIONS ##########################################################
 
-function enable_plugins(dir=DEFAULT_PLUGIN_DIR)
-	for file in readdir(dir)
-		path = joinpath(dir, file)
-		include(path)
-	end
-end
-
-function add_plugin(app::CruiseApp, plugin::CRPlugin; phase=:postupdate)
-	merge_plugins(app.plugins[phase], plugin)
-end
-
 """
     awake!(a::CruiseApp)
 
@@ -107,7 +94,7 @@ function update!(a::CruiseApp, dt)
 	end
 end
 update!(a::CruiseApp, phase::Symbol, dt) = update!(a.plugins[phase], dt)
-update!(sg::CRPlugin, dt) = pmap!(p -> update!(p, dt), sg)
+update!(sg::CRPlugin, dt) = smap!(update!, sg)
 update!(n::CRPluginNode) = nothing
 
 """
@@ -134,16 +121,18 @@ shutdown!(n::CRPluginNode) = (n.status[] = CRPluginStatus.OFF)
 """
     on(a::CruiseApp)
 
-Rtuens true if the CruiseApp is running.
+Returns true if the CruiseApp is running.
 """
 on(a::CruiseApp) = a.running
 
 """
     off(a::CruiseApp)
 
-Rtuens true if the CruiseApp isn't running.
+Returns true if the CruiseApp isn't running.
 """
 off(a::CruiseApp) = !a.running
+
+merge_plugin!(app::CruiseApp, plugin::CRPlugin) = merge_graph!(app.plugins[phase], plugin)
 
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]

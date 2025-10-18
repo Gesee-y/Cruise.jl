@@ -53,12 +53,12 @@ add_dependency!(plugin, id1, id2)
 Now all you have to do is defining your plugin lifecycle
 
 ```julia
-awake!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OK)
-awake!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OK)
-update!(node::CRPluginNode{Sys1}) = println(node.obj.x)
-update!(node::CRPluginNode{Sys2}) = println(node.obj.y + node.deps[Sys1].value.obj.x)
-shutdown!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OFF)
-shutdown!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OFF)
+Cruise.awake!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OK)
+Cruise.awake!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OK)
+Cruise.update!(node::CRPluginNode{Sys1}) = println(node.obj.x)
+Cruise.update!(node::CRPluginNode{Sys2}) = println(node.obj.y + node.deps[Sys1].value.obj.x)
+Cruise.shutdown!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OFF)
+Cruise.shutdown!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OFF)
 ```
 
 Finally you need to merge your plugin into Cruise at the correct phase.
