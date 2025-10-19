@@ -1,6 +1,6 @@
 # Cruise 0.3.0 documentation: Plugins
 
-This documentation provides the informations and steos necessary for anyone to make a plugin.
+This documentation provides the informations and steps necessary for anyone to make a plugin.
 
 In order to extend itself, Cruise rely on a **plugin system** built on top of a dependency graph.
 A **plugin** is basically a subgraph of that dependency graph.
@@ -81,7 +81,8 @@ end
 You should be seeing our plugin merrily doing it's job and printing numbers
 Since we are in Julia, you can create these plugin at runtime, add them or remove them at your will!
 
-By defaut any error happening during a node update will stop the program. So you have to use `try`/`catch` to prevent these and just set the plugin statusand last encountered error.
+By default, any error occurring during a node update will stop the program.
+So you have to use `try`/`catch` to prevent these, set the plugin status and last encountered error.
 
 ## Advanced Features
 
