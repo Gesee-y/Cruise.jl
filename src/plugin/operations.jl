@@ -183,11 +183,11 @@ end
 
 Iterate topologically on the graph and apply the function f on it sequentially.
 """
-function smap!(f, sg::CRPlugin)
+function smap!(f, sg::CRPlugin, args...)
     for id in sg.sort_cache
         node = sg.idtonode[id]
         try
-            f(node)
+            f(node, args...)
         catch e
             setstatus(node, PLUGIN_ERR)
             setlasterr(node, e)
@@ -200,7 +200,7 @@ end
 
 Iterate topologically on the graph and apply the function f on it concurrently.
 """
-function pmap!(f, sg::CRPlugin)
+function pmap!(f, sg::CRPlugin, args...)
     indeg = indegree(sg.graph)
     ready = [v for v in vertices(sg.graph) if indeg[v] == 0]
 
@@ -211,7 +211,7 @@ function pmap!(f, sg::CRPlugin)
             @spawn begin
                 node = sg.idtonode[v]
                 try
-                    f(node)
+                    f(node, args...)
                 catch e
                     setstatus(node, PLUGIN_ERR)
                     setlasterr(node, e)

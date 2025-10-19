@@ -94,7 +94,7 @@ function update!(a::CruiseApp, dt)
 	end
 end
 update!(a::CruiseApp, phase::Symbol, dt) = update!(a.plugins[phase], dt)
-update!(sg::CRPlugin, dt) = smap!(update!, sg)
+update!(sg::CRPlugin, dt) = pmap!(update!, sg, dt)
 update!(n::CRPluginNode) = nothing
 
 """
