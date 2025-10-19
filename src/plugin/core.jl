@@ -40,6 +40,7 @@ mutable struct CRPluginNode{T,S}
     children::Vector{CRPluginNode}
     status::CRSubject{CRPluginStatus}
     result::S
+    lasterr::Exception
 
     ## Constructors
 

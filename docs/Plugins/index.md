@@ -108,6 +108,8 @@ From there you can access the status of the dependency (`getstatus(node.deps[TYP
 * `hasfailed(s::CRPluginNode)`
 * `getstatus(s::CRPluginNode)`
 * `setstatus(s::CRPluginNode, st::CRPluginStatus)`
+* `getlasterror(s::CRPluginNode)`
+* `setlasterr(s::CRPluginNode, e::Exception)`
 * `getresult(s::CRPluginNode)`
 * `setresult(s::CRPluginNode, r)`
 * `hasfaileddeps(s::CRPluginNode)`
