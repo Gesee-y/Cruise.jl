@@ -81,6 +81,8 @@ end
 You should be seeing our plugin merrily doing it's job and printing numbers
 Since we are in Julia, you can create these plugin at runtime, add them or remove them at your will!
 
+By defaut any error happening during a node update will stop the program. So you have to use `try`/`catch` to prevent these and just set the plugin statusand last encountered error.
+
 ## Advanced Features
 
 ### Querying a node
