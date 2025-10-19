@@ -108,6 +108,56 @@ The DAG has been choosen for Cruise because it's a more fundamental architecture
 Cruise already comes with 3 architectures: Dataflow, ECS and SceneTree.
 Just waiting for you to add your own idea.
 
+### ECS Architecture 
+
+```julia
+using Cruise
+using RECSPlugin
+
+# We create a new app
+app = CruiseApp()
+
+merge_plugin!(app, RECSPLUGIN)
+
+@component Health begin hp::Int end
+@system HPSystem
+
+e1 = create_entity!(Health(10))
+
+## Then we make the game loop, it will update the systems
+```
+
+### SceneTree Architecture 
+
+```julia
+using Cruise
+using SceneTreePlugin
+
+# We create a new app
+app = CruiseApp()
+
+merge_plugin!(app, SCENETREEPLUGIN)
+
+mutable struct Player
+    hp::Int
+end
+struct Weapon end
+
+n1 = Node(Player(10))
+n2 = Node(Weapon())
+addchild(n1, n2)
+
+ready!(n::Node{Player}) = (n[].hp = 10)
+process!(n::Node{Player}) = println(n[].hp)
+
+connect(_ON_READY) do n::Node{Player}
+    add_child(n1, Node(Weapon))
+end
+
+## Then magic will happen in the game loop
+
+```
+
 ## Plugins
 
 So in order to extend itself, Cruise relies on a **DAG-driven architecture**.  
@@ -156,16 +206,18 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 ```julia
 using Cruise
+using ODPlugin
+using HZPlugin
 
 # We create a new app
 app = CruiseApp()
-enable_plugins()
 
-add_plugin(app, OutdoorPlugin; phase=:preupdate)
-add_plugin(app, HorizonPlugin)
+merge_plugin!(app, ODPLUGIN; phase=:preupdate)
+merge_plugin!(app, HZPLUGIN)
 
 # Initialise SDL style window with a SDL renderer
-win = CreateWindow(app, SDLStyle, SDLRender, "Example", 640, 480)
+win = CreateWindow(app, SDLStyle, "Example", 640, 480)
+
 
 # We import our resource as an ImageCrate
 img = @crate "docs|example|assets|001.png"::ImageCrate
