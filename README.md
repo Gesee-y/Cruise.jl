@@ -158,6 +158,30 @@ end
 
 ```
 
+### DataFlow Architecture 
+
+```julia
+using Cruise 
+
+app = CruiseApp()
+
+mutable struct Player
+    hp::Int
+end
+
+p1 = Player(10)
+
+game = CRPlugin()
+add_system!(game, p1)
+
+Cruise.awake!(n::CRPluginNode{Player}) = (n.obj.hp = 10)
+Cruise.update!(n::CRPluginNode{Player}) = println(n.obj.hp)
+
+merge_plugin!(app, game)
+
+## Magic happens in the game loop
+```
+
 ## Plugins
 
 So in order to extend itself, Cruise relies on a **DAG-driven architecture**.  
