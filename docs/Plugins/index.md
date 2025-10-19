@@ -7,7 +7,7 @@ A **plugin** is basically a subgraph of that dependency graph.
 
 ## Making a plugin
 
-To mae a plugin, it's relatively simple, first of all let's setup Cruise.
+To make a plugin, it's relatively simple, first of all let's setup Cruise.
 
 ```julia
 using Cruise
@@ -81,8 +81,11 @@ end
 You should be seeing our plugin merrily doing it's job and printing numbers
 Since we are in Julia, you can create these plugin at runtime, add them or remove them at your will!
 
-By default, any error occurring during a node update will stop the program.
-So you have to use `try`/`catch` to prevent these, set the plugin status and last encountered error.
+By default, any error occurring during a node update will be catched and the node will have his status set to `PLUGIN_ERR`.
+
+## Worflow
+
+When making a plugin, it's better to do it as a package. Users will be able to install easily and manage the binary size. You can then specify in you `project.toml` the other plugins yours need.
 
 ## Advanced Features
 

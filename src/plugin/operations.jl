@@ -186,7 +186,12 @@ Iterate topologically on the graph and apply the function f on it sequentially.
 function smap!(f, sg::CRPlugin)
     for id in sg.sort_cache
         node = sg.idtonode[id]
-        f(node)
+        try
+            f(node)
+        catch e
+            setstatus(node, PLUGIN_ERR)
+            setlasterr(node, e)
+        end
     end
 end
 
@@ -205,7 +210,12 @@ function pmap!(f, sg::CRPlugin)
         @sync for v in ready
             @spawn begin
                 node = sg.idtonode[v]
-                f(node)
+                try
+                    f(node)
+                catch e
+                    setstatus(node, PLUGIN_ERR)
+                    setlasterr(node, e)
+                end
 
                 for child in outneighbors(sg.graph, v)
                     indeg[child] -= 1
