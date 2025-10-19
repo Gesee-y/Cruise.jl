@@ -15,7 +15,8 @@ using Cruise
 app = CruiseApp()
 ```
 
-Then we need to define our structures.
+Then we need to define our structures. Any type can be node for a plugin, there is no special supertype.
+This way you can taea fully backed renderer as Maie and just use it as a node.
 
 ```julia
 struct Sys1
@@ -47,7 +48,7 @@ id2 = add_system!(plugin, s2)
 Now we can try adding a dependency between these 2 systems
 
 ```julia
-add_dependency!(plugin, id1, id2)
+add_dependency!(plugin, id1, id2) # Cycles are automatically detected if  there arre some.
 ```
 
 Now all you have to do is defining your plugin lifecycle
@@ -112,6 +113,9 @@ From there you can access the status of the dependency (`getstatus(node.deps[TYP
 * `hasfaileddeps(s::CRPluginNode)`
 * `hasuninitializeddeps(s::CRPluginNode)`
 * `hasalldepsinitialized(s::CRPluginNode)`
+* `hasdeaddeps(s::CRPluginNode)`
+
+A node SHOULD NOT modify it's dependency, that would violate the principle of separations of concerns and violate the integrity of the graph. 
 
 ### Plugins Status
 
