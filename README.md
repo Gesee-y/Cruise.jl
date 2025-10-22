@@ -68,14 +68,8 @@ What Cruise gives you
 - **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
 - **Full Julia Power**: REPL-driven dev, live code injection, and JIT-level speed.
 
+
 ## What does Cruise represent ?
-
-I was kind of surprised when I realized that Cruise has a double impact:
-
-- An ambitious Julia game engine.  
-- An ambitious African game engine.  
-
-Not only is it a big plus for the Julia ecosystem, but also a demonstration that Africa can produce massive and complex industry-grade tools.
 
 Making a game is a long and tortuous journey with many ups and downs. Building a game engine is often a necessary step, but it's easy to lose the desire to make the actual game.  
 
