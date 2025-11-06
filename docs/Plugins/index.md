@@ -1,13 +1,15 @@
-# Cruise 0.3.0 documentation: Plugins
+# Cruise 0.3.0 Documentation: Plugins & Capabilities
 
-This documentation provides the informations and steps necessary for anyone to make a plugin.
+This documentation provides the information and steps necessary for anyone to create a plugin in Cruise.
 
-In order to extend itself, Cruise rely on a **plugin system** built on top of a dependency graph.
-A **plugin** is basically a subgraph of that dependency graph.
+Cruise extends itself via a **plugin system** built on top of a dependency graph. A plugin is essentially a **subgraph of that dependency graph**. To control interactions between plugins, Cruise uses a **capabilities system**: each plugin can expose a limited interface (a capability) to dependent plugins.
 
-## Making a plugin
 
-To make a plugin, it's relatively simple, first of all let's setup Cruise.
+---
+
+## Making a Plugin
+
+To create a plugin, first set up Cruise:
 
 ```julia
 using Cruise
@@ -15,62 +17,96 @@ using Cruise
 app = CruiseApp()
 ```
 
-Then we need to define our structures. Any type can be node for a plugin, there is no special supertype.
-This way you can taea fully backed renderer as Maie and just use it as a node.
+Then define your system structures. Any type can be a node for a plugin; there is no special supertype required.
 
 ```julia
 struct Sys1
-	x::Int
+    x::Int
 end
 
 struct Sys2
-	y::Int
+    y::Int
 end
 
 s1, s2 = Sys1(1), Sys2(0)
 ```
 
-Now we have an instance of our 2 systems, we need not to create a new empty plugin.
+Create a new empty plugin:
 
 ```julia
 plugin = CRPlugin()
 ```
 
-Then to that plugin we will just add our structs to it.
+---
+
+## Adding Capabilities
+
+Each plugin node must expose a **capability**, which restricts what dependent nodes can access.
 
 ```julia
-id1 = add_system!(plugin, s1)
-id2 = add_system!(plugin, s2)
-``` 
+# Define concrete capabilities
+struct Sys1Cap <: AbstractCapability
+    max_value::Int
+end
 
-`add_system!` return the id of the new system in the plugin.
+struct Sys2Cap <: AbstractCapability
+    allowed_increment::Int
+end
 
-Now we can try adding a dependency between these 2 systems
-
-```julia
-add_dependency!(plugin, id1, id2) # Cycles are automatically detected if  there arre some.
+# Create nodes with capabilities
+id1 = add_system!(plugin, s1, Sys1Cap(100))
+id2 = add_system!(plugin, s2, Sys2Cap(10))
 ```
 
-Now all you have to do is defining your plugin lifecycle
+> The capability is the **only interface** other plugins will receive when they depend on this node.
+
+---
+
+## Adding Dependencies with Capabilities
+
+Dependencies only expose the capability of the parent to the child:
+
+```julia
+add_dependency!(plugin, id1, id2)
+```
+
+Now Sys2 can access Sys1 only via its capability and cannot modify the internal state of Sys1 directly.
+
+---
+
+## Defining the Plugin Lifecycle
+
+Define the lifecycle methods (awake!, update!, shutdown!) for your plugin nodes:
 
 ```julia
 Cruise.awake!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OK)
 Cruise.awake!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OK)
+
 Cruise.update!(node::CRPluginNode{Sys1}) = println(node.obj.x)
-Cruise.update!(node::CRPluginNode{Sys2}) = println(node.obj.y + node.deps[Sys1].value.obj.x)
+
+Cruise.update!(node::CRPluginNode{Sys2}) = begin
+    cap = node.deps[:Sys1].value  # access only Sys1's capability
+    println(node.obj.y + cap.max_value)
+end
+
 Cruise.shutdown!(node::CRPluginNode{Sys1}) = setstatus(node, PLUGIN_OFF)
 Cruise.shutdown!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OFF)
 ```
 
-Finally you need to merge your plugin into Cruise at the correct phase.
+---
+
+## Merging and Running
+
+Merge the plugin into Cruise at the correct phase:
 
 ```julia
 merge_plugin!(app, plugin, :preupdate)
 ```
 
-> Note that even if a plugin has been merged into the graph, you can still manage it from the `CRPlugin` you created.
+> Even after merging, you can still manage the plugin from the CRPlugin instance you created.
 
-You are done, just run Cruise's gameloop.
+
+Run Cruise’s gameloop:
 
 ```julia
 @gameloop app begin
@@ -78,71 +114,99 @@ You are done, just run Cruise's gameloop.
 end
 ```
 
-You should be seeing our plugin merrily doing it's job and printing numbers
-Since we are in Julia, you can create these plugin at runtime, add them or remove them at your will!
+Errors during update! are caught automatically and set the node status to PLUGIN_ERR.
 
-By default, any error occurring during a node update will be catched and the node will have his status set to `PLUGIN_ERR`.
 
-## Worflow
+---
 
-When making a plugin, it's better to do it as a package. Users will be able to install easily and manage the binary size. You can then specify in you `project.toml` the other plugins yours need.
+## Workflow
+
+It is recommended to package your plugin as a Julia package. This allows users to install it easily and manage binary size. Dependencies on other plugins can be declared in Project.toml.
+
+
+---
 
 ## Advanced Features
 
-### Querying a node
+### Querying a Node
 
-You can use `getnodeid(plugin, symbol)` to get the id of a given node type. `symbol` is the node tpe as a Symbol.
+Use `getnodeid(plugin, symbol)` to get the ID of a given node type.
 
 You can also use:
 
-- `remove_system!(sg::CRPlugin, id::Int; sort=true)` : Remove the system with `id` from the graph
-- `remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)`: Remove the dependency between the systems with ids `from` and `to`
+- `remove_system!(sg::CRPlugin, id::Int; sort=true)` : Remove a system by ID.
 
-### Dependencies
+- `remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)` : Remove a dependency.
 
-Each plugin node store a `WeakRef` to its dependencies. WeakRef are used because a plugin isn't supposed to keep his dependencies alive, if they are deleted, the plugin should see that his deps is no more there. You can access them like this:
+
+---
+
+## Dependencies & Capabilities
+
+Each plugin node stores a WeakRef to its dependencies. These references contain only the capability exposed by the dependency, not the full node object.
 
 ```julia
-node.deps[TYPE] # Will return a weakref to the dependency of type `TYPE`
+node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type TYPE
 ```
 
-From there you can access the status of the dependency (`getstatus(node.deps[TYPE].value)`), the last result it returned (`getresult(node.deps[TYPE].value)`), it's instance (`node.deps[TYPE].value.obj`), etc.
+Use these utility functions:
 
-* `isinitialized(s::CRPluginNode)`
-* `isuninitialized(s::CRPluginNode)`
-* `isdeprecated(s::CRPluginNode)`
-* `hasfailed(s::CRPluginNode)`
-* `getstatus(s::CRPluginNode)`
-* `setstatus(s::CRPluginNode, st::CRPluginStatus)`
-* `getlasterror(s::CRPluginNode)`
-* `setlasterr(s::CRPluginNode, e::Exception)`
-* `getresult(s::CRPluginNode)`
-* `setresult(s::CRPluginNode, r)`
-* `hasfaileddeps(s::CRPluginNode)`
-* `hasuninitializeddeps(s::CRPluginNode)`
-* `hasalldepsinitialized(s::CRPluginNode)`
-* `hasdeaddeps(s::CRPluginNode)`
+- `isinitialized(s::CRPluginNode)`
 
-A node SHOULD NOT modify it's dependency, that would violate the principle of separations of concerns and violate the integrity of the graph. 
+- `isuninitialized(s::CRPluginNode)`
 
-### Plugins Status
+- `isdeprecated(s::CRPluginNode)`
 
-Plugins status gives informations about the current state of a plugin. It's in fact an enumeration:
+- `hasfailed(s::CRPluginNode)`
+
+- `getstatus(s::CRPluginNode)`
+
+- `setstatus(s::CRPluginNode, st::CRPluginStatus)`
+
+- `getlasterror(s::CRPluginNode)`
+
+- `setlasterr(s::CRPluginNode, e::Exception)`
+
+- `getresult(s::CRPluginNode)`
+
+- `setresult(s::CRPluginNode, r)`
+
+- `hasfaileddeps(s::CRPluginNode)`
+
+- `hasuninitializeddeps(s::CRPluginNode)`
+
+- `hasalldepsinitialized(s::CRPluginNode)`
+
+- `hasdeaddeps(s::CRPluginNode)`
+
+
+> Important: You should **never** modify a node manually; doing so would break the separation of concerns and violate graph integrity.
+
+
+---
+
+### Plugin Status
+
+Plugin status indicates the current state of a plugin node:
 
 ```julia
 @enum CRPluginStatus begin
-    PLUGIN_OFF # The plugin is not initialized
-    PLUGIN_DEPRECATED # The plugin result are deprecated
-    PLUGIN_OK # The plugin is inited
-    PLUGIN_ERR # The plugin encountered an error
+    PLUGIN_OFF         # Plugin not initialized
+    PLUGIN_DEPRECATED  # Plugin results are deprecated
+    PLUGIN_OK          # Plugin is initialized and running
+    PLUGIN_ERR         # Plugin encountered an error
 end
 ```
 
-Each time a plugin node change status, an event is sent. you can use `add_status_callback(f, node)` to call the function `f` each time the node changes its status.
+Status change events can be tracked using `add_status_callback(f, node)`.
 
-## Applying a function on a plugin
 
-We provide 2 function to apply a function on a plugin:
+---
 
-- `smap!(f, plugin)` : It will topologically and sequentially apply the function `f` on the node of the plugin
-- `pmap!(f, plugin)` : It will topologically apply the function `f` on the node of the plugin. It will run nodes on the same level in parallel to ensure it's thread-safe. 
+### Applying a Function on a Plugin
+
+Cruise provides two methods to apply a function to all nodes:
+
+- `smap!(f, plugin)` : Apply f sequentially in topological order.
+
+- `pmap!(f, plugin)` : Apply f topologically and concurrently for nodes on the same level, ensuring thread safety.
