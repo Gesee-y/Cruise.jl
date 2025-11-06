@@ -69,6 +69,7 @@ Dependencies only expose the capability of the parent to the child:
 ```julia
 add_dependency!(plugin, id1, id2)
 ```
+If adding a dependency will introduce a cor ulsr dependency, then this function will do nothing and return `false`, otherwise it returns `true`
 
 Now Sys2 can access Sys1 only via its capability and cannot modify the internal state of Sys1 directly.
 
