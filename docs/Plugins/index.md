@@ -149,6 +149,9 @@ Each plugin node stores a WeakRef to its dependencies. These references contain 
 node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type TYPE
 ```
 
+**`WeakRef`s** are used here so that when a given plugin node is removed or deleted, his dependencies should not prevent the GC to take it nor should continue using a dead node.
+
+
 Use these utility functions:
 
 - `isinitialized(s::CRPluginNode)`
