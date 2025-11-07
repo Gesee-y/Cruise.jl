@@ -41,6 +41,7 @@ mutable struct CRPluginNode{T,S}
     status::CRSubject{CRPluginStatus}
     result::S
     lasterr::Exception
+    capability::AbstractCapability
 
     ## Constructors
 
