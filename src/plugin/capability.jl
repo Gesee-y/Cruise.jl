@@ -2,16 +2,7 @@
 ################################################### CAPABILITIES #######################################################
 #########################################################################################################################
 
-export AbstractCapability, add_capability!, get_capability, require_capability
-
-"""
-    abstract type AbstractCapability
-
-Abstract supertype representing a capability that a plugin can expose to other plugins.
-Capabilities are used to control and restrict access between plugins in the dependency graph.
-"""
-abstract type AbstractCapability end
-
+export add_capability!, get_capability, require_capability
 
 """
     add_capability!(node::CRPluginNode, cap::AbstractCapability)
