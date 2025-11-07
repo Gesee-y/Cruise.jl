@@ -98,7 +98,7 @@ Cruise.awake!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OK)
 Cruise.update!(node::CRPluginNode{Sys1}) = println(node.obj.x)
 
 Cruise.update!(node::CRPluginNode{Sys2}) = begin
-    cap = node.deps[:Sys1].value  # access only Sys1's capability
+    cap = getdep(node, Sys1)  # access only Sys1's capability
     println(node.obj.y + cap.max_value)
 end
 
