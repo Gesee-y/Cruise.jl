@@ -1,3 +1,4 @@
+module TempStorage
 
 export TempStorage, addvar!, getvar, hasvar, delvar!, clear!, save!, load!, cleanup!,
        on, off, start_auto_cleanup!, stop_auto_cleanup!, listnamespaces, listvars
@@ -530,3 +531,5 @@ function load!(ts::TempStorage, filepath::String)
     
     @info "Storage loaded from $filepath" active_vars=length(ts.data) expired_removed=expired_count
 end
+
+end # module
