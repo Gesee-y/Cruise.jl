@@ -26,6 +26,8 @@ include("object.jl")
 include("game_loop.jl")
 include("writer.jl")
 
+@reexport .TemporaryStorage
+
 text_en = [
 	"{speed:0.2}Everything begins somewhere.{pause:4}",
     "No dream comes from nowhere.{pause:4}",
