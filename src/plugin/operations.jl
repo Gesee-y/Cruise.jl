@@ -20,6 +20,8 @@ hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(s.d
 hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(s.deps))
 hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(s.deps))
 hasdeaddeps(s::CRPluginNode) = any(isnothing, values(s.deps))
+getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d].value : error("Dependency $n not found in node)
+getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
 
 add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
 serialize(::CRPluginNode) = ""
