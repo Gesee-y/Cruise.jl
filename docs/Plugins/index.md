@@ -39,7 +39,11 @@ plugin = CRPlugin()
 
 ---
 
-## Adding Capabilities
+## Capabilities
+
+A **capability** is an interface a node expose for his dependencies to use, this is used to restrict what a node allows its dependencies to modify. This make the program safer.
+
+### Adding capabilities
 
 Each plugin node must expose a **capability**, which restricts what dependent nodes can access.
 
@@ -60,6 +64,13 @@ id2 = add_system!(plugin, s2, Sys2Cap(10))
 
 > The capability is the **only interface** other plugins will receive when they depend on this node.
 
+You should also set some utilities functions so that any we can still get informations about the node from the capability.
+For example:
+
+```julia
+Cruise.getstatus(c::Sys1Cap) = iszero(c.max_value) ? PLUGIN_ERR : PLUGIN_OK 
+```
+
 ---
 
 ## Adding Dependencies with Capabilities
@@ -69,6 +80,7 @@ Dependencies only expose the capability of the parent to the child:
 ```julia
 add_dependency!(plugin, id1, id2)
 ```
+
 If adding a dependency will introduce a cor ulsr dependency, then this function will do nothing and return `false`, otherwise it returns `true`
 
 Now Sys2 can access Sys1 only via its capability and cannot modify the internal state of Sys1 directly.
