@@ -1,4 +1,4 @@
-module TempStorage
+module TemporaryStorage
 
 export TempStorage, addvar!, getvar, hasvar, delvar!, clear!, save!, load!, cleanup!,
        on, off, start_auto_cleanup!, stop_auto_cleanup!, listnamespaces, listvars
