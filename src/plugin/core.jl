@@ -2,6 +2,7 @@
 ######################################################## CORE ###########################################################
 #########################################################################################################################
 
+export AbstractCapability 
 export CRPluginNode, CRPlugin, CRPluginStatus
 
 struct StopExec end
@@ -19,6 +20,14 @@ end
 Supertype of any kind of system graph.
 """
 abstract type AbstractPlugin end
+
+"""
+    abstract type AbstractCapability
+
+Abstract supertype representing a capability that a plugin can expose to other plugins.
+Capabilities are used to control and restrict access between plugins in the dependency graph.
+"""
+abstract type AbstractCapability end
 
 """
     mutable struct CRPlugin{T}
