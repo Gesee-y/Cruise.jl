@@ -80,7 +80,7 @@ get_graph(sg::CRPlugin) = sg.graph
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::CRPlugin, obj; sort=true)
+function add_system!(sg::CRPlugin, obj, cap::AbstractCapability; sort=true)
     id = get_available_id(sg)
     node = CRPluginNode(obj)
     add_node!(sg, id, node)
@@ -112,7 +112,7 @@ function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     if add_edge_checked!(IncrementalCycleTracker(sg.graph), from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
-        c.deps[typeof(p.obj)] = WeakRef(p)
+        c.deps[typeof(p.obj)] = WeakRef(p. capability)
         push!(p.children, c)
         sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     end
