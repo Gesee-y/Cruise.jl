@@ -4,7 +4,7 @@
 
 export add_system!, remove_system!, add_dependency!, remove_dependency!, merge_graphs!, pmap!, smap!
 export isinitialized, isuninitialized, isdeprecated, hasfailed, getstatus, setstatus, setresult
-export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized
+export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized, getdep
 
 isinitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OK
 isuninitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OFF
@@ -20,7 +20,7 @@ hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(s.d
 hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(s.deps))
 hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(s.deps))
 hasdeaddeps(s::CRPluginNode) = any(isnothing, values(s.deps))
-getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d].value : error("Dependency $n not found in node)
+getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d].value : error("Dependency $n not found in node")
 getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
 
 add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
