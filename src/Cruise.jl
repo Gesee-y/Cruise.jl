@@ -18,6 +18,7 @@ using Base.Threads
 @reexport using AssetCrates
 
 include("events.jl")
+include("tempstorage.jl")
 include(joinpath("plugin", "plugin.jl"))
 include("utilities.jl")
 include("App.jl")
