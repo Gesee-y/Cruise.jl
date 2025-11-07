@@ -19,14 +19,14 @@ using Base.Threads
 
 include("events.jl")
 include("tempstorage.jl")
+
+@reexport using .TemporaryStorage
 include(joinpath("plugin", "plugin.jl"))
 include("utilities.jl")
 include("App.jl")
 include("object.jl")
 include("game_loop.jl")
 include("writer.jl")
-
-@reexport .TemporaryStorage
 
 text_en = [
 	"{speed:0.2}Everything begins somewhere.{pause:4}",
