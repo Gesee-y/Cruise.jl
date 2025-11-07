@@ -198,7 +198,7 @@ This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a 
 
 - [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
-- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, dynamic structs and more.
+- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, temporary storage, dynamic structs and more.
 
 ### Modules
 
