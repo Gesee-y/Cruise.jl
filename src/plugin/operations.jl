@@ -86,6 +86,7 @@ function add_system!(sg::CRPlugin, obj, cap::AbstractCapability; sort=true)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
+    add_capability!(node, cap)
     sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     return id
 end
