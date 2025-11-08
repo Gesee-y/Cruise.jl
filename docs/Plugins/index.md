@@ -151,7 +151,6 @@ You can also use:
 
 - `remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)` : Remove a dependency.
 
-
 ---
 
 ## Dependencies & Capabilities
@@ -164,6 +163,69 @@ node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type
 
 **`WeakRef`s** are used here so that when a given plugin node is removed or deleted, his dependencies should not prevent the GC to take it nor should continue using a dead node.
 
+Exactement, c’est une super idée 😎
+
+Ça te permet de structurer le dump de chaque plugin de manière uniforme et d’éviter le chaos quand tu restores des états ou analyses les logs. Tu pourrais formaliser ça comme ça :
+
+
+---
+
+### Plugin Serialization
+
+Every plugin must overload the serialization functions `encode_state` that outputs a dictionary with exactly 2 top-level sections following the enumeration:
+
+```julia
+@enum PluginSerializationInfo begin
+    PLUGIN_STATE_INFO
+    PLUGIN_DEBUG_INFO
+end
+```
+
+1. `PLUGIN_STATE_INFO` : the core runtime state of the plugin. It should provides enough informations for you to reconstruct the data of you `CRPluginNode`.
+
+2. `PLUGIN_DEBUG_INFO`: optional info for debugging, monitoring, or health-checks (e.g., counters, last error, timestamps). Anything that could help debug abnormal behaviors in your plugin.
+
+#### Restoring your plugin
+
+You should overload the `restore_plugin` methods which will have the following signature:
+
+```julia
+reatore_plugin(::Val{:YourPluginName}, data::Dict{String, Any})
+```
+
+This function should returns an instance of the object contained in your plugin. You will have to use the informations you previously gave to serialize to create your object
+
+#### Serialization Rules
+
+- Keys within each section should be namespaced by the plugin name: "PluginName-key"
+
+- Non-serializable fields (callbacks, Tasks, WeakRefs) must be skipped.
+
+- `restore_state` must be able to restore both state and data fully.
+
+- debug can be ignored during restore; it is purely informational.
+
+
+#### Example
+
+```julia
+Dict(
+    PLUGIN_STATE_INFO => Dict("TimerPlugin-current_time" => 12.5, "TimerPlugin-active" => true),
+    PLUGIN_DEBUG_INFO => Dict("TimerPlugin-last_update" => DateTime("2025-11-08T10:00:00"))
+)
+```
+
+#### Why this ?
+
+Because it offers:
+
+- Clear separation between runtime, persistent, and debug info
+
+- Easier logging and debugging
+
+- Uniform format for all plugins, making save/load logic generic
+
+### Utilities
 
 Use these utility functions:
 
