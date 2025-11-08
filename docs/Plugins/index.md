@@ -153,7 +153,7 @@ You can also use:
 
 ---
 
-## Dependencies & Capabilities
+### Dependencies & Capabilities
 
 Each plugin node stores a WeakRef to its dependencies. These references contain only the capability exposed by the dependency, not the full node object.
 
@@ -162,11 +162,6 @@ node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type
 ```
 
 **`WeakRef`s** are used here so that when a given plugin node is removed or deleted, his dependencies should not prevent the GC to take it nor should continue using a dead node.
-
-Exactement, c’est une super idée 😎
-
-Ça te permet de structurer le dump de chaque plugin de manière uniforme et d’éviter le chaos quand tu restores des états ou analyses les logs. Tu pourrais formaliser ça comme ça :
-
 
 ---
 
@@ -185,12 +180,12 @@ end
 
 2. `PLUGIN_DEBUG_INFO`: optional info for debugging, monitoring, or health-checks (e.g., counters, last error, timestamps). Anything that could help debug abnormal behaviors in your plugin.
 
-#### Restoring your plugin
+#### Restoring your plugin's state
 
-You should overload the `restore_plugin` methods which will have the following signature:
+You should overload the `restore_state` methods which will have the following signature:
 
 ```julia
-reatore_plugin(::Val{:YourPluginName}, data::Dict{String, Any})
+reatore_state(::Val{:YourPluginName}, data::Dict{String, Any})
 ```
 
 This function should returns an instance of the object contained in your plugin. You will have to use the informations you previously gave to serialize to create your object
@@ -224,6 +219,15 @@ Because it offers:
 - Easier logging and debugging
 
 - Uniform format for all plugins, making save/load logic generic
+
+### Registering plugin
+
+In order for your plugin to be registered, it need to meet the following guidelines:
+
+- Have a clear goal
+- Have passing unit tests
+- Should pass a mockup scenario provides by Cruise and not cause any damage. If you want to propose a new mock, make a pull request.
+- Should the the julia registrator's guidelines
 
 ### Utilities
 
