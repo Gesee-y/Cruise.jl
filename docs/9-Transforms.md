@@ -1,4 +1,6 @@
-# Cruise v0.3.0: Transformations
+# Cruise v0.3.0: Transformations and coordinate system 
+
+## Transforms 
 
 Transformations allows you to move, rotate your object.
 
@@ -33,3 +35,37 @@ occur,
 
 The transformation matrix isn't automatically updated when data in the `Transform` change so you need to call `updated_transform_matrix!` on it.
 
+## Coordinate systems
+
+**Coordinate systems** allow you to do compplex calculations in the most convenient representation.
+Cruise provides you with:
+
+- `PolarCoord`
+- `BipolarCoord`
+- `CylindricalCoord`
+- `SphericalCoord`
+- `CartesianCoord`
+
+To create your own system all you have to do is to create your sub type 
+of it (`MyCoordinateSystem <: CoordinateSystem`) and then set the methods ToCartesian(::MyCoordinateSystem) and 
+you are done
+
+```julia-repl
+
+julia> struct PolarCoordinate <: CoordinateSystem
+                  r :: Float64
+                  phi :: Float64
+       end
+
+julia> ToCartesian(coord::PolarCoordinate) = begin
+            x = cos(coord.phi) * coord.r
+            y = sin(coord.phi) * coord.r
+
+            return CartesianCoord{2}(x,y) # To cartesian should return a cartesian coordinate struct for efficiency
+           end
+
+julia> # Polar coordinate can now be used for any calculation involving a Coordinate system
+
+```
+
+---
