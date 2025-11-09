@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.5 – Input Handling
+# Cruise Engine v0.3.0: Input Handling
 
 Input management is critical for interactive applications. Cruise provides a simple yet powerful API to track keyboard and mouse input with ease.
 
@@ -10,8 +10,11 @@ Start by initializing your application and opening a window:
 
 ```julia
 using Cruise
+using ODPlugin # It’s also provides inputs handling
 
 app = CruiseApp()
+merge_plugin!(app, ODPLUGIN)
+
 win = CreateWindow(app, SDLStyle, SDLRender, "Inputs Receiver", 640, 480)
 ```
 
@@ -19,34 +22,30 @@ win = CreateWindow(app, SDLStyle, SDLRender, "Inputs Receiver", 640, 480)
 
 ## Keyboard Input
 
-Cruise offers several functions to track the state of keys. These must be called within an **active game loop**, otherwise no input will be registered.
+Through the ODPlugin, Cruise offers several functions to track the state of keys. These must be called within an **active game loop**, otherwise no input will be registered.
 
 ### Key State Functions
 
-All functions take the `win.inst` as first argument, followed by a string key name:
+All functions take the `win` as first argument, followed by a string key name:
 
-* `IsKeyPressed(win.inst, "A")`
-  → Returns `true` if key **A** is currently held down.
+* `IsKeyPressed(win, "A")`: Returns `true` if key **A** is currently held down.
 
-* `IsKeyJustPressed(win.inst, "LEFT")`
-  → Returns `true` if the **Left Arrow** was pressed **this frame**.
+* `IsKeyJustPressed(win, "LEFT")`: Returns `true` if the **Left Arrow** was pressed **this frame**.
 
-* `IsKeyReleased(win.inst, "R")`
-  → Returns `true` if key **R** is currently **not pressed**.
+* `IsKeyReleased(win, "R")`: Returns `true` if key **R** is currently **not pressed**.
 
-* `IsKeyJustReleased(win.inst, "A")`
-  → Returns `true` if key **A** was released **this frame**.
+* `IsKeyJustReleased(win, "A")`: Returns `true` if key **A** was released **this frame**.
 
 ---
 
-## 🖱 Mouse Input
+## Mouse Input
 
 Mouse buttons are handled in a similar way:
 
-* `IsMouseButtonPressed(win.inst, "LEFT_BUTTON")`
-* `IsMouseButtonJustPressed(win.inst, "RIGHT_BUTTON")`
-* `IsMouseButtonReleased(win.inst, "MIDDLE_BUTTON")`
-* `IsMouseButtonJustReleased(win.inst, "LEFT_BUTTON")`
+* `IsMouseButtonPressed(win, "LEFT_BUTTON")`
+* `IsMouseButtonJustPressed(win, "RIGHT_BUTTON")`
+* `IsMouseButtonReleased(win, "MIDDLE_BUTTON")`
+* `IsMouseButtonJustReleased(win, "LEFT_BUTTON")`
 
 Mouse constants include:
 `"LEFT_BUTTON"`, `"RIGHT_BUTTON"`, `"MIDDLE_BUTTON"`
@@ -64,7 +63,7 @@ To avoid hardcoding keys throughout your codebase, you can define **input maps**
 Once declared, `Up` can be passed directly to the input functions:
 
 ```julia
-if IsKeyPressed(win.inst, Up)
+if IsKeyPressed(win, Up)
     println("Moving Up!")
 end
 ```
@@ -81,20 +80,10 @@ Make sure to wrap your logic in a loop like this:
 
 ```julia
 @gameloop app begin
-    if IsKeyPressed(win.inst, "Q")
+    if IsKeyPressed(win, "Q")
         shutdown!(app)
     end
 end
 ```
 
 ---
-
-## Summary
-
-You now know how to:
-
-* Track keyboard and mouse input
-* Detect input states per frame
-* Use input maps for better abstraction
-
-In the next section, we’ll explore rendering within the game loop and how to use `@frame` for visual output.
