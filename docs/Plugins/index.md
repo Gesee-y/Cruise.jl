@@ -1,4 +1,4 @@
-# Cruise 0.3.0 Documentation: Plugins & Capabilities
+# Cruise 0.3.0 Documentation: Plugins
 
 This documentation provides the information and steps necessary for anyone to create a plugin in Cruise.
 
