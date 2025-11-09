@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.5 – Creating a Basic App
+# Cruise Engine v0.3.0: Creating a Basic App
 
 In this section, we’ll learn how to set up a minimal Cruise application **without opening a window**. This will help you understand the basic structure of a Cruise-based app and how the main loop is handled.
 
@@ -74,15 +74,4 @@ shutdown!(app)
 
 This function stops the app and cleans up all allocated resources.
 
----
-
-## Summary
-
-You now understand how to:
-
-* Initialize a Cruise app
-* Create a controlled game loop
-* Access loop timing data
-* Cleanly shut down the application
-
-From now on, we’ll assume you are working from a source file rather than the REPL.
+---
