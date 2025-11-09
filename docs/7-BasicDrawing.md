@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.5 – Basic Drawings
+# Cruise Engine v0.3.0: Basic Drawings
 
 This section covers how to draw basic shapes using Cruise.
 
@@ -10,9 +10,37 @@ Start by initializing a window and application as usual:
 
 ```julia
 using Cruise
+using ODPlugin
 
 app = CruiseApp()
-win = CreateWindow(app, SDLStyle, SDLRender, "Drawing Window", 640, 480)
+merge_plugin!(app, ODPLUGIN)
+win = CreateWindow(SDLStyle, "Drawing Window", 640, 480)
+```
+
+---
+
+## Setting a renderer 
+
+For this you need a plugin for rendering. For now we recommend you to use [HZPlugin.jl](https://github.com/Gesee-y/HZPlugin.jl) which allows you to use [Horizons.jl](https://github.com/Gesee-y/Horizons.jl) into Cruise.
+To add it, just do:
+
+```julia-repl
+julia> ]add HZPlugin 
+```
+
+Then in your script you just do:
+
+```julia
+
+using HZPlugin 
+
+merge_plugin!(app, HZPLUGIN)
+```
+
+Now to create a new backend you do:
+
+```julia
+backend = CreateBackend(GetWindowPtr(GetStyle(win)), SDLRender, GetWindowSize(win)...)
 ```
 
 ---
@@ -22,7 +50,7 @@ win = CreateWindow(app, SDLStyle, SDLRender, "Drawing Window", 640, 480)
 Use `SetDrawColor` to define the current drawing color:
 
 ```julia
-SetDrawColor(context(win), (0, 5, 3, 8))  # RGBA format
+SetDrawColor(backend, (0, 5, 3, 8))  # RGBA format
 ```
 
 > **Note:** The alpha channel only affects rendering if blending is enabled using `SetAlphaBlendMode(context, SDL_BLENDMODE_BLEND)`.
@@ -35,7 +63,7 @@ Use `DrawPoint` to draw a single point:
 
 ```julia
 @gameloop app begin
-    DrawPoint(context(win), (50, 50))
+    DrawPoint(backend, (50, 50))
 end
 ```
 
@@ -43,7 +71,7 @@ To draw multiple points at once:
 
 ```julia
 @gameloop app begin
-    DrawPoints(context(win), [(10, 50), (20, 55), (27, 62)])
+    DrawPoints(backend, [(10, 50), (20, 55), (27, 62)])
 end
 ```
 
@@ -57,7 +85,7 @@ Draw a single line:
 
 ```julia
 @gameloop app begin
-    DrawLine(context(win), (50, 0), (70, 30))
+    DrawLine(backend, (50, 0), (70, 30))
 end
 ```
 
@@ -65,7 +93,7 @@ To draw connected lines between multiple points:
 
 ```julia
 @gameloop app begin
-    DrawLines(context(win), Vec2(1, 5), Vec2(5, 9), Vec2(78, 6))
+    DrawLines(backend, Vec2(1, 5), Vec2(5, 9), Vec2(78, 6))
 end
 ```
 
@@ -79,7 +107,7 @@ To draw a rectangle outline:
 
 ```julia
 @gameloop app begin
-    DrawRect(context(win), Rect2Di(0, 0, 50, 50))
+    DrawRect(backend, Rect2Di(0, 0, 50, 50))
 end
 ```
 
@@ -87,7 +115,7 @@ To draw a filled rectangle:
 
 ```julia
 @gameloop app begin
-    FillRect(context(win), Rect2Di(10, 10, 30, 30))
+    FillRect(backend, Rect2Di(10, 10, 30, 30))
 end
 ```
 
@@ -102,18 +130,8 @@ You can draw multiple rectangles at once:
 
 ```julia
 @gameloop app begin
-    FillRects(context(win), [Rect2Di(10,10,30,30), Rect2Di(50,50,20,40)])
+    FillRects(backend, [Rect2Di(10,10,30,30), Rect2Di(50,50,20,40)])
 end
 ```
 
----
-
-## Summary
-
-You now know how to:
-
-* Set draw colors (with or without alpha)
-* Draw points, lines, and rectangles (filled or outlined)
-* Use batched drawing for performance
-
-In the next section, we’ll cover how to draw **images and textures**.
+---
