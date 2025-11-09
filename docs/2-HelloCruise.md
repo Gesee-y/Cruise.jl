@@ -2,7 +2,7 @@
 
 In this section, we will set up a minimal Cruise application to verify that everything works as expected.
 
-## 🧩 Installation
+## Installation
 
 First, install the engine. If you haven't already:
 
@@ -16,16 +16,14 @@ For the latest development version:
 julia> ]add https://github.com/Gesee-y/Cruise.jl
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 After installation, load the package:
 
 ```julia
 julia> using Cruise
 ```
-
-> ⚠️ The first load may take some time due to Julia’s compilation.
-
+
 Now you're ready to run your first Cruise function:
 
 ```julia
