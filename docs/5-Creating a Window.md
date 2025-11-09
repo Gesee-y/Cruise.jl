@@ -1,4 +1,4 @@
-# Cruise Engine v0.1.5 – Window Creation
+# Cruise Engine v0.3.0: Window Creation
 
 This section explains how to create and manage windows using Cruise. Windows are at the core of any graphical application, and Cruise makes it easy to open and control them.
 
@@ -6,7 +6,7 @@ This section explains how to create and manage windows using Cruise. Windows are
 
 ---
 
-## Step 1 – Import Cruise
+## Step 1: Import Cruise
 
 ```julia
 using Cruise
@@ -14,7 +14,7 @@ using Cruise
 
 ---
 
-## Step 2 – Create a Cruise Application
+## Step 2: Create a Cruise Application
 
 Every Cruise-based project begins with creating a central application instance:
 
@@ -26,7 +26,23 @@ This instance acts as a container for all windows, events, and state handling.
 
 ---
 
-## Step 3 – Create a Window
+## Step 3: Use the windowing plugin
+
+In order to create a window, you need a dedicated plugin for that. We recommend you the [ODPlugin](https://github.com/Gesee-y/ODPlugin.jl) which allows you to use [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl) into Cruise. To add it, you can use the REPL and just do:
+
+```julia-repl
+julia> ]add ODPlugin
+```
+
+Then in your script you just do:
+
+```julia
+using ODPlugin 
+
+merge_plugin!(app, ODPLUGIN)
+```
+
+## Step 4: Create a Window
 
 Use `CreateWindow` to initialize a new window:
 
@@ -82,11 +98,3 @@ end
 Closing **both** windows will stop the loop, unless configured otherwise.
 
 ---
-
-## Summary
-
-Cruise’s window system is modular, backend-agnostic, and designed to scale. You now know how to:
-
-* Initialize a Cruise application
-* Create one or more windows
-* Run the game loop
