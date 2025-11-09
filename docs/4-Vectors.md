@@ -1,4 +1,4 @@
-# Cruise engine v0.1.5 : Vectors math
+# Cruise engine v0.3.0 : Vectors math
 
 Here we will introduce you to some Cruise maths to allow you to easily make your games.
 First of all, you should import Cruise,
