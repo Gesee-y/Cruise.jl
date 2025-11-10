@@ -3,7 +3,7 @@
 #########################################################################################################################
 
 export GameLoop
-export @gameloop
+export @gameloop, LOOP_VAR_REF
 
 ## Inspired from B+ engine by William Manning
 """
@@ -53,6 +53,15 @@ Base.@kwdef mutable struct GameLoop
     max_frame_duration::Float32 = 0.5
 end
 
+const LOOP_VAR_REF = Ref{GameLoop}(GameLoop())
+
+function reset!(l::GameLoop)
+    l.last_frame_time_ns = 0
+    l.frame_idx = 0
+    l.max_fps = 60
+    l.max_frame_duration = 0.5
+end
+
 """
     @gameloop app begin
         ...
@@ -99,22 +108,22 @@ macro gameloop(args...)
         end
     end
     body = esc(quote
-        off(app) && awake!(app)
-        od_app = app.inst
-        world = app.ecs
+        app = Cruise.CruiseApp()
+        Cruise.off(app) && Cruise.awake!()
         tolerance = 0.02
-        LOOP_VAR = GameLoop()
+        LOOP_VAR = LOOP_VAR_REF[]
+        Cruise.reset!(LOOP_VAR)
         LOOP_VAR.max_fps = $max_fps
         LOOP_VAR.max_frame_duration = $max_duration
-        while on(app)
+        while Cruise.on(app)
 
             # First pump events and initialize every windows
-            update!(app.plugins[:preupdate])
+            Cruise.update!(app.plugins[:preupdate])
 
             # Then execute the loop code
             $code
 
-            update!(app.plugins[:postupdate])
+            Cruise.update!(app.plugins[:postupdate])
 
             # Advance the timer.
             LOOP_VAR.frame_idx += 1
@@ -134,7 +143,7 @@ macro gameloop(args...)
                 else
                     wait_time = target_frame_time*(fratio+1) - elapsed_seconds
                     if wait_time > 0
-                        Notifyers.sleep_ns(wait_time; sec=true)
+                        EventNotifiers.sleep_ns(wait_time; sec=true)
                         # Update the timestamp again after waiting.
                         new_time = time_ns()
                     end
@@ -148,6 +157,8 @@ macro gameloop(args...)
             # Cap the length of the next frame.
             LOOP_VAR.delta_seconds = min(LOOP_VAR.max_frame_duration, LOOP_VAR.delta_seconds)
         end
+
+        on(app) && shutdown!()
     end)
     
     # A noted by William, global code is slow in julia, better wrap it in an anonymous function

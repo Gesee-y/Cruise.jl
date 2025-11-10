@@ -1,6 +1,8 @@
-##############################
-# Minimal Observer Pattern
-##############################
+#####################################################################################################################################
+####################################################### Minimal Observer Pattern ####################################################
+#####################################################################################################################################
+
+export CRSubject, connect, disconnect, notify!
 
 const Observer = Function
 
@@ -11,7 +13,7 @@ mutable struct CRSubject{T}
     CRSubject(value::T) where T = new{T}(value, Observer[])
 end
 
-function connect(s::CRSubject, f::Observer)
+function connect(f::Observer, s::CRSubject)
     push!(s.observers, f)
     return f
 end
@@ -28,4 +30,4 @@ function notify!(s::CRSubject)
 end
 
 Base.getindex(s::CRSubject) = s.value
-Base.setindex(s::CRSubject, v) = (s.value = v)
+Base.setindex!(s::CRSubject, v) = (s.value = v)

@@ -50,7 +50,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin), 
+	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), 
 	    	CrateManager(), false)
 	end
 	unlock(app_lock)
@@ -68,7 +68,8 @@ Initialize the CruiseApp and all his plugins.
 
 Initialize all the systems in the given CRPlugin.
 """
-function awake!(a::CruiseApp) 
+function awake!()
+    a = CruiseApp() 
 	a.running = true
 	for sg in values(a.plugins)
 		awake!(sg)
@@ -88,13 +89,14 @@ Update for the current frame the CruiseApp and all his plugins.
 
 Update for the current frame all the systems in the given CRPlugin.
 """
-function update!(a::CruiseApp, dt) 
+function update!()
+    a = CruiseApp() 
 	for sg in values(a.plugins)
-		update!(sg, dt)
+		update!(sg)
 	end
 end
-update!(a::CruiseApp, phase::Symbol, dt) = update!(a.plugins[phase], dt)
-update!(sg::CRPlugin, dt) = pmap!(update!, sg, dt)
+update!(a::CruiseApp, phase::Symbol) = update!(a.plugins[phase])
+update!(sg::CRPlugin) = pmap!(update!, sg)
 update!(n::CRPluginNode) = nothing
 
 """
@@ -106,7 +108,8 @@ This function will stop Cruise, his plugins and clean up the resources.
 
 This will stop the given system graph by topologically calling shutdown! on the systems.
 """
-function shutdown!(a::CruiseApp)
+function shutdown!()
+	a = CruiseApp()
     if on(a)
         a.running = false
         for sg in values(a.plugins)
@@ -132,7 +135,7 @@ Returns true if the CruiseApp isn't running.
 """
 off(a::CruiseApp) = !a.running
 
-merge_plugin!(app::CruiseApp, plugin::CRPlugin) = merge_graph!(app.plugins[phase], plugin)
+merge_plugin!(app::CruiseApp, plugin::CRPlugin, phase=:postupdate) = merge_graphs!(app.plugins[phase], plugin)
 
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]

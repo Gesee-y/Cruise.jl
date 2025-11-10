@@ -175,7 +175,7 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
         end
     end
 
-    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
+    sort && (sg1.sort_cache = topological_sort(get_graph(sg1)))
 
     return sg1
 end

@@ -1,25 +1,26 @@
 module TemporaryStorage
 
-export TempStorage, addvar!, getvar, hasvar, delvar!, clear!, save!, load!, cleanup!,
-       on, off, start_auto_cleanup!, stop_auto_cleanup!, listnamespaces, listvars
+export TempStorage, Namespace, TempEntry, addvar!, getvar, hasvar, delvar!, clear!, save!, load!, cleanup!,
+       on, off, start_auto_cleanup!, stop_auto_cleanup!, listnamespaces, listvars, createnamespace!, getnamespaces,
+       getnamespace, deletenamespace!
 
 using Dates, JSON
 
 abstract type AbstractNamespace end
 
 mutable struct TempEntry{T}
-    val::T
-    expiration::DateTime
+    value::T
+    ttl::Union{Nothing,DateTime}
 
     ## Constructor
 
-    TempEntry(v::T) where T = new{T}(v)
+    TempEntry(v::T) where T = new{T}(v, nothing)
     TempEntry(v::T, ttl::DateTime) where T = new{T}(v, ttl)
 end
 
 mutable struct Namespace <: AbstractNamespace
     data::Dict{String, TempEntry}
-    observers::Dict{Symbol, Vector{Function}}
+    listeners::Dict{Symbol, Vector{Function}}
     namespaces::Dict{String, Namespace}
     lock::ReentrantLock
     cleanup_task::Union{Nothing, Task}
@@ -65,7 +66,7 @@ start_auto_cleanup!(ts, Second(60))
 """
 mutable struct TempStorage <: AbstractNamespace
     data::Dict{String, TempEntry}
-    observers::Dict{Symbol, Vector{Tuple{Function, Function}}}
+    listeners::Dict{Symbol, Vector{Tuple{Function, Function}}}
     namespaces::Dict{String, Namespace}
     lock::ReentrantLock
     cleanup_task::Union{Nothing, Task}
@@ -143,7 +144,7 @@ end
 # -- Event system ---------------------------------------------------
 
 """
-    connect(ts::TempStorage, event::Symbol, callback::Function)
+    on(f, ts::TempStorage, event::Symbol)
 
 Registers a callback function for an event.  
 
@@ -154,12 +155,12 @@ Registers a callback function for an event.
 
 # Example
 ```julia
-connect(ts, :add) do key, value
+on(ts, :add) do key, value
     println("Added: \$key = \$value")
 end
 ```
 """
-function on(f, ts::TempStorage, event::Symbol, args...)
+function on(f, ts::AbstractNamespace, event::Symbol, args...)
     lock(ts.lock) do
         v = get!(ts.listeners, event, Vector{Tuple{Function,Function}}())
         callback = f
@@ -226,16 +227,17 @@ function addvar!(ts::Namespace, value, name::String, ttl=nothing)
     
     lock(ts.lock) do
         entry = TempEntry(value)
-        entry.value = value
         if ttl !== nothing
             entry.ttl = now() + ttl
         end
+
+        ts.data[name] = entry
     end
     
     _emit(ts, :addkey, key, value)
     return value
 end
-addvar!(ts::TempStorage, args...; ns="") = addvar!(ts.namespace[ns], args...)
+addvar!(ts::TempStorage, args...; ns="") = addvar!(ts.namespaces[ns], args...)
 Base.setindex!(n::AbstractNamespace, v, inds...) = addvar!(n, v, inds...)
 
 """
@@ -258,7 +260,7 @@ function getvar(ts::Namespace, name::String; default=nothing)
         return get(ts.data, key, default)
     end
 end
-getvar(ts::TempStorage, name; default=nothing, ns="") =  getvar(ts.namespace[ns], name; default=default)
+getvar(ts::TempStorage, name; default=nothing, ns="") =  getvar(ts.namespaces[ns], name; default=default)
 Base.getindex(ts::AbstractNamespace, name) =  getvar(ts, name)
 
 """
@@ -283,7 +285,7 @@ function hasvar(ts::Namespace, name::String)
         return haskey(ts.data, key)
     end
 end
-hasvar(ts::TempStorage, name; ns="") = hasvar(ts.namespace[ns], name)
+hasvar(ts::TempStorage, name; ns="") = hasvar(ts.namespaces[ns], name)
 
 """
     delvar!(ts::TempStorage, name::String; ns="")
@@ -301,17 +303,15 @@ function delvar!(ts::Namespace, name::String)
     key = name
     
     value = lock(ts.lock) do
-        v = pop!(ts.data, key, nothing)
-        delete!(ts.expirations, key)
-        v
+        return pop!(ts.data, key, nothing)
     end
     
     if value !== nothing
         _emit(ts, :deletekey, key, value.value)
     end
 end
-delvar!(ts::TempStorage, name; ns="") = delvar!(ts.namespace[ns], name)
-delete!(ts::AbstractNamespace, name) = delvar!(ts, name)
+delvar!(ts::TempStorage, name; ns="") = delvar!(ts.namespaces[ns], name)
+Base.delete!(ts::AbstractNamespace, name) = delvar!(ts, name)
 
 """
     clear!(ts::Namespace; ns=nothing)
@@ -326,8 +326,8 @@ clear!(ts, ns="temp")   # Clear only "temp" namespace
 """
 function clear!(ts::Namespace)
     keys_to_delete = lock(ts.lock) do
-         clear!(ts.data)
-         clear!(ts.namespace)
+        empty!(ts.data)
+        empty!(ts.namespaces)
     end
 
     _emit(ts, :clear)
@@ -335,11 +335,11 @@ end
 
 function clear!(ts::TempStorage; ns=nothing)
     if ns != nothing
-        clear!(ts.namespace[ns])
+        clear!(ts.namespaces[ns])
     else
         lock(ts.lock) do
-            clear!(ts.namespace)
-            ts.namespace[""] = Namespace()
+            empty!(ts.namespaces)
+            ts.namespaces[""] = Namespace()
         end
     end
 
@@ -355,7 +355,7 @@ This is called automatically by `getvar` and `hasvar`, but can be called
 manually to force immediate cleanup.
 """
 function cleanup!(ts::TempStorage)
-    for ns in values(ts.namespace)
+    for ns in values(ts.namespaces)
         cleanup!(ns)
     end
 end
@@ -363,7 +363,7 @@ function cleanup!(ts::Namespace)
     nowtime = now()
     
     expired = lock(ts.lock) do
-        [k for (k, v) in ts.data if isdefined(v, :ttl) && v.ttl < nowtime]
+        [k for (k, v) in ts.data if !isnothing(v.ttl) && v.ttl < nowtime]
     end
     
     for k in expired
@@ -378,7 +378,7 @@ function cleanup!(ts::Namespace)
         end
     end
 
-    for ns in values(ts.namespace)
+    for ns in values(ts.namespaces)
         cleanup!(ns)
     end
 end
@@ -448,8 +448,8 @@ function stop_auto_cleanup!(ts::TempStorage)
     @info "Auto-cleanup stopped"
 end
 
-createnamespace(ts::AbstractNamespace, name) = begin
-    setindex!(ts.namespace, Namespace(), name)
+createnamespace!(ts::AbstractNamespace, name) = begin
+    setindex!(ts.namespaces, Namespace(), name)
     _emit(ts, :addns, name)
 end
 
@@ -464,11 +464,11 @@ namespaces = listnamespaces(ts)
 println("Active namespaces: \$namespaces")
 ```
 """
-getnamespaces(ts::AbstractNamespace) = ts.namespace
+getnamespaces(ts::AbstractNamespace) = ts.namespaces
 getnamespace(ts::AbstractNamespace, ns="") = getnamespaces(ts)[ns]
 
 deletenamespace!(ts::AbstractNamespace, name) = begin
-    delete!(ts.namespac, name)
+    delete!(ts.namespaces, name)
     _emit(ts, :deletens, name)
 end
 
@@ -488,7 +488,7 @@ varsdict(ns::Namespace) = ns.data
 function listvars(ts::TempStorage; ns="")
     cleanup!(ts)
     
-    varsdict(ts.namespace[ns])
+    varsdict(ts.namespaces[ns])
 end
 
 # TODO: Improve serialization
@@ -507,7 +507,7 @@ save!(ts::TempStorage, filepath::String) = save!(ts, open(filepath, "w"))
 function save!(ts::TempStorage, io::IO) 
     cleanup!(ts)
 
-    for ns in values(ts.namespace)
+    for ns in values(ts.namespaces)
         save!(io, ns, filepath)
     end
 
