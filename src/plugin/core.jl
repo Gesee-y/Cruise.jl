@@ -21,13 +21,7 @@ Supertype of any kind of system graph.
 """
 abstract type AbstractPlugin end
 
-"""
-    abstract type AbstractCapability
-
-Abstract supertype representing a capability that a plugin can expose to other plugins.
-Capabilities are used to control and restrict access between plugins in the dependency graph.
-"""
-abstract type AbstractCapability end
+include("plugindict.jl")
 
 """
     mutable struct CRPlugin{T}
@@ -45,17 +39,16 @@ Returns a new CRPlugin from the given obj
 mutable struct CRPluginNode{T,S}
     id::Int
     obj::T
-    deps::Dict{DataType, WeakRef}
+    deps::PluginDict
     children::Vector{CRPluginNode}
     status::CRSubject{CRPluginStatus}
     result::S
     lasterr::Exception
-    capability::AbstractCapability
 
     ## Constructors
 
-    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(PLUGIN_OFF))
-    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, Dict{DataType, WeakRef}(), CRPluginNode[], CRSubject(PLUGIN_OFF))
+    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
+    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
 end
 
 """

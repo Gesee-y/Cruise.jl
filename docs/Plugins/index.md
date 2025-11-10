@@ -45,35 +45,18 @@ A **capability** is an interface a node expose for his dependencies to use, this
 
 ### Adding capabilities
 
-Each plugin node must expose a **capability**, which restricts what dependent nodes can access.
+Each plugin node expose a **capability**, which restricts what dependent nodes can access.
+It's basically just the instance of the object you want to add.
+This way users of your plugin can't access the internal daa of the `CRPlugin` itself, just what you provided them
 
 ```julia
-# Define concrete capabilities
-struct Sys1Cap <: AbstractCapability
-    max_value::Int
-end
-
-struct Sys2Cap <: AbstractCapability
-    allowed_increment::Int
-end
-
-# Create nodes with capabilities
-id1 = add_system!(plugin, s1, Sys1Cap(100))
-id2 = add_system!(plugin, s2, Sys2Cap(10))
-```
-
-> The capability is the **only interface** other plugins will receive when they depend on this node.
-
-You should also set some utilities functions so that any we can still get informations about the node from the capability.
-For example:
-
-```julia
-Cruise.getstatus(c::Sys1Cap) = iszero(c.max_value) ? PLUGIN_ERR : PLUGIN_OK 
+id1 = add_system!(plugin, s1)
+id2 = add_system!(plugin, s2)
 ```
 
 ---
 
-## Adding Dependencies with Capabilities
+## Adding Dependencies
 
 Dependencies only expose the capability of the parent to the child:
 
@@ -81,7 +64,7 @@ Dependencies only expose the capability of the parent to the child:
 add_dependency!(plugin, id1, id2)
 ```
 
-If adding a dependency will introduce a cor ulsr dependency, then this function will do nothing and return `false`, otherwise it returns `true`
+If adding a dependency will introduce a circular dependency, then this function will do nothing and return `false`, otherwise it returns `true`
 
 Now Sys2 can access Sys1 only via its capability and cannot modify the internal state of Sys1 directly.
 

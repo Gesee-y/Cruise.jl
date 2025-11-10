@@ -124,19 +124,19 @@ _serialize(value) = value
 """
 Deserializes value from JSON storage
 """
-function _deserialize(::Val{:DateTime}. value)
+function _deserialize(::Val{:DateTime}, value)
     val = value["value"]
     return DateTime(val)
 end
-function _deserialize(::Val{:Symbol}. value)
+function _deserialize(::Val{:Symbol}, value)
     val = value["value"]
     return Symbol(val)
 end
-function _deserialize(::Val{:Date}. value)
+function _deserialize(::Val{:Date}, value)
     val = value["value"]
     return Date(val)
 end
-function _deserialize(::Val. value)
+function _deserialize(::Val, value)
     return value
 end
 

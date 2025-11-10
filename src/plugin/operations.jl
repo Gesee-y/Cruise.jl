@@ -16,11 +16,11 @@ getresult(s::CRPluginNode) = s.result
 setresult(s::CRPluginNode, r) = (s.result = r)
 getlasterror(s::CRPluginNode) = isdefined(s, :lasterr) ? s.lasterr : nothing
 setlasterr(s::CRPluginNode, e::Exception) = setfield!(s, :lasterr, e)
-hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(s.deps))
-hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(s.deps))
-hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(s.deps))
-hasdeaddeps(s::CRPluginNode) = any(isnothing, values(s.deps))
-getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d].value : error("Dependency $n not found in node")
+hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(_getdata(s.deps)))
+hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(_getdata(s.deps)))
+hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(_getdata(s.deps)))
+hasdeaddeps(s::CRPluginNode) = any(isnothing, values(_getdata(s.deps)))
+getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d] : error("Dependency $n not found in node")
 getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
 
 add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
@@ -82,13 +82,12 @@ get_graph(sg::CRPlugin) = sg.graph
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::CRPlugin, obj, cap::AbstractCapability; sort=true)
+function add_system!(sg::CRPlugin, obj, S=Any; sort=true)
     id = get_available_id(sg)
-    node = CRPluginNode(obj)
+    node = CRPluginNode{S}(obj)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
-    add_capability!(node, cap)
     sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     return id
 end
@@ -115,7 +114,7 @@ function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     if add_edge_checked!(IncrementalCycleTracker(sg.graph), from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
-        c.deps[typeof(p.obj)] = WeakRef(p. capability)
+        c.deps[typeof(p.obj)] = WeakRef(p.obj)
         push!(p.children, c)
         sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     end
