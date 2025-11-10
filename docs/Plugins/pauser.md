@@ -33,11 +33,14 @@ add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, :TimerManager), id)
 add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, :ODApp), id)
 ```
 
+In Cruise, a dependecy link ensures that one system is updated after another and can access its instance safely.
+Herer, `PauseManager` depends on both `TimerManager` and `ODApp`, so it can pause timers based on player input.
 Now the interesting part, the lifecycle. For this plugin `awake!` and `shutdown!` are irrelevant so we will just implement `update!`:
 
 ```julia
 function Cruise.update!(n::CRPluginNode{PauseManager}, _)
-    tm = n.deps[:TimeManager]
+    hasfaileddeps(n) && return
+    tm = n.deps[:TimerManager]
     od = n.deps[:ODApp]
 
     tm.paused = IsKeyJustPressed(od, PAUSE) ? !tm.paused : tm.paused
