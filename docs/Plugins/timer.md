@@ -40,7 +40,7 @@ addtimer!(tm::TimerManager, dur) = begin
     addtimer!(tm, timer)
     return timer
 end
-addtimer!(tm::TimerManager, t::Timer) = push!(tm.timer, t)
+addtimer!(tm::TimerManager, t::Timer) = push!(tm.timers, t)
 
 ontimeout(f, t::Timer) = connect(f, t.signal)
 ```
@@ -56,6 +56,8 @@ Let's now define our timer lifecyle. Since there is nothing much to do at boot t
 ```julia
 function Cruise.update!(n::CRPluginNode{TimerManager}, lvar::GameLoop)
     tm = n.obj
+    tm.paused && return
+    
     timers = tm.timers
     start, stop = 1, length(timers)
     dt = lvar.delta_seconds
