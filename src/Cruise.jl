@@ -12,10 +12,11 @@ using Reexport
 using Graphs
 using Base.Threads
 
+include("..\\..\\AssetCrates.jl\\src\\AssetCrates.jl")
 @reexport using EventNotifiers
 @reexport using NodeTree
 @reexport using GDMathLib
-@reexport using AssetCrates
+@reexport using .AssetCrates
 
 include("events.jl")
 include("tempstorage.jl")

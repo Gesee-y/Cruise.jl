@@ -5,6 +5,38 @@ export TempStorage, addvar!, getvar, hasvar, delvar!, clear!, save!, load!, clea
 
 using Dates, JSON
 
+abstract type AbstractNamespace end
+
+mutable struct TempEntry{T}
+    val::T
+    expiration::DateTime
+
+    ## Constructor
+
+    TempEntry(v::T) where T = new{T}(v)
+    TempEntry(v::T, ttl::DateTime) where T = new{T}(v, ttl)
+end
+
+mutable struct Namespace <: AbstractNamespace
+    data::Dict{String, TempEntry}
+    observers::Dict{Symbol, Vector{Function}}
+    namespaces::Dict{String, Namespace}
+    lock::ReentrantLock
+    cleanup_task::Union{Nothing, Task}
+    cleanup_active::Ref{Bool}
+end
+
+function Namespace()
+    Namespace(
+        Dict{String, TempEntry}(),
+        Dict{Symbol, Vector{Function}}(),
+        Dict{String, Namespace}(),
+        ReentrantLock(),
+        nothing,
+        Ref(false)
+    )
+end
+
 """
     TempStorage()
 
@@ -31,10 +63,10 @@ end
 start_auto_cleanup!(ts, Second(60))
 ```
 """
-mutable struct TempStorage
-    data::Dict{String, Any}
-    expirations::Dict{String, DateTime}
-    listeners::Dict{Symbol, Vector{Function}}
+mutable struct TempStorage <: AbstractNamespace
+    data::Dict{String, TempEntry}
+    observers::Dict{Symbol, Vector{Tuple{Function, Function}}}
+    namespaces::Dict{String, Namespace}
     lock::ReentrantLock
     cleanup_task::Union{Nothing, Task}
     cleanup_active::Ref{Bool}
@@ -42,9 +74,9 @@ end
 
 function TempStorage()
     TempStorage(
-        Dict{String, Any}(),
-        Dict{String, DateTime}(),
+        Dict{String, TempEntry}(),
         Dict{Symbol, Vector{Function}}(),
+        Dict{String, Namespace}("" => Namespace()),
         ReentrantLock(),
         nothing,
         Ref(false)
@@ -84,59 +116,58 @@ _fullname(ns::Union{Nothing, String}, name::String) = ns === nothing ? name : "$
 """
 Serializes value for JSON storage (handles special types)
 """
-function _serialize(value)
-    if value isa DateTime
-        return Dict("__type__" => "DateTime", "value" => string(value))
-    elseif value isa Symbol
-        return Dict("__type__" => "Symbol", "value" => string(value))
-    elseif value isa Date
-        return Dict("__type__" => "Date", "value" => string(value))
-    else
-        return value
-    end
-end
+_serialize(value::DateTime) = Dict("__type__" => "DateTime", "value" => string(value))
+_serialize(value::Symbol) = Dict("__type__" => "Symbol", "value" => string(value))
+_serialize(value::Date) = Dict("__type__" => "Date", "value" => string(value))
+_serialize(value) = value
 
 """
 Deserializes value from JSON storage
 """
-function _deserialize(value)
-    if value isa Dict && haskey(value, "__type__")
-        type_str = value["__type__"]
-        val = value["value"]
-        if type_str == "DateTime"
-            return DateTime(val)
-        elseif type_str == "Symbol"
-            return Symbol(val)
-        elseif type_str == "Date"
-            return Date(val)
-        end
-    end
+function _deserialize(::Val{:DateTime}. value)
+    val = value["value"]
+    return DateTime(val)
+end
+function _deserialize(::Val{:Symbol}. value)
+    val = value["value"]
+    return Symbol(val)
+end
+function _deserialize(::Val{:Date}. value)
+    val = value["value"]
+    return Date(val)
+end
+function _deserialize(::Val. value)
     return value
 end
 
 # -- Event system ---------------------------------------------------
 
 """
-    on(ts::TempStorage, event::Symbol, callback::Function)
+    connect(ts::TempStorage, event::Symbol, callback::Function)
 
 Registers a callback function for an event.  
 
 # Supported events
-- `:add` — triggered when a variable is added (receives: key, value)
-- `:delete` — triggered when a variable is deleted (receives: key, value)
-- `:expire` — triggered when a variable expires (receives: key, value)
+- `:add`: triggered when a variable is added (receives: key, value)
+- `:delete`: triggered when a variable is deleted (receives: key, value)
+- `:expire`: triggered when a variable expires (receives: key, value)
 
 # Example
 ```julia
-on(ts, :add) do key, value
+connect(ts, :add) do key, value
     println("Added: \$key = \$value")
 end
 ```
 """
-function on(ts::TempStorage, event::Symbol, callback::Function)
+function on(f, ts::TempStorage, event::Symbol, args...)
     lock(ts.lock) do
-        v = get!(ts.listeners, event, Vector{Function}())
-        push!(v, callback)
+        v = get!(ts.listeners, event, Vector{Tuple{Function,Function}}())
+        callback = f
+
+        if !isempty(args)
+            callback = (v...) -> isequal.(v, args) && f(v...)
+        end
+        push!(v, (f,callback))
     end
 end
 
@@ -148,7 +179,7 @@ Unregisters a previously registered callback for a specific event.
 function off(ts::TempStorage, event::Symbol, callback::Function)
     lock(ts.lock) do
         if haskey(ts.listeners, event)
-            filter!(f -> f !== callback, ts.listeners[event])
+            filter!(f -> f[1] !== callback, ts.listeners[event])
         end
     end
 end
@@ -156,14 +187,14 @@ end
 """
 Emits an event to all registered listeners (thread-safe)
 """
-function _emit(ts::TempStorage, event::Symbol, args...)
+function _emit(ts::AbstractNamespace, event::Symbol, args...)
     listeners_copy = lock(ts.lock) do
-        get(ts.listeners, event, Function[]) |> copy
+        get(ts.listeners, event, Tuple{Function,Function}[]) |> copy
     end
     
     for cb in listeners_copy
         try
-            cb(args...)
+            cb[2](args...)
         catch e
             @warn "Event callback error for event :$event" exception=(e, catch_backtrace())
         end
@@ -173,44 +204,42 @@ end
 # -- Core API -------------------------------------------------------
 
 """
-    addvar!(ts::TempStorage, name::String, value; ns=nothing, ttl=nothing)
+    addvar!(ts::TempStorage, value, name::String, ttl=nothing)
 
 Adds a variable to the storage (thread-safe).  
 
 # Arguments
-- `name`: variable name (cannot contain '/' or '\\')
 - `value`: any serializable value
-- `ns`: optional namespace for organization
+- `name`: variable name (cannot contain '/' or '\\')
 - `ttl`: optional expiration duration (e.g. `Second(5)`, `Minute(1)`)
 
 # Example
 ```julia
-addvar!(ts, "count", 42, ns="stats", ttl=Second(60))
-addvar!(ts, "config", Dict("debug" => true))
+addvar!(ts, 42, "count", Second(60))
+addvar!(ts, Dict("debug" => true), "config")
 ```
 """
-function addvar!(ts::TempStorage, name::String, value; ns=nothing, ttl=nothing)
+function addvar!(ts::Namespace, value, name::String, ttl=nothing)
     _validate_name(name)
-    _validate_namespace(ns)
     
-    key = _fullname(ns, name)
+    key = name
     
     lock(ts.lock) do
-        ts.data[key] = value
+        entry = TempEntry(value)
+        entry.value = value
         if ttl !== nothing
-            ts.expirations[key] = now() + ttl
-        else
-            # Remove expiration if updating without TTL
-            delete!(ts.expirations, key)
+            entry.ttl = now() + ttl
         end
     end
     
-    _emit(ts, :add, key, value)
+    _emit(ts, :addkey, key, value)
     return value
 end
+addvar!(ts::TempStorage, args...; ns="") = addvar!(ts.namespace[ns], args...)
+Base.setindex!(n::AbstractNamespace, v, inds...) = addvar!(n, v, inds...)
 
 """
-    getvar(ts::TempStorage, name::String; ns=nothing, default=nothing)
+    getvar(ts::TempStorage, name::String; ns="", default=nothing)
 
 Returns the value of a variable, or `default` if it does not exist or has expired.
 
@@ -219,17 +248,18 @@ Returns the value of a variable, or `default` if it does not exist or has expire
 count = getvar(ts, "count", ns="stats", default=0)
 ```
 """
-function getvar(ts::TempStorage, name::String; ns=nothing, default=nothing)
+function getvar(ts::Namespace, name::String; default=nothing)
     _validate_name(name)
-    _validate_namespace(ns)
     
     cleanup!(ts)
-    key = _fullname(ns, name)
+    key = name
     
     lock(ts.lock) do
         return get(ts.data, key, default)
     end
 end
+getvar(ts::TempStorage, name; default=nothing, ns="") =  getvar(ts.namespace[ns], name; default=default)
+Base.getindex(ts::AbstractNamespace, name) =  getvar(ts, name)
 
 """
     hasvar(ts::TempStorage, name::String; ns=nothing) -> Bool
@@ -243,20 +273,20 @@ if hasvar(ts, "session", ns="auth")
 end
 ```
 """
-function hasvar(ts::TempStorage, name::String; ns=nothing)
+function hasvar(ts::Namespace, name::String)
     _validate_name(name)
-    _validate_namespace(ns)
     
     cleanup!(ts)
-    key = _fullname(ns, name)
+    key = name
     
     lock(ts.lock) do
         return haskey(ts.data, key)
     end
 end
+hasvar(ts::TempStorage, name; ns="") = hasvar(ts.namespace[ns], name)
 
 """
-    delvar!(ts::TempStorage, name::String; ns=nothing)
+    delvar!(ts::TempStorage, name::String; ns="")
 
 Deletes a variable if it exists.
 
@@ -265,11 +295,10 @@ Deletes a variable if it exists.
 delvar!(ts, "session", ns="auth")
 ```
 """
-function delvar!(ts::TempStorage, name::String; ns=nothing)
+function delvar!(ts::Namespace, name::String)
     _validate_name(name)
-    _validate_namespace(ns)
     
-    key = _fullname(ns, name)
+    key = name
     
     value = lock(ts.lock) do
         v = pop!(ts.data, key, nothing)
@@ -278,12 +307,14 @@ function delvar!(ts::TempStorage, name::String; ns=nothing)
     end
     
     if value !== nothing
-        _emit(ts, :delete, key, value)
+        _emit(ts, :deletekey, key, value.value)
     end
 end
+delvar!(ts::TempStorage, name; ns="") = delvar!(ts.namespace[ns], name)
+delete!(ts::AbstractNamespace, name) = delvar!(ts, name)
 
 """
-    clear!(ts::TempStorage; ns=nothing)
+    clear!(ts::Namespace; ns=nothing)
 
 Clears all variables, or only those within the specified namespace.
 
@@ -293,23 +324,26 @@ clear!(ts)              # Clear everything
 clear!(ts, ns="temp")   # Clear only "temp" namespace
 ```
 """
-function clear!(ts::TempStorage; ns=nothing)
+function clear!(ts::Namespace)
     keys_to_delete = lock(ts.lock) do
-        if ns === nothing
-            collect(keys(ts.data))
-        else
-            prefix = "$ns/"
-            [k for k in keys(ts.data) if startswith(k, prefix)]
+         clear!(ts.data)
+         clear!(ts.namespace)
+    end
+
+    _emit(ts, :clear)
+end
+
+function clear!(ts::TempStorage; ns=nothing)
+    if ns != nothing
+        clear!(ts.namespace[ns])
+    else
+        lock(ts.lock) do
+            clear!(ts.namespace)
+            ts.namespace[""] = Namespace()
         end
     end
-    
-    for k in keys_to_delete
-        # Extract name from full key
-        parts = split(k, '/')
-        name = parts[end]
-        ns_part = length(parts) > 1 ? join(parts[1:end-1], '/') : nothing
-        delvar!(ts, name, ns=ns_part)
-    end
+
+    _emit(ts, :clear)
 end
 
 """
@@ -321,23 +355,31 @@ This is called automatically by `getvar` and `hasvar`, but can be called
 manually to force immediate cleanup.
 """
 function cleanup!(ts::TempStorage)
+    for ns in values(ts.namespace)
+        cleanup!(ns)
+    end
+end
+function cleanup!(ts::Namespace)
     nowtime = now()
     
     expired = lock(ts.lock) do
-        [k for (k, t) in ts.expirations if t < nowtime]
+        [k for (k, v) in ts.data if isdefined(v, :ttl) && v.ttl < nowtime]
     end
     
     for k in expired
         val = lock(ts.lock) do
             v = get(ts.data, k, nothing)
             delete!(ts.data, k)
-            delete!(ts.expirations, k)
             v
         end
         
         if val !== nothing
             _emit(ts, :expire, k, val)
         end
+    end
+
+    for ns in values(ts.namespace)
+        cleanup!(ns)
     end
 end
 
@@ -406,8 +448,13 @@ function stop_auto_cleanup!(ts::TempStorage)
     @info "Auto-cleanup stopped"
 end
 
+createnamespace(ts::AbstractNamespace, name) = begin
+    setindex!(ts.namespace, Namespace(), name)
+    _emit(ts, :addns, name)
+end
+
 """
-    listnamespaces(ts::TempStorage) -> Vector{String}
+    getnamespaces(ts::TempStorage) -> Vector{String}
 
 Returns a list of all active namespaces.
 
@@ -417,23 +464,17 @@ namespaces = listnamespaces(ts)
 println("Active namespaces: \$namespaces")
 ```
 """
-function listnamespaces(ts::TempStorage)
-    cleanup!(ts)
-    
-    lock(ts.lock) do
-        namespaces = Set{String}()
-        for k in keys(ts.data)
-            if occursin('/', k)
-                ns = split(k, '/')[1]
-                push!(namespaces, ns)
-            end
-        end
-        return sort(collect(namespaces))
-    end
+getnamespaces(ts::AbstractNamespace) = ts.namespace
+getnamespace(ts::AbstractNamespace, ns="") = getnamespaces(ts)[ns]
+
+deletenamespace!(ts::AbstractNamespace, name) = begin
+    delete!(ts.namespac, name)
+    _emit(ts, :deletens, name)
 end
 
+
 """
-    listvars(ts::TempStorage; ns=nothing) -> Vector{String}
+    varsdict(ts::TempStorage; ns=nothing) -> Vector{String}
 
 Returns a list of all variable names, optionally filtered by namespace.
 
@@ -443,19 +484,14 @@ all_vars = listvars(ts)
 auth_vars = listvars(ts, ns="auth")
 ```
 """
-function listvars(ts::TempStorage; ns=nothing)
+varsdict(ns::Namespace) = ns.data
+function listvars(ts::TempStorage; ns="")
     cleanup!(ts)
     
-    lock(ts.lock) do
-        if ns === nothing
-            return sort(collect(keys(ts.data)))
-        else
-            prefix = "$ns/"
-            return sort([k for k in keys(ts.data) if startswith(k, prefix)])
-        end
-    end
+    varsdict(ts.namespace[ns])
 end
 
+# TODO: Improve serialization
 """
     save!(ts::TempStorage, filepath::String)
 
@@ -467,22 +503,25 @@ Handles special types (DateTime, Symbol, Date) via serialization.
 save!(ts, "storage_backup.json")
 ```
 """
-function save!(ts::TempStorage, filepath::String)
+save!(ts::TempStorage, filepath::String) = save!(ts, open(filepath, "w"))
+function save!(ts::TempStorage, io::IO) 
     cleanup!(ts)
-    
+
+    for ns in values(ts.namespace)
+        save!(io, ns, filepath)
+    end
+
     data_copy, expirations_copy = lock(ts.lock) do
         (copy(ts.data), copy(ts.expirations))
     end
     
     serialized_data = Dict(k => _serialize(v) for (k, v) in data_copy)
     
-    open(filepath, "w") do io
-        JSON.print(io, Dict(
-            "data" => serialized_data,
-            "expirations" => Dict(k => string(v) for (k, v) in expirations_copy),
-            "saved_at" => string(now())
-        ), 2)  # Pretty print with 2-space indent
-    end
+    JSON.print(io, Dict(
+        "data" => serialized_data,
+        "expirations" => Dict(k => string(v) for (k, v) in expirations_copy),
+        "saved_at" => string(now())
+    ), 2)  # Pretty print with 2-space indent
     
     @info "Storage saved to $filepath"
 end
