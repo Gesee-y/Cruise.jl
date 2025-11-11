@@ -4,7 +4,7 @@
 
 module HZPlugin
 
-export HZPLUGIN, RegisterBackend
+export HZPLUGIN, RegisterBackend, GetBackend, CreateBackend
 
 using SimpleDirectMediaLayer.LibSDL2
 using ModernGL
@@ -39,7 +39,7 @@ end
 
 const HZPLUGIN = CRPlugin()
 const MANAGER = HorizonManager()
-PHASE = :postupdate
+PHASE = :preupdate
 
 const ID = add_system!(HZPLUGIN, MANAGER)
 
@@ -51,10 +51,25 @@ end
 
 ################################################# PLUGIN LIFECYCLE ####################################################
 
+function GetBackend(win)
+	for (k,v) in MANAGER.backends
+		v.value == win && return k
+	end
+end
+
+function CreateBackend(R::Type{<:HRenderer}, win, sizex, sizey, x=0, y=0)
+	backend = InitBackend(R, win)
+	CreateViewport(backend, sizex, sizey, x, y)
+	MANAGER.backends[backend] = WeakRef(win)
+
+	return backend
+end
+
 function Cruise.awake!(n::CRPluginNode{HorizonManager})
 	for (R, data) in MANAGER.data
 		win = data.win
-		backend = InitBackend(R, win, data.args...)
+		backend = InitBackend(R, win)
+		CreateViewport(backend, data.args...)
 		MANAGER.backends[backend] = WeakRef(win)
 	end
 
@@ -62,14 +77,15 @@ function Cruise.awake!(n::CRPluginNode{HorizonManager})
 	setstatus(n, PLUGIN_OK)
 end
 
-function Cruise.update!(n::CRPluginNode{HorizonManager}, dt)
+function Cruise.update!(n::CRPluginNode{HorizonManager})
 	manager = n.obj
 	backends = keys(manager.backends)
+
 	for (backend, winref) in manager.backends
 		if isnothing(winref.value)
 			# Given that there are a small number of renderers in a game,
 			# No need to move memory to delete the deprecated backend, we can just skip them
-			continue
+			#continue
 		end
         SetDrawColor(backend,WHITE)
         ClearViewport(backend)

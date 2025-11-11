@@ -92,8 +92,8 @@ If you are going to create a new backend, you should create a dispatch of this o
 your backend.
 """
 function UpdateRender(backend::HRenderer)
-	RenderViewport(backend, backend.viewport)
 	ExecuteCommands(backend)
+	RenderViewport(backend, backend.viewport)
 	PresentRender(backend)
 	clear!(get_commandbuffer(backend))
 end

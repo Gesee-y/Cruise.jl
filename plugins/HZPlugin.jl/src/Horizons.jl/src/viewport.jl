@@ -76,9 +76,9 @@ function RenderViewport(r,v::HViewport)
 	root = get_children(get_root(v.objects))
 
 	for child in root
-		RenderObjects(r,child,nothing,1)
+		RenderObjects(r,child,v.screen,1)
 	end
-	RenderObject(r, v.screen)
+	RenderObject(r, v.screen; viewport=false)
 end
 
 function RenderObjects(r,node::Node{<:Object2D}, parent=nothing, depth=0;limit_x=640, limit_y=480)

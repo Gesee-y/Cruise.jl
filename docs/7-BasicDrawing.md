@@ -40,42 +40,22 @@ merge_plugin!(app, HZPLUGIN)
 Now to create a new backend you do:
 
 ```julia
-backend = CreateBackend(GetWindowPtr(GetStyle(win)), SDLRender, GetWindowSize(win)...)
+RegisterBackend(SDLRender, GetStyle(win).style, 640. 480)
 ```
-
----
-
-## Setting Draw Color
-
-Use `SetDrawColor` to define the current drawing color:
-
-```julia
-SetDrawColor(backend, (0, 5, 3, 8))  # RGBA format
-```
-
-> **Note:** The alpha channel only affects rendering if blending is enabled using `SetAlphaBlendMode(context, SDL_BLENDMODE_BLEND)`.
 
 ---
 
 ## Drawing Points
 
-Use `DrawPoint` to draw a single point:
+Use `DrawPoint2D` to draw a single point:
 
 ```julia
 @gameloop app begin
-    DrawPoint(backend, (50, 50))
+    backend = GetBackend(GetStyle(win).style)
+    DrawPoint2D(backend, iRGBA(0, 50, 30, 8), Vec2f(50, 50))
 end
 ```
-
-To draw multiple points at once:
-
-```julia
-@gameloop app begin
-    DrawPoints(backend, [(10, 50), (20, 55), (27, 62)])
-end
-```
-
-Using a batch like this is more efficient than drawing points individually.
+> **Note:** For the `SDLRender` backend the alpha channel only affects rendering if blending is enabled using `SetAlphaBlendMode(context, SDL_BLENDMODE_BLEND)`.
 
 ---
 
@@ -85,53 +65,20 @@ Draw a single line:
 
 ```julia
 @gameloop app begin
-    DrawLine(backend, (50, 0), (70, 30))
+    DrawLine2D(backend, BLUE,(50, 0), (70, 30))
 end
 ```
-
-To draw connected lines between multiple points:
-
-```julia
-@gameloop app begin
-    DrawLines(backend, Vec2(1, 5), Vec2(5, 9), Vec2(78, 6))
-end
-```
-
-You may also pass tuples like `(1, 5), (5, 9), ...` instead of `Vec2`.
 
 ---
 
 ## Drawing Rectangles
 
-To draw a rectangle outline:
+To draw a rectangle:
 
 ```julia
 @gameloop app begin
-    DrawRect(backend, Rect2Di(0, 0, 50, 50))
+    DrawRect2D(backend, PURPLE, Rect2Df(0, 0, 50, 50), true) # filled = true, meaning the rectangle should be filled, not just the outlines
 end
 ```
 
-To draw a filled rectangle:
-
-```julia
-@gameloop app begin
-    FillRect(backend, Rect2Di(10, 10, 30, 30))
-end
-```
-
-Rectangles using floating-point coordinates should use the `*F` variants:
-
-* `DrawRectF`
-* `FillRectF`
-* `DrawRectsF`
-* `FillRectsF`
-
-You can draw multiple rectangles at once:
-
-```julia
-@gameloop app begin
-    FillRects(backend, [Rect2Di(10,10,30,30), Rect2Di(50,50,20,40)])
-end
-```
-
----
+---

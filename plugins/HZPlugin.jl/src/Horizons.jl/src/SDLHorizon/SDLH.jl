@@ -97,7 +97,7 @@ include("SDLCommands.jl")
 This function create a new Viewport for the renderer r.
 Once the viewport created, it's now possible to use textures and surfaces
 """
-function CreateViewport(r::SDLRender,w,h,x=0,y=0;scale=4)
+function CreateViewport(r::SDLRender,w,h,x=0,y=0;scale=1)
 	
 	# We create a blank texture that will be the screen of the viewport
 	# other texture will just be pasted on it.

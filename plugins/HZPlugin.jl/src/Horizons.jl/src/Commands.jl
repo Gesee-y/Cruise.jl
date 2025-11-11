@@ -2,7 +2,7 @@
 ################################################# RENDERING COMMANDS ##################################################
 #######################################################################################################################
 
-export DrawPoint2D, DrawLine2D, DrawRect2D, DrawCircle2D
+export DrawPoint2D, DrawLine2D, DrawRect2D, DrawCircle2D, ClearScreen, DrawTexture2D
 
 @commandaction ClearScreenCmd begin
 	color::iRGBA
@@ -93,11 +93,11 @@ function DrawCircle2D(ren::HRenderer,target,color, center, radius; filled::Bool=
 	add_command!(cb,get_id(target),priority,0, action;pass=pass) 
 end
 
-DrawTexture2D(ren::HRenderer, rect, angle=0, flip=false,priority=0;pass=:render) = DrawTexture2D(ren, 
+DrawTexture2D(ren::HRenderer, tex::AbstractResource, rect::Rect2D, angle=0, flip=false,priority=0;pass=:render) = DrawTexture2D(ren, tex,
 	get_texture(ren.viewport.screen), rect, angle, flip; pass=pass)
-function DrawTexture2D(ren::HRenderer, target::AbstractResource, rect, angle=0, flip=false,priority=0;pass=:render)
+function DrawTexture2D(ren::HRenderer, tex::AbstractResource, target::AbstractResource, rect::Rect2D, angle=0, flip=false,priority=0;pass=:render)
 	cb = get_commandbuffer(ren)
 	action = DrawTexture2DCmd(rect, angle, flip)
 
-	add_command!(cb,get_id(target),priority,0, action;pass=pass)
+	add_command!(cb,get_id(target),priority,get_id(tex), action;pass=pass)
 end

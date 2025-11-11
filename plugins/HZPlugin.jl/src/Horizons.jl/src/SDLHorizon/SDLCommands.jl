@@ -23,6 +23,26 @@ function execute_command(ren::SDLRender, targetid, caller, commands::Vector{Appl
     end
 end
 
+function execute_command(ren::SDLRender, targetid, callerid, commands::Vector{DrawTexture2DCmd})
+	target = get_resourcefromid(ren, targetid)
+	caller = get_resourcefromid(ren, callerid)
+	texptr = _get_texture(caller)
+
+    renderer = ren.data.renderer
+    ta = SDL_GetRenderTarget(renderer)
+	SetRenderTarget(ren, target)
+	rt = caller.rect
+
+    for cmd in commands
+        ro = cmd.rect # getting the rect of the cmd
+		rect = SDL_FRect(ro.x,ro.y,rt.w*ro.w,rt.h*ro.h)
+
+		SDL_RenderCopyF(renderer,texptr,C_NULL,Ref(rect))
+    end
+
+    SDL_SetRenderTarget(renderer, ta)
+end
+
 function execute_command(ren::SDLRender, targetid, caller, commands::Vector{DrawPoint2DCmd})
 	target = get_resourcefromid(ren, targetid)
     SetRenderTarget(ren, target)
@@ -107,8 +127,7 @@ function execute_command(ren::SDLRender, targetid, caller, commands::Vector{Draw
 end
 
 function draw_a_circle(ren::SDLRender, center, radius,filled)
-	# Algorithme de Bresenham pour les cercles
-    x0, y0 = center.x, center.y
+	x0, y0 = center.x, center.y
     x = radius
     y = 0
     err = 0

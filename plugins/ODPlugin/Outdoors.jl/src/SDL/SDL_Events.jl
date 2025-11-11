@@ -216,7 +216,7 @@ function HandleKeyboardTextInputs(app::ODApp,event::Ref{SDL_Event},ev_type)
 		
 		obj = event[].edit
 		character = Char(obj.text[1])
-		text = map(x -> x > 0 ? Char(x) : Char(abs(x)) ,obj.text)
+		text = map(x -> x >= 0 ? Char(x) : Char(0) ,obj.text)
 	end
 end
 
@@ -299,7 +299,7 @@ function _KeyboardKeyDown(win::SDLWindow,event)
 	key = ConvertKey(SDLStyle,event[].key.keysym.sym)
 	Pkey = ConvertKey(SDLStyle,event[].key.keysym.scancode;physical=true)
 
-	just_pressed = key in Inputs ? (Inputs[key].pressed ? false : true) : true
+	just_pressed = haskey(Inputs,key) ? (Inputs[key].pressed ? false : true) : true
 	
 	key_ev = KeyboardEvent(id,key,just_pressed,true,false,false;Pkey=Pkey)
 	Inputs[key] = key_ev
@@ -321,19 +321,19 @@ function _MouseButtonDown(win::SDLWindow,event)
 	if evt.button.button == SDL_BUTTON_LEFT
 
 		name = "LeftClick"
-		just_pressed = name in MouseButtons ? (MouseButtons[name].pressed ? false : true) : true
+		just_pressed = haskey(MouseButtons, name) ? (MouseButtons[name].pressed ? false : true) : true
 		click_num = Int(evt.button.clicks)
 		ev = MouseClickEvent(LeftClick{click_num}(),just_pressed,true,false,false)
 	elseif evt.button.button == SDL_BUTTON_RIGHT
 		
 		name = "RightClick"
-		just_pressed = name in MouseButtons ? (MouseButtons[name].pressed ? false : true) : true
+		just_pressed = haskey(MouseButtons, name) ? (MouseButtons[name].pressed ? false : true) : true
 		click_num = Int(evt.button.clicks)
 		ev = MouseClickEvent(RightClick{click_num}(),just_pressed,true,false,false)
 	elseif evt.button.button == SDL_BUTTON_MIDDLE
 		
 		name = "MiddleClick"
-		just_pressed = name in MouseButtons ? (MouseButtons[name].pressed ? false : true) : true
+		just_pressed = haskey(MouseButtons, name) ? (MouseButtons[name].pressed ? false : true) : true
 		
 		click_num = Int(evt.button.clicks)
 		ev = MouseClickEvent(MiddleClick{click_num}(),just_pressed,true,false,false)

@@ -31,21 +31,21 @@ include("writer.jl")
 include(joinpath("..", "plugins", "enable.jl"))
 
 text_en = [
-	"{speed:0.2}Everything begins somewhere.{pause:4}",
-    "No dream comes from nowhere.{pause:4}",
-    "We are all searching for a new beginning.{pause:3}",
-    "{speed:0.3}A new land where flowers bloom once more.{pause:4}",
-    "{speed:0.1}Behind these shadowy clouds of darkness{pause:1}.{pause:1}.{pause:1}.{pause:3}",
-    "{speed:0.2}Lies a breathtaking field of success.{pause:5}",
-    "{speed:0.1}Let go of the fear that binds your heart.{pause:3}",
-    "Follow the shining stars of hope.{pause:3}",
-    "{speed:0.2}And even if there's nothing waiting tomorrow{pause:1}.{pause:1}.{pause:1}.{pause:3}",
-    "{speed:0.15}I’ll still be grateful to have been part of your journey.{pause:4}",
-    "{speed:0.1}Sail away.{pause:2}",
+	"{speed:0.1}Everything begins somewhere.{pause:2}",
+    "No dream comes from nowhere.{pause:2}",
+    "We are all searching for a new beginning.{pause:1.5}",
+    "{speed:0.15}A new land where flowers bloom once more.{pause:2}",
+    "{speed:0.05}Behind these shadowy clouds of darkness{pause:1}.{pause:1}.{pause:1}.{pause:1.5}",
+    "{speed:0.2}Lies a breathtaking field of success.{pause:2}",
+    "{speed:0.05}Let go of the fear that binds your heart.{pause:2}",
+    "Follow the shining stars of hope.{pause:2}",
+    "{speed:0.1}And even if there's nothing waiting tomorrow{pause:1}.{pause:1}.{pause:1}.{pause:3}",
+    "{speed:0.075}I will still be grateful to have been part of your journey.{pause:4}",
+    "{speed:0.05}Sail away.{pause:2}",
     "Write your own story.{pause:2}",
     "Break the rules.{pause:2}",
-    "{speed:0.15}And most importantly{pause:1}.{pause:1}.{pause:1}.{pause:4}",
-    "{speed:0.25}Never let them forget your Cruise.{pause:5}",
+    "{speed:0.075}And most importantly{pause:1}.{pause:1}.{pause:1}.{pause:2}",
+    "{speed:0.1}Never let them forget your Cruise.{pause:3}",
 ]
 
 text_fr = [

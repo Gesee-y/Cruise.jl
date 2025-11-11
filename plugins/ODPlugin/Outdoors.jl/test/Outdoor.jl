@@ -60,6 +60,7 @@ Outdoors.connect(NOTIF_QUIT_EVENT) do
 	Close[] = true
 end
 
+
 #=Outdoors.connect(NOTIF_KEYBOARD_INPUT) do win,key
 	obj = key.key
 

@@ -56,7 +56,7 @@ function Texture(backend::SDLRender,img::ImageCrate,x=0,y=0,static=false)
 		data = SDLTextureData(tex, _to_horizon_access(info[4]),info[3])
 
 		texture = Texture{SDLTextureData}(img.width,img.height,data;x=x,y=y,static=static)
-		register_resource(ren, texture)
+		register_resource(backend, texture)
 		return texture
     end
 end
@@ -182,6 +182,7 @@ end
 # So that change in parents easily affect childs (We are talking about texture there.)
 @inline function _render_texture(b::SDLRender,v::SDLViewport,node;par=node[])
 	t = node[] # Just getting the texture
+	println("in")
 	if (t.visible)
 
 		# We have prefer tail recursivity there.

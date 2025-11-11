@@ -8,11 +8,11 @@ You’ll also find practical examples showing how to apply each concept in a rea
 
 ### Start Here
 
-* [Hello Cruise!!](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/2-HelloCruise): Your first Cruise application in a few lines.
-* [BasicApp](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/3-BasicApp): Learn how Cruise structures an application.
-* [Vectors](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/4-Vectors): Handle 2D/3D vectors with Cruise math utilities.
-* [Creating a Window](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/5-Creating-a-window): Create and manage game windows.
-* [Inputs](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/6-Inputs): Handle user inputs (keyboard, mouse, etc.).
-* [Basic Drawings](https://github.com/Gesee-y/Cruise.jl/blob/main/doc/7-BasicDrawing): Render basic shapes and sprites.
+* [Hello Cruise!!](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/2-HelloCruise): Your first Cruise application in a few lines.
+* [BasicApp](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/3-BasicApp): Learn how Cruise structures an application.
+* [Vectors](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/4-Vectors): Handle 2D/3D vectors with Cruise math utilities.
+* [Creating a Window](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/5-Creating-a-window): Create and manage game windows.
+* [Inputs](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/6-Inputs): Handle user inputs (keyboard, mouse, etc.).
+* [Basic Drawings](https://github.com/Gesee-y/Cruise.jl/blob/main/docs/7-BasicDrawing): Render basic shapes and sprites.
 
 ---

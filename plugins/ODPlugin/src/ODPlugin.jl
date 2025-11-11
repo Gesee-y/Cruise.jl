@@ -35,7 +35,8 @@ function Cruise.awake!(n::CRPluginNode{ODApp})
 	setstatus(n, PLUGIN_OK)
 end
 
-function Cruise.update!(n::CRPluginNode{ODApp}, dt)
+function Cruise.update!(n::CRPluginNode{ODApp})
+	#println(n.lasterr)
 	EventLoop(n.obj)
 end
 
@@ -47,7 +48,7 @@ end
 ################################################## OTHER FUNCTIONS #####################################################
 
 function Outdoors.CreateWindow(style::Type{<:AbstractStyle}, args...)
-	InitStyle(style)
+	InitOutdoor(style)
 	return CreateWindow(APP, style, args...)
 end
 

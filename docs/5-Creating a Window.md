@@ -42,12 +42,24 @@ using ODPlugin
 merge_plugin!(app, ODPLUGIN)
 ```
 
-## Step 4: Create a Window
+## Step 4: Set up event handling
+
+Outdoors expose signals you can use to react to windows events. We will set up an event to stop the loop when all the windows are closed:
+
+```julia
+Close = Ref(false)
+
+Outdoors.connect(NOTIF_QUIT_EVENT) do
+	Close[] = true
+end
+```
+
+## Step 5: Create a Window
 
 Use `CreateWindow` to initialize a new window:
 
 ```julia
-win = CreateWindow(app, SDLStyle, SDLRender, "My First Window", 640, 480)
+win = CreateWindow(SDLStyle, "My First Window", 640, 480)
 ```
 
 ### Explanation of Parameters:
@@ -62,12 +74,13 @@ win = CreateWindow(app, SDLStyle, SDLRender, "My First Window", 640, 480)
 
 ---
 
-## Step 4 – Run the Game Loop
+## Step 6 – Run the Game Loop
 
 Creating the window isn’t enough. It won’t respond to input or update properly unless a **game loop** is running. Here's how to start it:
 
 ```julia
-@gameloop app begin
+@gameloop begin
+    Close && shutdown!()
 end
 ```
 
@@ -88,13 +101,12 @@ Cruise allows you to create multiple windows by calling `CreateWindow` multiple 
 Example:
 
 ```julia
-win1 = CreateWindow(app, SDLStyle, SDLRender, "Main", 800, 600)
-win2 = CreateWindow(app, SDLStyle, SDLRender, "Debug", 400, 300)
+win1 = CreateWindow(SDLStyle, "Main", 800, 600)
+win2 = CreateWindow(SDLStyle, "Debug", 400, 300)
 
 @gameloop app begin
+    Close[] && shutdown!()
 end
 ```
-
-Closing **both** windows will stop the loop, unless configured otherwise.
 
 ---

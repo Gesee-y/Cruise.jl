@@ -3,7 +3,7 @@
 #########################################################################################################################
 
 export AbstractCapability 
-export CRPluginNode, CRPlugin, CRPluginStatus
+export CRPluginNode, CRPlugin, CRPluginStatus, PLUGIN_OK, PLUGIN_OFF, PLUGIN_ERR, PLUGIN_DEPRECATED
 
 struct StopExec end
 

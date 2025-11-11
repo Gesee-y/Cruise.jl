@@ -34,7 +34,7 @@ You can now define a game loop using the `@gameloop` macro:
 julia> @gameloop max_fps=60 app begin
            println("delta seconds: $(LOOP_VAR.delta_seconds)")
            # Simulate a 10-second delay before shutting down
-           LOOP_VAR.frame_idx > 600 && shutdown!(app)
+           LOOP_VAR.frame_idx > 600 && shutdown!()
        end
 ```
 
@@ -69,9 +69,9 @@ Inside the loop, you can access loop-specific data via the `LOOP_VAR` struct:
 ### Shutdown Mechanism
 
 ```julia
-shutdown!(app)
+shutdown!()
 ```
 
 This function stops the app and cleans up all allocated resources.
 
----
+---
