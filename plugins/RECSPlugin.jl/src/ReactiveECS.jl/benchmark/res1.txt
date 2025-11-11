@@ -1,0 +1,59 @@
+﻿-----------------------------------------------
+              Query Pos/Vel
+-----------------------------------------------
+
+ReactiveECS: Unoptimized (recreating a component at each loop)
+
+
+Benchmarking with 100 entities...
+Mean time per entity: 2.8752932687651325 ns
+BenchmarkTools.Trial: 10000 samples with 413 evaluations per sample.
+ Range (min … max):  225.564 ns … 544.797 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     281.956 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   287.529 ns ±  18.095 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+                            █▂█▂▄                                
+  ▂▂▂▁▁▂▁▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▇██████▆▇▄▆▄▅▄▅▄▄▃▃▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂ ▃
+  226 ns           Histogram: frequency by time          342 ns <
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+
+Benchmarking with 1000 entities...
+Mean time per entity: 3.3624243700000003 ns
+BenchmarkTools.Trial: 10000 samples with 10 evaluations per sample.
+ Range (min … max):  2.013 μs …   7.263 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     3.395 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   3.362 μs ± 211.872 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+                                                ▅ █▇▃          
+  ▂▁▁▁▂▂▂▁▂▂▂▁▂▂▁▂▂▂▁▂▂▂▁▂▂▁▂▂▂▁▂▃▃▁▃▃▁▃▃▃▁▄▄▅▁██▁███▁▇▃▂▁▂▂▂ ▃
+  2.01 μs         Histogram: frequency by time        3.71 μs <
+
+ Memory estimate: 16 bytes, allocs estimate: 1.
+
+Benchmarking with 10000 entities...
+Mean time per entity: 3.4102549700000004 ns
+BenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.
+ Range (min … max):  20.132 μs … 72.237 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     34.737 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   34.103 μs ±  2.481 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+                                              ▃ ▅██ ▆▃         
+  ▂▂▂▂▁▂▂▂▂▁▂▂▂▁▂▂▂▂▁▂▂▂▁▂▂▂▂▁▂▂▃▁▃▃▃▄▁▄▅▆▁▇▇██▁███▁██▆▄▁▃▂▂▂ ▃
+  20.1 μs         Histogram: frequency by time        38.3 μs <
+
+ Memory estimate: 16 bytes, allocs estimate: 1.
+
+Benchmarking with 100000 entities...
+Mean time per entity: 2.8852459429824564 ns
+BenchmarkTools.Trial: 5016 samples with 1 evaluation per sample.
+ Range (min … max):  259.344 μs … 552.239 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     286.185 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   288.525 μs ±  18.668 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+            ▂▄▅█▆▂▁                                              
+  ▂▂▂▃▃▄▅▆▇▇███████▇▆▅▄▃▃▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▂▂▂▂▂▂▂▂▂▂ ▃
+  259 μs           Histogram: frequency by time          380 μs <
+
+ Memory estimate: 16 bytes, allocs estimate: 1.
+ [Finished in 39.3s]

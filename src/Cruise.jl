@@ -12,9 +12,9 @@ using Reexport
 using Graphs
 using Base.Threads
 
-include("AssetCrates.jl\\src\\AssetCrates.jl")
+include(joinpath("AssetCrates.jl","src","AssetCrates.jl"))
 @reexport using EventNotifiers
-@reexport using NodeTree
+#@reexport using NodeTree
 @reexport using GDMathLib
 @reexport using .AssetCrates
 
@@ -28,6 +28,7 @@ include("App.jl")
 include("object.jl")
 include("game_loop.jl")
 include("writer.jl")
+include(joinpath("..", "plugins", "enable.jl"))
 
 text_en = [
 	"{speed:0.2}Everything begins somewhere.{pause:4}",
