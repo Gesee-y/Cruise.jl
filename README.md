@@ -56,7 +56,7 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 - [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allows you to create events with a Godot-like syntax (`@Notifyer MY_EVENT(x::Int)`) and manipulate them by modifying their states in an OpenGL-like manner. Features include easy traceability, support for synchronous and asynchronous callbacks, parent–child relationships, state serialization/deserialization, and more.
 
-- [Crates.jl](https://github.com/Gesee-y/Crates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
+- [AssetCrates.jl](https://github.com/Gesee-y/AssetCrates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
 - **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, temporary storage, dynamic structs and more.
 
@@ -94,8 +94,8 @@ merge_plugin!(app, ODPLUGIN; phase=:preupdate)
 merge_plugin!(app, HZPLUGIN)
 
 # Initialise SDL style window with a SDL renderer
-win = CreateWindow(app, SDLStyle, "Example", 640, 480)
-
+win = CreateWindow(SDLStyle, "Example", 640, 480)
+backend = CreateBackend(SDLRender, GestStyle(win).window, 640, 480)
 
 # We import our resource as an ImageCrate
 img = @crate "docs|example|assets|001.png"::ImageCrate
@@ -108,12 +108,12 @@ img = @crate "docs|example|assets|001.png"::ImageCrate
 
 # We create a new renderable object
 
-texture Texture(context(win), img)
+texture Texture(backend, img)
 
 pos = Vec2f(0,0)
 
 # Our game loop. It update events and render for us. Once the window will be closed, it will stop.
-@gameloop app begin
+@gameloop begin
     pos.x += IsKeyPressed(instance(win), RIGHT) - IsKeyPressed(instance(win), LEFT)
     pos.y += IsKeyPressed(instance(win), DOWN) - IsKeyPressed(instance(win), UP)
     DrawTexture2D(backend, texture, Rect2Df(pos...,1,1)
