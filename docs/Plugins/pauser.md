@@ -29,8 +29,8 @@ So for that we will merge them in our plugin
 ```julia
 merge_plugin!(PAUSEPLUGIN, ODPLUGIN)
 merge_plugin!(PAUSEPLUGIN, TIMERPLUGIN)
-add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, :TimerManager), id)
-add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, :ODApp), id)
+add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, TimerManager), id)
+add_dependency!(PAUSEPLUGIN, getnodeid(PAUSEPLUGIN, ODApp), id)
 ```
 
 In Cruise, a dependecy link ensures that one system is updated after another and can access its instance safely.
@@ -38,10 +38,10 @@ Herer, `PauseManager` depends on both `TimerManager` and `ODApp`, so it can paus
 Now the interesting part, the lifecycle. For this plugin `awake!` and `shutdown!` are irrelevant so we will just implement `update!`:
 
 ```julia
-function Cruise.update!(n::CRPluginNode{PauseManager}, _)
+function Cruise.update!(n::CRPluginNode{PauseManager})
     hasfaileddeps(n) && return
-    tm = n.deps[:TimerManager]
-    od = n.deps[:ODApp]
+    tm = n.deps[TimerManager]
+    od = n.deps[ODApp]
 
     tm.paused = IsKeyJustPressed(od, PAUSE) ? !tm.paused : tm.paused
 end

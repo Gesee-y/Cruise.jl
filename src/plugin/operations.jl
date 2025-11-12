@@ -4,7 +4,7 @@
 
 export add_system!, remove_system!, add_dependency!, remove_dependency!, merge_graphs!, pmap!, smap!
 export isinitialized, isuninitialized, isdeprecated, hasfailed, getstatus, setstatus, setresult
-export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized, getdep
+export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized, getdep, getnodeid
 
 isinitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OK
 isuninitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OFF
@@ -26,9 +26,20 @@ getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
 add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
 serialize(::CRPluginNode) = ""
 
-function getnodeid(p::CRPluginNode, s::Symbol)
+function getnodeid(p::CRPlugin, s::Symbol)
     for (i, n) in p.idtonode
-        if Symbol(typeof(n.obj)) == s
+        symb = Symbol(typeof(n.obj))
+        println(symb)
+        if symb == s
+            return i
+        end
+    end
+
+    return -1
+end
+function getnodeid(p::CRPlugin, T::Type)
+    for (i, n) in p.idtonode
+        if typeof(n.obj) == T
             return i
         end
     end
@@ -114,7 +125,7 @@ function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     if add_edge_checked!(IncrementalCycleTracker(sg.graph), from, to)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
-        c.deps[typeof(p.obj)] = WeakRef(p.obj)
+        c.deps[typeof(p.obj)] = WeakRef(p)
         push!(p.children, c)
         sort && (sg.sort_cache = topological_sort(get_graph(sg)))
     end
@@ -159,6 +170,7 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
         else
             new_id = id2 + offset
             sg1.idtonode[new_id] = node2
+            node2.id = new_id
             add_vertex!(sg1.graph)
             sg1.current_max = max(sg1.current_max, new_id)
             id_map[id2] = new_id

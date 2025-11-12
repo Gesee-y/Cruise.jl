@@ -3,17 +3,17 @@
 ####################################################################################################################################
 
 struct PluginDict
-	_data::Dict{Symbol, WeakRef}
+	_data::Dict{Symbol, Any}
 
 	## Constructor
 
-	PluginDict() = new(Dict{Symbol, WeakRef}())
+	PluginDict() = new(Dict{Symbol, Any}())
 end
 
 Base.getindex(p::PluginDict, s::Symbol) = _unwrap(getindex(_getdata(p), s))
 Base.getindex(p::PluginDict, T::Type) = getindex(p, Symbol(T))
 
-Base.setindex!(p::PluginDict, v, s::Symbol) = setindex!(_getdata(p), WeakRef(v), s)
+Base.setindex!(p::PluginDict, v, s::Symbol) = setindex!(_getdata(p), v, s)
 Base.setindex!(p::PluginDict, v, T::Type) = setindex!(p, v, Symbol(T))
 
 Base.delete!(p::PluginDict, s::Symbol) = delete!(_getdata(p), s)

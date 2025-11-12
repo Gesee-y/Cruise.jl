@@ -78,7 +78,7 @@ function awake!()
 	ON_CRUISE_STARTUP.emit
 end
 awake!(sg::CRPlugin) = smap!(awake!, sg)
-awake!(n::CRPluginNode) = (n.status[] = CRPluginStatus.OK)
+awake!(n::CRPluginNode) = (n.status[] = PLUGIN_OK)
 
 """
     update!(a::CruiseApp)
@@ -135,7 +135,8 @@ Returns true if the CruiseApp isn't running.
 """
 off(a::CruiseApp) = !a.running
 
-merge_plugin!(app::CruiseApp, plugin::CRPlugin, phase=:postupdate) = merge_graphs!(app.plugins[phase], plugin)
+merge_plugin!(app::CruiseApp, plugin::CRPlugin, phase=:postupdate) = merge_plugin!(app.plugins[phase], plugin)
+merge_plugin!(plugin1::CRPlugin, plugin2::CRPlugin) = merge_graphs!(plugin1, plugin2)
 
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]

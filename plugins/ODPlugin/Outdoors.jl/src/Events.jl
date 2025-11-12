@@ -83,6 +83,7 @@ IsKeyJustPressed(win::ODWindow,key::String) = begin
 
 	return Inputs[key].just_pressed[]
 end
+IsKeyJustPressed(app::ODApp,key) = any(Base.Fix2(IsKeyJustPressed, key), values(app.Windows))
 
 """
 	IsKeyPressed(win::ODWindow,key::String)
@@ -96,6 +97,7 @@ IsKeyPressed(win::ODWindow,key::String) = begin
 
 	return Inputs[key].pressed
 end
+IsKeyPressed(app::ODApp,key) = any(Base.Fix2(IsKeyPressed, key), values(app.Windows))
 
 """
 	IsKeyJustReleased(win::ODWindow,key::String)
@@ -109,6 +111,8 @@ IsKeyJustReleased(win::ODWindow,key::String) = begin
 
 	return Inputs[key].just_released[]
 end
+IsKeyJustReleased(app::ODApp,key) = any(Base.Fix2(IsKeyJustReleased, key), values(app.Windows))
+
 
 """
 	IsKeyReleased(win::ODWindow,key::String)
@@ -117,6 +121,7 @@ This function return true if a keyboard key `key` is actually released, return f
 other case
 """
 IsKeyReleased(win::ODWindow,key::String) = !IsKeyPressed(win,key)
+IsKeyReleased(app::ODApp,key) = any(Base.Fix2(IsKeyJustPressed, key), values(app.Windows))
 
 """
 	IsMouseButtonJustPressed(win::ODWindow,key::String)
