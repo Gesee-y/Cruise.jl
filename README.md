@@ -5,6 +5,7 @@
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
 **Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems or full game engines without too much overhead.
+It's closer to Linux philosophy, the same way everyone can build his own OS using the Linux kernel, anyone can build his own engine using Cruise.
 
 ---
 
@@ -29,6 +30,8 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 - **Plugin system**: Built around a DAG (Direct Acyclic Graph), it allows you to extend Cruise, share your own plugin and collaborate without too much hassle.
 
 - **Assets Loading and Management**: Cruise can load a wide variety of files (Images, sounds and soon meshes) and manage/reuse them during the game lifecycle.
+
+- **Complete and optimized math library**
 
 - **JIT compiled**: Which means you can dynamically add code to your program while it's running, allowing you to do hot reloading or live coding.
 
