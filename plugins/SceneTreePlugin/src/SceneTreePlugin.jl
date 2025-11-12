@@ -31,7 +31,7 @@ function Cruise.awake!(n::CRPluginNode{ObjectTree})
 	setstatus(n, PLUGIN_OK)
 end
 
-function Cruise.update!(n::CRPluginNode{ObjectTree}, dt)
+function Cruise.update!(n::CRPluginNode{ObjectTree})
 	nodes = BFS_search(n.obj)
 	for node in nodes
 		process!(node, dt)

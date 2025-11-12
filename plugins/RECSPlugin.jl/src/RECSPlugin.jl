@@ -34,7 +34,7 @@ function Cruise.awake!(n::CRPluginNode{ECSManager})
 	setstatus(n, PLUGIN_OK)
 end
 
-function Cruise.update!(n::CRPluginNode{ECSManager}, dt)
+function Cruise.update!(n::CRPluginNode{ECSManager})
 	dispatch_data(WORLD)
 	blocker(WORLD)
 end
