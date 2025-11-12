@@ -40,16 +40,6 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 - **Build your own engine**: Since Cruise is just a minimal core, you can just choose the set of plugins (or build your own) that perfectly match your use case.
 
-
-## Why Cruise?
-
-There are some interesting game engines being made in Julia, like [B+ engine](https://github.com/heyx3/Bplus.jl) by William Mannings, [Julgame](https://github.com/Kyjor/JulGame.jl) by Kyjor, or even [GameZero](https://github.com/aviks/GameZero.jl).  
-So why create another engine instead of contributing to them?
-
-Well, if I put aside the learning treasure that is building an engine, I would say that none of them matched my vision.
-
-Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, Dataflow for processing, your own architecture for custom mechanics, etc.
-
 ---
 
 ## Exisitin Tools and Plugins
