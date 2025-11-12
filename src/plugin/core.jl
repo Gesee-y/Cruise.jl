@@ -39,6 +39,7 @@ Returns a new CRPlugin from the given obj
 mutable struct CRPluginNode{T,S}
     id::Int
     obj::T
+    mainthread::Bool
     deps::PluginDict
     children::Vector{CRPluginNode}
     status::CRSubject{CRPluginStatus}
@@ -47,8 +48,8 @@ mutable struct CRPluginNode{T,S}
 
     ## Constructors
 
-    CRPluginNode(obj::T) where T = new{T,Any}(-1, obj, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
-    CRPluginNode{S}(obj::T) where {T, S<:Any} = new{T,S}(-1, obj, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
+    CRPluginNode(obj::T; mainthread=false) where T = new{T,Any}(-1, obj, mainthread, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
+    CRPluginNode{S}(obj::T; mainthread=false) where {T, S<:Any} = new{T,S}(-1, obj, mainthread, PluginDict(), CRPluginNode[], CRSubject(PLUGIN_OFF))
 end
 
 """

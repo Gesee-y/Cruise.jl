@@ -54,6 +54,9 @@ id1 = add_system!(plugin, s1)
 id2 = add_system!(plugin, s2)
 ```
 
+You can optionnaly pass the default argument `mainthread::Bool` to `add_system!` to specify that the node should always run on the main thread.
+By default, it's `false`.
+
 ---
 
 ## Adding Dependencies

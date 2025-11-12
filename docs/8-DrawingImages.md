@@ -13,18 +13,24 @@ using Cruise
 using ODPlugin, HZPlugin
 
 app = CruiseApp()
+Close = Ref(false)
+
 merge_plugin!(app, ODPLUGIN)
 merge_plugin!(app, HZPLUGIN)
 
-win = CreateWindow(app, SDLStyle, SDLRender, "Image Example", 640, 480)
-backend = CreateBackend(SDLRender,  GetWindowPtr(GetStyle(win)))
+win = CreateWindow(SDLStyle, "Image Example", 640, 480)
+backend = CreateBackend(SDLRender, GetStyle(win).window)
+
+Outdoors.connect(NOTIF_QUIT_EVENT) do
+    Close[] = true
+end
 ```
 
 ---
 
 ## Loading an Image
 
-In Cruise, images are loaded as `Crates`. A `Crate` is any managed resource (image, sound, font, etc.) that is automatically tracked and released when the application shuts down.
+In Cruise, images are loaded as `Crate`. A `Crate` is any managed resource (image, sound, font, etc.) that is automatically tracked and released when the application shuts down.
 
 Assuming you have an image at `assets/img.png`, load it like this:
 
@@ -46,43 +52,15 @@ texture = Texture(backend, img)
 
 ---
 
-## Creating a Drawable Object
+## Drawing the texture
 
-To render anything on screen, you must create an `Object`. An `Object` represents something that can be drawn.
-
-```julia
-obj = Object2D(Vec2f(0, 0), Vec2f(1, 1), texture)
-```
-
-* The first argument is the position (`Vec2f(x, y)`)
-* The second is the scale (`Vec2f(sx, sy)`)
-* The third is the texture
-
-> `Object` internally maintains a transformation matrix.
-
----
-
-## Adding to the Render Tree
-
-To make an object visible, add it to the render tree:
+To draw a texture, you just have to call `DrawTexture2D`
 
 ```julia
-AddObject(backend, obj)
+DrawTexture2D(backend, texture, Rect2Df(0,0,1,1))
 ```
 
-You can build hierarchies of objects using:
-
-```julia
-AddChildObject(parent, child)
-```
-
-This allows one object to be rendered relative to another (e.g., for UI elements or skeletal animations).
-
-To remove an object from the tree:
-
-```julia
-DestroyObject(obj)
-```
+The last argument define the position and the scale of the texture (`Rect2Df(x,y, scalex, scaley)`).
 
 ---
 
@@ -96,6 +74,9 @@ pos = obj.rect.origin
 @gameloop app begin
     pos.x += IsKeyPressed(win, "RIGHT") - IsKeyPressed(instance(win), "LEFT")
     pos.y += IsKeyPressed(win, "DOWN") - IsKeyPressed(win, "UP")
+
+    DrawTexture2D(backend, texture, Rect2Df(pos...,1,1))
+    Close[] && shutdown()
 end
 ```
 

@@ -20,7 +20,7 @@ const ODPLUGIN = CRPlugin()
 const APP = ODApp()
 PHASE = :preupdate
 
-const ID = add_system!(ODPLUGIN, APP)
+const ID = add_system!(ODPLUGIN, APP; mainthread=true)
 
 Outdoors.connect(NOTIF_ERROR) do msg,err
 	node = ODPLUGIN.idtonode[ID]

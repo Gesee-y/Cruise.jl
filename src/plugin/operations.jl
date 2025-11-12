@@ -82,9 +82,9 @@ get_graph(sg::CRPlugin) = sg.graph
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::CRPlugin, obj, S=Any; sort=true)
+function add_system!(sg::CRPlugin, obj, S=Any; sort=true, mainthread=false)
     id = get_available_id(sg)
-    node = CRPluginNode{S}(obj)
+    node = CRPluginNode{S}(obj; mainthread=mainthread)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
@@ -210,14 +210,22 @@ function pmap!(f, sg::CRPlugin, args...)
         next_ready = Int[]
 
         @sync for v in ready
-            @spawn begin
-                node = sg.idtonode[v]
-                try
-                    f(node, args...)
-                catch e
-                    setstatus(node, PLUGIN_ERR)
-                    setlasterr(node, e)
+            node = sg.idtonode[v]
+            
+            if node.mainthread
+                _exec_node(f, node, args...)
+
+                for child in outneighbors(sg.graph, v)
+                    indeg[child] -= 1
+                    if indeg[child] == 0
+                        push!(next_ready, child)
+                    end
                 end
+                continue
+            end
+
+            @spawn begin
+                _exec_node(f, node, args...)
 
                 for child in outneighbors(sg.graph, v)
                     indeg[child] -= 1
@@ -229,5 +237,14 @@ function pmap!(f, sg::CRPlugin, args...)
         end
 
         ready = next_ready
+    end
+end
+
+function _exec_node(f, node, args...)
+    try
+        f(node, args...)
+    catch e
+        setstatus(node, PLUGIN_ERR)
+        setlasterr(node, e)
     end
 end

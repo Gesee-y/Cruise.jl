@@ -41,7 +41,7 @@ const HZPLUGIN = CRPlugin()
 const MANAGER = HorizonManager()
 PHASE = :preupdate
 
-const ID = add_system!(HZPLUGIN, MANAGER)
+const ID = add_system!(HZPLUGIN, MANAGER; mainthread=true)
 
 Horizons.connect(HORIZON_ERROR) do msg,err
 	node = HZPLUGIN.idtonode[ID]

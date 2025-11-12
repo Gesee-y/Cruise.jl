@@ -13,8 +13,14 @@ using Cruise
 using ODPlugin
 
 app = CruiseApp()
+Close = Ref(false)
+
 merge_plugin!(app, ODPLUGIN)
 win = CreateWindow(SDLStyle, "Drawing Window", 640, 480)
+
+Outdoors.connect(NOTIF_QUIT_EVENT) do
+    Close[] = true
+end
 ```
 
 ---
@@ -40,7 +46,7 @@ merge_plugin!(app, HZPLUGIN)
 Now to create a new backend you do:
 
 ```julia
-RegisterBackend(SDLRender, GetStyle(win).style, 640. 480)
+backend = CreateBackend(SDLRender, GetStyle(win).style, 640, 480)
 ```
 
 ---
@@ -51,8 +57,8 @@ Use `DrawPoint2D` to draw a single point:
 
 ```julia
 @gameloop app begin
-    backend = GetBackend(GetStyle(win).style)
     DrawPoint2D(backend, iRGBA(0, 50, 30, 8), Vec2f(50, 50))
+    Close[] && shutdown!()
 end
 ```
 > **Note:** For the `SDLRender` backend the alpha channel only affects rendering if blending is enabled using `SetAlphaBlendMode(context, SDL_BLENDMODE_BLEND)`.
@@ -66,6 +72,7 @@ Draw a single line:
 ```julia
 @gameloop app begin
     DrawLine2D(backend, BLUE,(50, 0), (70, 30))
+    Close[] && shutdown!()
 end
 ```
 
@@ -78,6 +85,7 @@ To draw a rectangle:
 ```julia
 @gameloop app begin
     DrawRect2D(backend, PURPLE, Rect2Df(0, 0, 50, 50), true) # filled = true, meaning the rectangle should be filled, not just the outlines
+    Close[] && shutdown!()
 end
 ```
 
