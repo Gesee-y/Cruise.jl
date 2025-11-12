@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
-**Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems without too much overhead.
+**Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems or full game engines without too much overhead.
 
 ---
 
@@ -104,15 +104,16 @@ img = @crate "docs|example|assets|001.png"::ImageCrate
 @InputMap RIGHT("RIGHT", "D")
 
 # We create a new renderable object
-obj = Object(Vec2f(0, 0), Vec2f(1, 1), Texture(context(win), img))
-AddObject(win, obj) # And we add it to the render tree
 
-pos = obj.rect.origin
+texture Texture(context(win), img)
+
+pos = Vec2f(0,0)
 
 # Our game loop. It update events and render for us. Once the window will be closed, it will stop.
 @gameloop app begin
     pos.x += IsKeyPressed(instance(win), RIGHT) - IsKeyPressed(instance(win), LEFT)
     pos.y += IsKeyPressed(instance(win), DOWN) - IsKeyPressed(instance(win), UP)
+    DrawTexture2D(backend, texture, Rect2Df(pos...,1,1)
     println(LOOP_VAR.delta_seconds) # LOOP_VAR contain the internal data of our loop
 end
 ```
