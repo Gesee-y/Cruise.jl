@@ -1,10 +1,10 @@
-# Cruise.jl v0.3.0 : A Powerful Game Engine Core for Julia
+# Cruise.jl v0.3.0 : A Powerful Game Engine Kernel for Julia
 
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
-**Cruise.jl**, a game engine core with a powerful plugin system to allows you to build complex systems without too much overhead.
+**Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems without too much overhead.
 
 ---
 
