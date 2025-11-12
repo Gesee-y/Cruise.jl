@@ -15,7 +15,7 @@ const PAUSEPLUGIN = CRPlugin()
 We will create some simple input maps and just make a placeholder struct for the pause plugin:
 
 ```julia
-@InputMap PAUSE("Space", "ESCAPE")
+@InputMap PAUSE("SPACE", "ESCAPE")
 
 struct PauseManager end
 

@@ -5,7 +5,7 @@ using ..Cruise.ODPlugin, ..TimerPlugin
 
 const PAUSEPLUGIN = CRPlugin()
 
-@InputMap PAUSE("Space", "SPACE", "ESCAPE")
+@InputMap PAUSE("SPACE", "ESCAPE")
 
 struct PauseManager end
 
