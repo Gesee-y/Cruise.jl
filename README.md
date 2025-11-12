@@ -1,6 +1,6 @@
 # Cruise.jl v0.3.0 : A 2D/3D Game Engine for Julia
 
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
