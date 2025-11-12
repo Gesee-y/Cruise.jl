@@ -4,7 +4,7 @@
 
 export CruiseApp
 export awake!, run!, shutdown!
-export on, off, merge_plugin!
+export on, off, merge_plugin!, debugmode
 export init_appstyle, context, instance
 
 ####################################################### CORE ##############################################################
@@ -58,6 +58,13 @@ function CruiseApp()
 end
 
 ##################################################### FUNCTIONS ##########################################################
+
+"""
+    debugmode() -> Bool
+
+This function tells whether or not the code is actually in debug mode. You can overload it to change debug mode at runtime
+"""
+debugmode() = true
 
 """
     awake!(a::CruiseApp)

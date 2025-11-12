@@ -200,12 +200,7 @@ Iterate topologically on the graph and apply the function f on it sequentially.
 function smap!(f, sg::CRPlugin, args...)
     for id in sg.sort_cache
         node = sg.idtonode[id]
-        try
-            f(node, args...)
-        catch e
-            setstatus(node, PLUGIN_ERR)
-            setlasterr(node, e)
-        end
+        _exec_node(f, node, args...)
     end
 end
 
@@ -253,10 +248,14 @@ function pmap!(f, sg::CRPlugin, args...)
 end
 
 function _exec_node(f, node, args...)
-    try
+    if debugmode()
         f(node, args...)
-    catch e
-        setstatus(node, PLUGIN_ERR)
-        setlasterr(node, e)
+    else
+        try
+            f(node, args...)
+        catch e
+            setstatus(node, PLUGIN_ERR)
+            setlasterr(node, e)
+        end
     end
 end
