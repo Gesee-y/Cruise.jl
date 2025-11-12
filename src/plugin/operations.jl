@@ -165,7 +165,7 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
 
     id_map = Dict{Int, Int}()
     for (id2, node2) in sg2.idtonode
-        if haskey(obj_to_id, typeof(node2.obj))
+        if haskey(obj_to_id, node2.obj)
             id_map[id2] = obj_to_id[typeof(node2.obj)]
         else
             new_id = id2 + offset
