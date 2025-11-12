@@ -1,14 +1,10 @@
-# Cruise.jl v0.3.0 : A 2D/3D Game Engine for Julia
+# Cruise.jl v0.3.0 : A Powerful Game Engine Core for Julia
 
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
-Julia has proven itself in fields like scientific computing, machine learning, and data visualization. But for game development, its ecosystem has remained... timid.
-
-**Cruise.jl** fills that gap.
-
-It’s not just a wrapper or a framework, Cruise is a modular, performant, and backend-agnostic game engine written entirely in Julia. With Cruise, Julia isn't just a language for science anymore, it becomes a serious tool for building games.
+**Cruise.jl**, a game engine core with a powerful plugin system to allows you to build complex systems without too much overhead.
 
 ---
 
@@ -28,27 +24,22 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ---
 
-## Philosophy 
+## Features
 
-Cruise is built around a modular DAG (Directed Acyclic Graph) of plugins, this means you can easily extend or replace any part of the engine without breaking your project.
-Want to swap your renderer from SDL to Vulkan? Just change a plugin.
-Need a pure ECS game instead of SceneTree? Just load the ECS plugin.
+- **Plugin system**: Built around a DAG (Direct Acyclic Graph), it allows you to extend Cruise, share your own plugin and collaborate without too much hassle.
 
-Why this philosophy? Because I believe there are many excellent programmers out there, some far better than me, so I designed this engine in a way that ensures programmers won't feel constrained by my implementations.
+- **Assets Loading and Management**: Cruise can load a wide variety of files (Images, sounds and soon meshes) and manage/reuse them during the game lifecycle.
 
-## Why Julia
+- **JIT compiled**: Which means you can dynamically add code to your program while it's running, allowing you to do hot reloading or live coding.
 
-It's certainly the question most people ask themselves. And that's why I chose Julia, because it *“wasn't meant for games.”*  
-Julia is a breath of fresh air, far from the thousands of C/C++ engines, finally allowing us to explore how a JIT-compiled language can perform in game development.  
+- **Event System**: Cruise provides you 2 event system, a lightweight synchronous one that can be use for simple cases, and a complex one leveraging the full powers of reactive programming such as merging, filtering, delays, throttling,  etc.
 
-Julia is fast and offers interesting features like multiple dispatch, a powerful macro system, and more, all with an easy-to-learn syntax.
+- **Temporary storage**: To easily share data among your systems, it also support TTL (Time To Live) for data and provides events and serialization support
 
-Using a JIT-compiled language offers some interesting features, such as:
+- **Make your own structure**: Cruise doesn't enforce any architecture, build your game as you feel
 
-- **Live coding**: Write your game code and see the results instantly.  
-- **Fast prototyping**: Thanks to Julia’s simple syntax and powerful code injection, you can build and tweak your games quickly.  
+- **Build your own engine**: Since Cruise is just a minimal core, you can just choose the set of plugins (or build your own) that perfectly match your use case.
 
-It also makes it possible to run your game and adjust it directly from an interactive REPL.
 
 ## Why Cruise?
 
@@ -59,133 +50,9 @@ Well, if I put aside the learning treasure that is building an engine, I would s
 
 Cruise is a game engine built for compatibility, modularity, and performance. It's designed so that users are not bound to any given architecture, library or rendering backend. This way, games are made with Cruise by choosing the optimal tools for every task. A SceneTree for UI, an ECS for the logics, Dataflow for processing, your own architecture for custom mechanics, etc.
 
-What Cruise gives you
+---
 
-- **Modular Architecture**: Plug in only what you need. Swap systems without refactoring.
-- **Customizable Workflow**: DataFlow, ECS or SceneTree? Or all of them. You choose what suits you or even build your dream architecture.
-- **Hot Reloading**: Edit your code or assets while your game is running.
-- **Event Systems**: Full reactive pipeline and event system with EventNotifiers
-- **Backend Freedom**: SDL, GLFW, WGPU… pick your renderer and your style.
-- **Full Julia Power**: REPL-driven dev, live code injection, and JIT-level speed.
-
-
-## What does Cruise represent ?
-
-Making a game is a long and tortuous journey with many ups and downs. Building a game engine is often a necessary step, but it's easy to lose the desire to make the actual game.  
-
-So Cruise is your boat, helping you navigate the vast ocean of ideas and build your own journey.  
-
-I built Cruise because game development has often made me feel intense emotions, and I want newcomers to be just as amazed as I was when I first started making games.
-
-## Architecture 
-
-> With Cruise, there is a difference between a module and a plugin. A plugin is added in the game lifecycle while a module is independent from that.
-
-Cruise itself is built as a minimal core, allowing you to add plugin (which is a graph of execution) into the game lifecycle to add new features.  
-
-But how does the system communicate?
-Using the DAG.
-
-Each plugin can access the data of his dependencies, their states and more.
-This itself form dataflow based architecture when each plugin passes data to the dependent ones.
-For example, when the Physics plugin updates object positions,
-the Renderer plugin automatically gets the new data through the DAG.
-No boilerplate. No manual sync. Just data flowing between systems.
-
-But that's not everything about it.
-You can make plugins for different types of architectures.
-For example make an ECSPlugin and other plugins and logics requiring an ECS will work smoothly
-Same with SceneTree or any crazy game architecture you have always dreamed of.
-
-The DAG has been choosen for Cruise because it's a more fundamental architecture that allows greater flexibility than locking the user in something like a SceneTree or an ECS in the sense that it allows the other architecture to be added on top of it with a clear separation of concerns simply by making them as plugins.
-
-Cruise already comes with 3 architectures: Dataflow, ECS and SceneTree.
-Just waiting for you to add your own idea.
-
-### ECS Architecture 
-
-```julia
-using Cruise
-using RECSPlugin
-
-# We create a new app
-app = CruiseApp()
-
-merge_plugin!(app, RECSPLUGIN)
-
-@component Health begin hp::Int end
-@system HPSystem
-
-e1 = create_entity!(Health(10))
-
-## Then we make the game loop, it will update the systems
-```
-
-### SceneTree Architecture 
-
-```julia
-using Cruise
-using SceneTreePlugin
-
-# We create a new app
-app = CruiseApp()
-
-merge_plugin!(app, SCENETREEPLUGIN)
-
-mutable struct Player
-    hp::Int
-end
-struct Weapon end
-
-n1 = Node(Player(10))
-n2 = Node(Weapon())
-addchild(n1, n2)
-
-ready!(n::Node{Player}) = (n[].hp = 10)
-process!(n::Node{Player}) = println(n[].hp)
-
-connect(_ON_READY) do n::Node{Player}
-    add_child(n1, Node(Weapon))
-end
-
-## Then magic will happen in the game loop
-
-```
-
-### DataFlow Architecture 
-
-```julia
-using Cruise 
-
-app = CruiseApp()
-
-mutable struct Player
-    hp::Int
-end
-
-p1 = Player(10)
-
-game = CRPlugin()
-add_system!(game, p1)
-
-Cruise.awake!(n::CRPluginNode{Player}) = (n.obj.hp = 10)
-Cruise.update!(n::CRPluginNode{Player}) = println(n.obj.hp)
-
-merge_plugin!(app, game)
-
-## Magic happens in the game loop
-```
-
-## Plugins
-
-So in order to extend itself, Cruise relies on a **DAG-driven architecture**.  
-So in Cruise, system (or plugin) execution is driven by a DAG (Directed Acyclic Graph) that represents dependencies between them and their execution order. Each graph is then assigned to a specific part of the game loop (before update, after update, etc.).
-
-A **plugin** is essentially a subgraph that can be merged into the main graph at a specific point in the game loop to be used.  
-
-This allows us to build a renderer plugin, an ECS plugin, a SceneTree plugin, a physics plugin, or even a bundle of plugins (like a visual editor plugin).
-
-## Provided Tools
+## Exisitin Tools and Plugins
 
 ### Core
 
@@ -274,33 +141,9 @@ More game examples are available in [there](https://github.com/Gesee-y/Cruise-ex
 
 ---
 
-## Untested features
-
-- **Complete modern OpenGL abstraction + bindless textures** backend from Bplus engine, inspired from Unreal engine rendering engine. Not yet linked to Horizons.jl.  
-
-- **Skia 2D rendering backend** from Skia.jl. Just needs its interface implemented in Horizons.jl.  
-
-- **3D physics**: Still needs to be tested on real-world cases.
-
-## Common Concerns  
-
-- **JIT startup latency**: Julia is already making great progress on this front, and packages like [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl) provide effective solutions.  
-
-- **Performance**: Cruise is optimized for maximum speed (static structures, SIMD, multithreading, cache optimization, etc.) and aims to reach the level of industry-grade solutions (ReactiveECS plugin is a good example).
-
-## Roadmap
-
-From now on, I will focus on testing, documenting and patching. But here is a list of the incoming features:
-
-- [ ] Animation Graph
-- [ ] Sprites, AnimatedSprite, Skeletal animations
-- [ ] Spatial sound
-- [ ] 3D Physics
-- [ ] 3D Render
-
 ## Contribution
 
-Core Cruise's modules and plugins are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance — you're welcome to contribute.
+Core Cruise's modules and plugins are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance, you're welcome to contribute.
 
 * Choose the module you want to improve.
 * Fork, hack, PR. Simple.
