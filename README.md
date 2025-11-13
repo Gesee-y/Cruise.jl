@@ -52,8 +52,6 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 > These modules are included into Cruise when you add it with the package manager
 - [GDMathLib.jl](https://github.com/Gesee-y/GDMathLib.jl): The mathematics toolbox. It contains game-dev functions (lerp, slerp, etc.), stack-allocated structures for optimized performance, vector and quaternion manipulation, optimized matrix operations, boxes and circles, an extensible coordinate system, colors, and more.
 
-- [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
-
 - [EventNotifiers.jl](https://github.com/Gesee-y/EventNotifiers.jl): A reactive module. It allows you to create events with a Godot-like syntax (`@Notifyer MY_EVENT(x::Int)`) and manipulate them by modifying their states in an OpenGL-like manner. Features include easy traceability, support for synchronous and asynchronous callbacks, parent–child relationships, state serialization/deserialization, and more.
 
 - [AssetCrates.jl](https://github.com/Gesee-y/AssetCrates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
@@ -69,6 +67,8 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 - [ReAnimation.jl](https://github.com/Gesee-y/ReAnimation.jl): An animation system built with a layered architecture where low-level structures compose into high-level ones (from simple keyframes to multi-track players). This offers tons of interpolations and easing with an easy-to-extend structure, animation frames, async/parallel animation, bindings (to bind a mutable object to an animation), animation players, tracks, and soon blend trees, animation graphs, and more.
 
 - [WavesFlow.jl](https://github.com/Gesee-y/WavesFlow.jl): An audio engine. It offers audio streaming, effects, audio groups and buses, mixing, and soon spatial audio.
+
+- [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
 
 ### Plugins
 
