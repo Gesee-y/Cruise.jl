@@ -14,7 +14,6 @@ To create a plugin, first set up Cruise:
 ```julia
 using Cruise
 
-app = CruiseApp()
 ```
 
 Then define your system structures. Any type can be a node for a plugin; there is no special supertype required.
