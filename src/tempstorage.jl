@@ -171,6 +171,12 @@ function on(f, ts::AbstractNamespace, event::Symbol, args...)
         push!(v, (f,callback))
     end
 end
+onkeyadded(f, ts_or_ns, key...) = on(f,ts_or_ns, :addkey, key...)
+onkeydeleted(f, ts_or_ns, key...) = on(f,ts_or_ns, :deletekey, key...)
+onkeyexpired(f, ts_or_ns, key...) = on(f,ts_or_ns, :expire, key...)
+onclear(f, ts_or_ns) = on(f,ts_or_ns, :clear)
+onnamespaceadded(f, ts_or_ns, name...) = on(f,ts_or_ns, :addns, key...)
+onnamespacedeleted(f, ts_or_ns, name...) = on(f,ts_or_ns, :deletens, key...)
 
 """
     off(ts::TempStorage, event::Symbol, callback::Function)
@@ -517,7 +523,7 @@ function save!(ts::TempStorage, io::IO)
     
     serialized_data = Dict(k => _serialize(v) for (k, v) in data_copy)
     
-    JSON.print(io, Dict(
+    JSON.json(io, Dict(
         "data" => serialized_data,
         "expirations" => Dict(k => string(v) for (k, v) in expirations_copy),
         "saved_at" => string(now())
@@ -542,10 +548,10 @@ function load!(ts::TempStorage, filepath::String)
         throw(ArgumentError("File not found: $filepath"))
     end
     
-    d = JSON.parsefile(filepath)
+    d = JSON.parse(filepath)
     
     deserialized_data = Dict{String, Any}(
-        k => _deserialize(v) for (k, v) in d["data"]
+        k => _deserialize(Val(Symbol(v["__type__"])), v) for (k, v) in d["data"]
     )
     
     expirations_dict = Dict{String, DateTime}()

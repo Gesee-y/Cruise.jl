@@ -30,11 +30,15 @@ end
 
 ## Loading an Image
 
-In Cruise, images are loaded as `Crate`. A `Crate` is any managed resource (image, sound, font, etc.) that is automatically tracked and released when the application shuts down.
+In order to load image, you need a specialized module. [AssetCrates.jl](https://github.com/Gesee-y/AssetCrates.jl), images are loaded as `Crate`. A `Crate` is any managed resource (image, sound, font, etc.) that is automatically tracked and released when the application shuts down.
 
 Assuming you have an image at `assets/img.png`, load it like this:
 
 ```julia
+using AssetCrates
+
+const MANAGER = CrateManager()
+AssetCrates.getmanager() = MANAGER
 img = @crate "assets|img.png"::ImageCrate
 ```
 

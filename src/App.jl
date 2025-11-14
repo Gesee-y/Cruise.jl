@@ -37,7 +37,6 @@ The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
 	const plugins::Dict{Symbol, CRPlugin}
-	const manager::CrateManager
 	running::Bool
 end
 
@@ -50,8 +49,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), 
-	    	CrateManager(), false)
+	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), false)
 	end
 	unlock(app_lock)
 	return app[]	
