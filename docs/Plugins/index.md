@@ -14,7 +14,6 @@ To create a plugin, first set up Cruise:
 ```julia
 using Cruise
 
-app = CruiseApp()
 ```
 
 Then define your system structures. Any type can be a node for a plugin; there is no special supertype required.
@@ -171,7 +170,7 @@ end
 You should overload the `restore_state` methods which will have the following signature:
 
 ```julia
-reatore_state(::Val{:YourPluginName}, data::Dict{String, Any})
+restore_state(::Val{:YourPluginName}, data::Dict{String, Any})
 ```
 
 This function should returns an instance of the object contained in your plugin. You will have to use the informations you previously gave to serialize to create your object
@@ -212,7 +211,6 @@ In order for your plugin to be registered, it need to meet the following guideli
 
 - Have a clear goal
 - Have passing unit tests
-- Should pass a mockup scenario provides by Cruise and not cause any damage. If you want to propose a new mock, make a pull request.
 - Should the the julia registrator's guidelines
 
 ### Utilities
