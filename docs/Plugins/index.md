@@ -56,6 +56,22 @@ id2 = add_system!(plugin, s2)
 You can optionnaly pass the default argument `mainthread::Bool` to `add_system!` to specify that the node should always run on the main thread.
 By default, it's `false`.
 
+You can also optionally add another capability to you system. This means that you can have your object + another interface that the users will manipulate.
+
+```julia
+mutable struct MySys
+    value1::Int
+    value2::INt
+end
+
+mutable struct MyCapability
+    increment1::Int # Instead of directly incrementing values in MySys we will use this interface
+    increment2::Int
+end
+
+id = add_system!(plugin, MySys(0,0), MyCapability(0,0))
+```
+
 ---
 
 ## Adding Dependencies
@@ -152,7 +168,7 @@ node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type
 
 ### Plugin Serialization
 
-Every plugin must overload the serialization functions `encode_state` that outputs a dictionary with exactly 2 top-level sections following the enumeration:
+Persistent plugin must overload the serialization functions `encode_state` that outputs a dictionary with exactly 3 top-level sections with the last 2 following the enumeration:
 
 ```julia
 @enum PluginSerializationInfo begin
@@ -177,8 +193,6 @@ This function should returns an instance of the object contained in your plugin.
 
 #### Serialization Rules
 
-- Keys within each section should be namespaced by the plugin name: "PluginName-key"
-
 - Non-serializable fields (callbacks, Tasks, WeakRefs) must be skipped.
 
 - `restore_state` must be able to restore both state and data fully.
@@ -190,8 +204,9 @@ This function should returns an instance of the object contained in your plugin.
 
 ```julia
 Dict(
-    PLUGIN_STATE_INFO => Dict("TimerPlugin-current_time" => 12.5, "TimerPlugin-active" => true),
-    PLUGIN_DEBUG_INFO => Dict("TimerPlugin-last_update" => DateTime("2025-11-08T10:00:00"))
+    "Name" => "TimerPlugin"
+    PLUGIN_STATE_INFO => Dict("current_time" => 12.5, "active" => true),
+    PLUGIN_DEBUG_INFO => Dict("last_update" => DateTime("2025-11-08T10:00:00"))
 )
 ```
 
@@ -211,7 +226,7 @@ In order for your plugin to be registered, it need to meet the following guideli
 
 - Have a clear goal
 - Have passing unit tests
-- Should the the julia registrator's guidelines
+- Should meet the julia registrator's guidelines
 
 ### Utilities
 
@@ -245,10 +260,6 @@ Use these utility functions:
 
 - `hasdeaddeps(s::CRPluginNode)`
 
-
-> Important: You should **never** modify a node manually; doing so would break the separation of concerns and violate graph integrity.
-
-
 ---
 
 ### Plugin Status
@@ -265,7 +276,6 @@ end
 ```
 
 Status change events can be tracked using `add_status_callback(f, node)`.
-
 
 ---
 

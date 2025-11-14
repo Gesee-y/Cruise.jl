@@ -24,7 +24,10 @@ getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d] : error("Depe
 getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
 
 add_status_callback(f, p::CRPluginNode) = connect(f, p.status)
-serialize(::CRPluginNode) = ""
+encode_state(::CRPluginNode) = Dict{Any, Any}()
+@generated function decode_state(::Val{T}, data) where T
+    return :($T(pairs(data)...))
+end
 
 function getnodeid(p::CRPlugin, s::Symbol)
     for (i, n) in p.idtonode
@@ -93,9 +96,9 @@ get_graph(sg::CRPlugin) = sg.graph
 
 Add the given obj to the system graph.
 """
-function add_system!(sg::CRPlugin, obj, S=Any; sort=true, mainthread=false)
+function add_system!(sg::CRPlugin, args...; sort=true, mainthread=false)
     id = get_available_id(sg)
-    node = CRPluginNode{S}(obj; mainthread=mainthread)
+    node = CRPluginNode(args...; mainthread=mainthread)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
@@ -183,7 +186,7 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
         to = id_map[dst(e)]
 
         if from != to
-            add_edge!(sg1.graph, from, to)
+            add_dependency!(sg1, from, to;sort=false)
         end
     end
 

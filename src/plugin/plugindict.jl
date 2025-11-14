@@ -26,4 +26,7 @@ Base.keys(p::PluginDict) = keys(_getdata(p))
 Base.values(p::PluginDict) = _unwrap.(values(_getdata(p)))
 
 _getdata(d::PluginDict) = getfield(d, :_data)
-_unwrap(w::WeakRef) = w.value.obj
+_unwrap(w::WeakRef) = begin 
+    v = w.value
+    return isdefined(v, :cap) ? v.cap : v.obj
+end

@@ -25,7 +25,7 @@ end
 
 function notify!(s::CRSubject)
     for obs in s.observers
-        args = isnothing(s.value) ? () : s.value
+        args = isnothing(s.value) ? () : (s.value,)
         obs(args...)
     end
 end
