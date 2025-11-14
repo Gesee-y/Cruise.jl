@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "71f69d39372e4357b821e4b259a8e4dc98453180"
+project_hash = "c88d780f1755933ad01ae78fae25265927ced49d"
 
 [[deps.ArnoldiMethod]]
 deps = ["LinearAlgebra", "Random", "StaticArrays"]
@@ -93,11 +93,6 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
-
-[[deps.NodeTree]]
-git-tree-sha1 = "4c2fb07056ec6b0f2504ff33627f52680c63cf78"
-uuid = "2904b71e-4df0-4a82-a724-4bbee9184de7"
-version = "1.0.0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
