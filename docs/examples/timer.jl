@@ -1,6 +1,6 @@
 module TimerPlugin
 
-using ..Cruise
+using Cruise
 
 const TIMERPLUGIN = CRPlugin()
 

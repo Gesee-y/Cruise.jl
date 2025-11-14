@@ -28,7 +28,6 @@ include("App.jl")
 include("object.jl")
 include("game_loop.jl")
 include("writer.jl")
-include(joinpath("..", "plugins", "enable.jl"))
 
 text_en = [
 	"{speed:0.1}Everything begins somewhere.{pause:2}",

@@ -1,6 +1,4 @@
-include(joinpath("..", "..", "src", "Cruise.jl"))
-
-using .Cruise
+using Cruise
 
 include("timer.jl")
 include("pauser.jl")

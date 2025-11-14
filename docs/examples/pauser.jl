@@ -1,7 +1,7 @@
 module PausePlugin
 
-using ..Cruise
-using ..Cruise.ODPlugin, ..TimerPlugin
+using Cruise
+using ODPlugin, ..TimerPlugin
 
 const PAUSEPLUGIN = CRPlugin()
 

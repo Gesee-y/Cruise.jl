@@ -1,7 +1,5 @@
-include(joinpath("..", "..", "src", "Cruise.jl"))
-
-using .Cruise
-using .Cruise.ODPlugin
+using Cruise
+using ODPlugin
 
 app = CruiseApp()
 Close = Ref(false)
