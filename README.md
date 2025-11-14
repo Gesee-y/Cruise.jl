@@ -123,18 +123,6 @@ end
 
 ---
 
-## Example games
-
-More game examples are available in [there](https://github.com/Gesee-y/Cruise-examples)
-
----
-
-## Games made with Cruise
-
-- **[Insane Pong](https://github.com/Gesee-y/Pong-GS)**: Which is an insane and rythmic version of pong with tons of shaders, events triggered by music, complex mechanics (gameplay change with the music) and more. All that with just the SDL backend.
-
----
-
 ## Contribution
 
 Core Cruise's modules and plugins are self-contained, meaning they use their own interfaces to implement their functionality. This allows any contributor to do the same and stay aligned with the engine's design. Whether you're fixing bugs, writing documentation, or improving performance, you're welcome to contribute.
