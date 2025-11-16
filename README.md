@@ -58,6 +58,10 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 - [AssetCrates.jl](https://github.com/Gesee-y/AssetCrates.jl): An asset loader and manager. It offers an easy-to-extend interface to load any type of file and manage their lifecycle. Hot reloading is in progress.
 
+- [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. Backends can be obtained via external packages.
+
+- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. Backend can be obtained via external packages.
+
 - **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, temporary storage, dynamic structs and more.
 
 ### Modules
@@ -73,10 +77,6 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 - [NodeTree.jl](https://github.com/Gesee-y/NodeTree.jl): Tree manipulation to create `SceneTree`s and any parent–child relationship.
 
 ### Plugins
-
-- [Outdoors.jl](https://github.com/Gesee-y/Outdoors.jl): A backend-agnostic window manager. Based on a microkernel architecture, it offers a clear interface to define window and event management backends. SDL and GLFW are already supported with a unified way to manage inputs.
-
-- [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. The SDL backend is available with optimized post processing, upscaling/downscaling and logging.
 
 - [Interactions.jl](https://github.com/Gesee-y/Interactions.jl): A 2D/3D physics engine. It supports particles, collision detection, forces, contact resolution, integration using a Verlet integrator, constraints, and more.
 
@@ -94,7 +94,7 @@ app = CruiseApp()
 
 # Initialise SDL style window with a SDL renderer
 win = CreateWindow(SDLStyle, "Example", 640, 480)
-backend = CreateBackend(SDLRender, GestStyle(win).window, 640, 480)
+backend = InitBackend(SDLRender, GestStyle(win).window, 640, 480)
 
 # We import our resource as an ImageCrate
 img = @crate "docs|example|assets|001.png"::ImageCrate
@@ -107,7 +107,7 @@ img = @crate "docs|example|assets|001.png"::ImageCrate
 
 # We create a new renderable object
 
-texture Texture(backend, img)
+texture = Texture(backend, img)
 
 pos = Vec2f(0,0)
 
