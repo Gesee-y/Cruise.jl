@@ -39,6 +39,8 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 - **Temporary storage**: To easily share data among your systems, it also support TTL (Time To Live) for data and provides events and serialization support
 
+- **Multiple clear interfaces**: [ECS](https://github.com/Gesee-y/ECSInterface.jl), SceneTree, [Rendering](https://github.com/Gesee-y/Horizons.jl) , [windowing and events](https://github.com/Gesee-y/Outdoors.jl). All clear and set for you to overload with bunch of premade implementations available.
+
 - **Make your own structure**: Cruise doesn't enforce any architecture, build your game as you feel
 
 - **Build your own engine**: Since Cruise is just a minimal core, you can just choose the set of plugins (or build your own) that perfectly match your use case.
@@ -84,14 +86,11 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ```julia
 using Cruise
-using ODPlugin
-using HZPlugin
+using SDLOutdoors
+using SDLHorizons
 
 # We create a new app
 app = CruiseApp()
-
-merge_plugin!(app, ODPLUGIN; phase=:preupdate)
-merge_plugin!(app, HZPLUGIN)
 
 # Initialise SDL style window with a SDL renderer
 win = CreateWindow(SDLStyle, "Example", 640, 480)
