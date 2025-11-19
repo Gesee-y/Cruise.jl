@@ -24,6 +24,7 @@ jobs:
             Pkg.add("Test");
             Pkg.instantiate();
             Pkg.test(coverage=true);
+            using Coverage
             LCOV.writefile("lcov.info", process_folder());
           '
 
