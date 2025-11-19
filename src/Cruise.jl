@@ -22,7 +22,6 @@ include("tempstorage.jl")
 include(joinpath("plugin", "plugin.jl"))
 include("utilities.jl")
 include("App.jl")
-include("object.jl")
 include("game_loop.jl")
 include("writer.jl")
 

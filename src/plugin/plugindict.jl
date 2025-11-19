@@ -30,3 +30,5 @@ _unwrap(w::WeakRef) = begin
     v = w.value
     return isdefined(v, :cap) ? v.cap : v.obj
 end
+_unwrap(w::Ref) = w[]
+_unwrap(x) = x

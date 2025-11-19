@@ -4,7 +4,7 @@
 
 export add_system!, remove_system!, add_dependency!, remove_dependency!, merge_graphs!, pmap!, smap!
 export isinitialized, isuninitialized, isdeprecated, hasfailed, getstatus, setstatus, setresult
-export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized, getdep, getnodeid
+export hasfaileddeps, hasuninitializeddeps, hasalldepsinitialized, getdep, getnodeid, getlasterror
 
 isinitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OK
 isuninitialized(s::CRPluginNode) = getstatus(s) == PLUGIN_OFF
@@ -16,9 +16,9 @@ getresult(s::CRPluginNode) = s.result
 setresult(s::CRPluginNode, r) = (s.result = r)
 getlasterror(s::CRPluginNode) = isdefined(s, :lasterr) ? s.lasterr : nothing
 setlasterr(s::CRPluginNode, e::Exception) = setfield!(s, :lasterr, e)
-hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_ERR, values(_getdata(s.deps)))
-hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OFF, values(_getdata(s.deps)))
-hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p) == PLUGIN_OK, values(_getdata(s.deps)))
+hasfaileddeps(s::CRPluginNode) = any(p -> getstatus(p.value) == PLUGIN_ERR, values(_getdata(s.deps)))
+hasuninitializeddeps(s::CRPluginNode) = any(p -> getstatus(p.value) == PLUGIN_OFF, values(_getdata(s.deps)))
+hasalldepsinitialized(s::CRPluginNode) = any(p -> getstatus(p.value) == PLUGIN_OK, values(_getdata(s.deps)))
 hasdeaddeps(s::CRPluginNode) = any(isnothing, values(_getdata(s.deps)))
 getdep(n::CRPluginNode, d::Symbol) = haskey(n.deps, d) ? n.deps[d] : error("Dependency $n not found in node")
 getdep(n::CRPluginNode, t::Type) = getdep(n, Symbol(t))
@@ -144,7 +144,7 @@ function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     p = sg.idtonode[from]
     c = sg.idtonode[to]
     delete!(c.deps,typeof(p.obj))
-    idx = findfirst(p.children, c)
+    idx = findfirst(isequal(c), p.children)
     if idx != -1
         p.children[end], p.children[idx] = p.children[idx], p.children[end]
         pop!(p.children)
@@ -160,6 +160,7 @@ If both graph have the samem system, one will be kept and the other will connect
 """
 function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
     offset = sg1.current_max
+    identical = 0
     obj_to_id = Dict{DataType, Int}()
 
     for (id, node) in sg1.idtonode
@@ -167,17 +168,19 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
     end
 
     id_map = Dict{Int, Int}()
-    for (id2, node2) in sg2.idtonode
-        if haskey(obj_to_id, node2.obj)
+    ids = sort!(collect(keys(sg2.idtonode)))
+    for id2 in ids
+        node2 = sg2.idtonode[id2]
+        if haskey(obj_to_id, typeof(node2.obj))
+            identical += 1
             id_map[id2] = obj_to_id[typeof(node2.obj)]
         else
-            new_id = id2 + offset
+            new_id = id2 + offset - identical
             sg1.idtonode[new_id] = node2
             node2.id = new_id
             add_vertex!(sg1.graph)
             sg1.current_max = max(sg1.current_max, new_id)
             id_map[id2] = new_id
-            obj_to_id[typeof(node2.obj)] = new_id
         end
     end
 

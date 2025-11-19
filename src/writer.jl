@@ -23,17 +23,17 @@ mutable struct TextWriter
 	TextWriter(text::Vector{String}; auto=true) = new(text, "", 0, Dict{Symbol, String}(:speed => "0.1"), auto)
 end
 
-function write_text(writer::TextWriter)
+function write_text(writer::TextWriter;io=stdout)
 	texts = writer.text
 	for i in eachindex(texts)
 		writer.current_text = texts[i]
 		writer.current_index = i
-		write_a_text(writer, i)
+		write_a_text(writer, i;io=io)
 		writer.auto || readline()
 	end
 end
 
-function write_a_text(writer::TextWriter, index::Int)
+function write_a_text(writer::TextWriter, index::Int; io=stdout)
 	strong_punc = ('.', '!', '?')
     soft_punc = (',', ';')
     text = writer.text[index]
@@ -46,7 +46,7 @@ function write_a_text(writer::TextWriter, index::Int)
     		key, val, i = _get_meta(text, i)
     		writer.meta[key] = val
     	else
-            print(char)
+            print(io,char)
         end
 
         process_all_metadata(writer)
@@ -63,7 +63,7 @@ function write_a_text(writer::TextWriter, index::Int)
         prev_char = char
         i += 1
     end
-    println()
+    println(io, "")
 end
 
 function _get_meta(text::String, i::Int)
@@ -71,6 +71,7 @@ function _get_meta(text::String, i::Int)
 	key_idx == nothing && error("Metadata not specified.")
     val_idx = findnext('}',text, i)
     val_idx == nothing && error("Metadata not closed")
+    key_idx+1 >= val_idx && error("Metadata is malformed: `$text`.")
 	
 	key = text[i+1:key_idx-1]
 	val = text[key_idx+1:val_idx-1]
