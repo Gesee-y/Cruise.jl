@@ -120,7 +120,6 @@ function shutdown!()
         for sg in values(a.plugins)
 		    shutdown!(sg)
 	    end
-        DestroyAllCrates!(a.manager)
     end
 end
 shutdown!(sg::CRPlugin) = smap!(shutdown!, sg)
@@ -144,4 +143,5 @@ merge_plugin!(app::CruiseApp, plugin::CRPlugin, phase=:postupdate) = merge_plugi
 merge_plugin!(plugin1::CRPlugin, plugin2::CRPlugin) = merge_graphs!(plugin1, plugin2)
 
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
+
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]
