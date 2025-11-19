@@ -1,6 +1,7 @@
 # Cruise.jl v0.3.0 : A Powerful Game Engine Kernel for Julia
 
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+[![Test workflow status](https://github.com/Gesee-y/Cruise.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/Gesee-y/Cruise.jl/actions/workflows/Test.yml?query=branch%3Amain)
+[![Coverage Status](https://coveralls.io/repos/github/Gesee-y/Cruise.jl/badge.svg?branch=main)](https://coveralls.io/github/Gesee-y/Cruise.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
 
