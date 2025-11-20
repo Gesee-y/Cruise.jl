@@ -2,8 +2,8 @@
 
 [![Test workflow status](https://github.com/Gesee-y/Cruise.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/Gesee-y/Cruise.jl/actions/workflows/Test.yml?query=branch%3Amain)
 [![Coverage Status](https://coveralls.io/repos/github/Gesee-y/Cruise.jl/badge.svg?branch=main)](https://coveralls.io/github/Gesee-y/Cruise.jl?branch=main)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
-[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://gesee-y.github.io/Cruise.jl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Gesee-y/Cruise.jl/blob/main/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://github.com/Cruise.jl/blob/main/docs/index.md)
 
 **Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems or full game engines without too much overhead.
 It's closer to Linux philosophy, the same way everyone can build his own OS using the Linux kernel, anyone can build his own engine using Cruise.
