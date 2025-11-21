@@ -95,7 +95,7 @@ app = CruiseApp()
 
 # Initialise SDL style window with a SDL renderer
 win = CreateWindow(SDLStyle, "Example", 640, 480)
-backend = InitBackend(SDLRender, GestStyle(win).window, 640, 480)
+backend = InitBackend(SDLRender, GetStyle(win).window, 640, 480)
 
 # We import our resource as an ImageCrate
 img = @crate "docs|example|assets|001.png"::ImageCrate
