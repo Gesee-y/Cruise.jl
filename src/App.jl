@@ -11,6 +11,14 @@ export init_appstyle, context, instance
 
 @Notifyer ON_CRUISE_STARTUP()
 
+mutable struct HorizonManager
+	backends::Dict{HRenderer, WeakRef}
+
+	## Constructor
+
+	HorizonManager() = new(Dict{HRenderer, WeakRef}())
+end
+
 """
     mutable struct CruiseApp
 		const inst::ODApp
@@ -37,7 +45,10 @@ The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
 	const plugins::Dict{Symbol, CRPlugin}
+	app::ODApp
+	render::HorizonManager
 	running::Bool
+	ShouldClose::Bool
 end
 
 const app = Ref{CruiseApp}()
@@ -49,10 +60,15 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), false)
+	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), 
+	    	ODApp(), HorizonManager(),false, false)
 	end
 	unlock(app_lock)
 	return app[]	
+end
+
+Outdoors.connect(NOTIF_QUIT_EVENT) do
+	CruiseApp.ShouldClose = true
 end
 
 ##################################################### FUNCTIONS ##########################################################
@@ -76,6 +92,7 @@ Initialize all the systems in the given CRPlugin.
 function awake!()
     a = CruiseApp() 
 	a.running = true
+	awake!(a.app)
 	for sg in values(a.plugins)
 		awake!(sg)
 	end
@@ -95,10 +112,12 @@ Update for the current frame the CruiseApp and all his plugins.
 Update for the current frame all the systems in the given CRPlugin.
 """
 function update!()
-    a = CruiseApp() 
+    a = CruiseApp()
+    update!(a.app)
 	for sg in values(a.plugins)
 		update!(sg)
 	end
+	update!(a.render)
 end
 update!(a::CruiseApp, phase::Symbol) = update!(a.plugins[phase])
 update!(sg::CRPlugin) = pmap!(update!, sg)
@@ -115,6 +134,8 @@ This will stop the given system graph by topologically calling shutdown! on the 
 """
 function shutdown!()
 	a = CruiseApp()
+	shutdown!(a.app)
+	shutdown!(a.render)
     if on(a)
         a.running = false
         for sg in values(a.plugins)
@@ -145,3 +166,49 @@ merge_plugin!(plugin1::CRPlugin, plugin2::CRPlugin) = merge_graphs!(plugin1, plu
 preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
 
 postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]
+
+########################################################### OUTDOORS ################################################################
+
+function Outdoors.CreateWindow(style::Type{<:AbstractStyle}, args...)
+	#InitOutdoor(style)
+	return CreateWindow(CruiseApp().app, style, args...)
+end
+
+function Cruise.awake!(n::ODApp)
+	#InitOutdoor()
+end
+
+function Cruise.update!(n::ODApp)
+	EventLoop(n)
+end
+
+function Cruise.shutdown!(n::ODApp)
+	QuitOutdoor()
+end
+
+########################################################### HORIZONS ################################################################
+
+function CRHorizons.InitBackend(R::Type{<:HRenderer}, win, sizex, sizey, x=0, y=0)
+	backend = InitBackend(R, win)
+	CreateViewport(backend, sizex, sizey, x, y)
+	CruiseApp().render.backends[backend] = WeakRef(win)
+
+	return backend
+end
+
+function Cruise.update!(manager::HorizonManager)
+	backends = keys(manager.backends)
+
+	for (backend, winref) in manager.backends
+		if isnothing(winref.value)
+			# Given that there are a small number of renderers in a game,
+			# No need to move memory to delete the deprecated backend, we can just skip them
+			#continue
+		end
+        SetDrawColor(backend,WHITE)
+        ClearViewport(backend)
+        UpdateRender(backend)
+    end
+end
+
+Cruise.shutdown!(n::HorizonManager) = nothing

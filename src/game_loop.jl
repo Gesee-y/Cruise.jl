@@ -118,12 +118,14 @@ macro gameloop(args...)
         while Cruise.on(app)
 
             # First pump events and initialize every windows
-            Cruise.update!(app.plugins[:preupdate])
+            Cruise.update!(app.app)
+            Cruise.update!(app, :preupdate)
 
             # Then execute the loop code
             $code
 
-            Cruise.update!(app.plugins[:postupdate])
+            Cruise.update!(app, :postupdate)
+            Cruise.update!(app.render)
 
             # Advance the timer.
             LOOP_VAR.frame_idx += 1
