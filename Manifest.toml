@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "106761c58e2ce6925bd7164b0b22ccd16180bfc5"
+project_hash = "20f832634634d31e85771103aa56e888018d6ea6"
 
 [[deps.ArnoldiMethod]]
 deps = ["LinearAlgebra", "Random", "StaticArrays"]
@@ -18,7 +18,7 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.CRHorizons]]
 deps = ["EventNotifiers", "GDMathLib", "NodeTree", "Reexport"]
-git-tree-sha1 = "68ec1371cf5ed103ace12a8846355146f264d952"
+git-tree-sha1 = "ba36bb2f877527a45abcf6da4443d3413d0cffcd"
 repo-rev = "main"
 repo-url = "https://github.com/Gesee-y/CRHorizons.jl"
 uuid = "d359ef98-a7e3-42d2-87cb-a7a1f294c746"
@@ -42,6 +42,13 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+
+[[deps.ECSInterface]]
+git-tree-sha1 = "fb5215c681b0e7eedcd9245c829fcefc493e36bb"
+repo-rev = "main"
+repo-url = "https://github.com/Gesee-y/ECSInterface.jl"
+uuid = "ed54f85f-9ee8-4912-9e4a-a43af611f8a9"
+version = "0.1.0"
 
 [[deps.EventNotifiers]]
 git-tree-sha1 = "e97e476f17d72f154bf4a1867c386dfac8c0bd7e"
@@ -119,9 +126,9 @@ version = "1.8.1"
 
 [[deps.Outdoors]]
 deps = ["EventNotifiers", "NodeTree"]
-git-tree-sha1 = "8ac16a2e810aeb58fdbc33b35e98f2f6c5c23156"
+git-tree-sha1 = "a252994ad78c1102c3a1a5bd102189f25e53389b"
 uuid = "d3598698-a7e3-42d2-87cb-a7a1f294c746"
-version = "0.6.5"
+version = "0.6.6"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]

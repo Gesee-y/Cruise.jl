@@ -68,7 +68,7 @@ function CruiseApp()
 end
 
 Outdoors.connect(NOTIF_QUIT_EVENT) do
-	CruiseApp.ShouldClose = true
+	CruiseApp().ShouldClose = true
 end
 
 ##################################################### FUNCTIONS ##########################################################
