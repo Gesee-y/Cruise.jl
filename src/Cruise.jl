@@ -15,7 +15,7 @@ using Base.Threads
 @reexport using EventNotifiers
 @reexport using GDMathLib
 @reexport using Outdoors
-@reexport using ..CRHorizons
+@reexport using CRHorizons
 
 include("events.jl")
 include("tempstorage.jl")
