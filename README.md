@@ -89,15 +89,21 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 using Cruise
 using SDLOutdoors
 using SDLHorizons
+using AssetCrates
 
 # We create a new app
 app = CruiseApp()
+manager = CrateManager() # The resources manager
+
+# Here we are assigning the global resources manager
+AssetCrates.getmanager() = manager
 
 # Initialise SDL style window with a SDL renderer
 win = CreateWindow(SDLStyle, "Example", 640, 480)
 backend = InitBackend(SDLRender, GetStyle(win).window, 640, 480)
 
 # We import our resource as an ImageCrate
+
 img = @crate "docs|example|assets|001.png"::ImageCrate
 
 # Then we define our bindings
@@ -113,7 +119,7 @@ texture = Texture(backend, img)
 pos = Vec2f(0,0)
 
 # Our game loop. It update events and render for us. Once the window will be closed, it will stop.
-@gameloop begin
+@gameloop app begin
     pos.x += IsKeyPressed(instance(win), RIGHT) - IsKeyPressed(instance(win), LEFT)
     pos.y += IsKeyPressed(instance(win), DOWN) - IsKeyPressed(instance(win), UP)
     DrawTexture2D(backend, texture, Rect2Df(pos...,1,1)
