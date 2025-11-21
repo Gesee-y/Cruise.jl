@@ -183,7 +183,7 @@ function Cruise.update!(n::ODApp)
 end
 
 function Cruise.shutdown!(n::ODApp)
-	QuitOutdoor()
+	QuitOutdoor(n)
 end
 
 ########################################################### HORIZONS ################################################################
@@ -212,3 +212,4 @@ function Cruise.update!(manager::HorizonManager)
 end
 
 Cruise.shutdown!(n::HorizonManager) = nothing
+
