@@ -270,6 +270,8 @@ function compute_parallel_levels(graph, nodes_sorted, idtonode)
 end
 
 function _exec_node(f, node, args...)
+    !node.enabled && return
+
     if debugmode()
         f(node, args...)
     else

@@ -45,6 +45,7 @@ mutable struct CRPluginNode{T,S}
     id::Int
     obj::T
     mainthread::Bool
+    enabled::Bool
     deps::PluginDict
     status::CRSubject{CRPluginStatus}
     capability::S
@@ -52,8 +53,8 @@ mutable struct CRPluginNode{T,S}
 
     ## Constructors
 
-    CRPluginNode(obj::T; mainthread=false) where T = new{T,Any}(-1, obj, mainthread, PluginDict(), CRSubject(PLUGIN_OFF))
-    CRPluginNode(obj::T, cap::S; mainthread=false) where {T, S<:Any} = new{T,S}(-1, obj, mainthread, PluginDict(), CRSubject(PLUGIN_OFF), cap)
+    CRPluginNode(obj::T; mainthread=false) where T = new{T,Any}(-1, obj, mainthread, true, PluginDict(), CRSubject(PLUGIN_OFF))
+    CRPluginNode(obj::T, cap::S; mainthread=false) where {T, S<:Any} = new{T,S}(-1, obj, mainthread, true, PluginDict(), CRSubject(PLUGIN_OFF), cap)
 end
 
 """

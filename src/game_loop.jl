@@ -3,7 +3,8 @@
 #########################################################################################################################
 
 export GameLoop
-export @gameloop, LOOP_VAR_REF
+export @gameloop, @gamelogic, LOOP_VAR_REF
+export enable_system, disable_system
 
 ## Inspired from B+ engine by William Manning
 """
@@ -59,7 +60,7 @@ const LOOP_VAR_REF = Ref{GameLoop}(GameLoop())
 This struct represent the code you passed on to the game loop object.
 That code will be used to generate a new system that will be used to execute your code
 """
-mutable struct GameCode
+mutable struct GameCode{N}
     expr::Expr
     code::Function
 end
@@ -69,6 +70,48 @@ function reset!(l::GameLoop)
     l.frame_idx = 0
     l.max_fps = 60
     l.max_frame_duration = 0.5
+end
+
+"""
+This macro helps you define your game logic more easily, without thinking about plugins or anything.
+
+## Example
+
+```julia
+app = CruiseApp()
+
+# This will create a new system in the main plugin and automatically set his update logic to your code.
+ai_id = @gamelogic AILogic begin
+    # My logics
+end
+```
+"""
+macro gamelogic(args...)
+    length(args) < 2 && error("@gamelogic should take at least 2 argument.")
+    args[1] isa Symbol || error("@gamelogic should take as first argument the logic name.")
+    args[end] isa Expr || error("@gamelogic should take as last argument the logic body.")
+    name = QuoteNode(args[1])
+    code = args[end]
+    rawcode = QuoteNode(code)
+    
+    cap = ()
+    for i in 2:length(args)-1
+        args[i] isa Symbol && error("@gamelogic should take keyword arguments not `$(args[i])")
+        arg = args[i].args
+        if arg[1] == :capability
+            cap = (arg[2],)
+        else
+            error("Unknow keyword $(arg[1])")
+        end
+    end
+
+    return quote
+        # Adding the user code as a system in the plugin
+        logic = Cruise.GameCode{name}($rawcode, () -> $code)
+        LOGICID = add_system!(CruiseApp().plugins, logic, cap...)
+
+        return LOGICID
+    end
 end
 
 """
@@ -89,13 +132,13 @@ using Cruise
 app = CruiseApp()
 cnt::Int = 0
 
-@gameloop max_fps=60 app begin
+@gameloop max_fps=60 begin
     global cnt
     println("In loop")
     cnt += 1
     
     # Will simulate 10s waiting then stop the loop
-    cnt > 600 && shutdown!(app)
+    cnt > 600 && shutdown!()
 end
 ```
 """
@@ -122,11 +165,14 @@ macro gameloop(args...)
         Cruise.off(app) && Cruise.awake!()
         
         # Adding the user code as a system in the plugin
-        codeid = add_system!(app.plugins, Cruise.GameCode($rawcode, () -> $code))
+        func = (LOGICID, LOOP_VAR) -> $code
+        logic = Cruise.GameCode{:gameloop}($rawcode, identity)
+        LOGICID = add_system!(app.plugins, logic)
 
         tolerance = 0.02
         LOOP_VAR = LOOP_VAR_REF[]
         Cruise.reset!(LOOP_VAR)
+        logic.code = () -> func(LOGICID, LOOP_VAR)
         LOOP_VAR.max_fps = $max_fps
         LOOP_VAR.max_frame_duration = $max_duration
         while Cruise.on(app)
@@ -167,14 +213,66 @@ macro gameloop(args...)
         end
 
         on(app) && shutdown!()
-        remove_system!(app.plugins, codeid)
+        remove_system!(app.plugins, LOGICID)
     end)
     
     # As noted by William, global code is slow in julia, better wrap it in an anonymous function
     return :(((app) -> $body)(Cruise.CruiseApp()))
 end
 
-function Cruise.update!(n::CRPluginNode{GameCode})
+"""
+Activate a logic and make it able to be executed.
+This is preferrable to adding/removing system because this doesn't need to recompute the topological order.
+You add the optional argument `awake` to say if the `awake!` function of the system should also be called.
+
+## Example
+
+```julia
+
+ai_id = @gamelogic AIUpdate begin
+    # hard stuffs
+end
+
+enable_system(id) # Now your game logic will be able to run
+```
+"""
+function enable_system(id::Integer, awake=true)
+    app = CruiseApp()
+    idtonode = app.idtonode
+
+    !haskey(idtonode, id) && return
+    node = app.idtonode[id]
+    node.enabled = true
+    awake && awake!(node)
+end
+
+"""
+Desactivate a logic and make it able to be executed.
+This is preferrable to adding/removing system because this doesn't need to recompute the topological order.
+
+## Example
+
+```julia
+
+ai_id = @gamelogic AIUpdate begin
+    # hard stuffs
+end
+
+disable_system(id) # Now your game logic will no more run
+```
+"""
+function disable_system(id::Integer, shut=false)
+    app = CruiseApp()
+    idtonode = app.idtonode
+
+    !haskey(idtonode, id) && return
+    node = app.idtonode[id]
+    node.enabled = false
+
+    shut && shutdown!(node)
+end
+
+function Cruise.update!(n::CRPluginNode{<:GameCode})
     gamelogic = n.obj
     gamelogic.code()
 end

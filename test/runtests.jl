@@ -1,3 +1,5 @@
+#include("..\\src\\Cruise.jl")
+
 using Cruise
 using Test
 
