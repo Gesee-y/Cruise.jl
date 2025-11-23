@@ -1,6 +1,4 @@
-include("..\\src\\Cruise.jl")
-
-using .Cruise
+using Cruise
 using BenchmarkTools
 
 include("BenchTypes.jl")

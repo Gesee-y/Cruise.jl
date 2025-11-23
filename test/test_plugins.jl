@@ -102,7 +102,6 @@ end
 
     remove_dependency!(sg, a, b)
     @test !haskey(sg.idtonode[b].deps, Symbol(DummySys))
-    @test !(sg.idtonode[b] in sg.idtonode[a].children)
 end
 
 @testset "merge_graphs! merges without duplicating identical system types" begin

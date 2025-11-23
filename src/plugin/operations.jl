@@ -135,7 +135,6 @@ function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
         p = sg.idtonode[from]
         c = sg.idtonode[to]
         c.deps[typeof(p.obj)] = WeakRef(p)
-        push!(p.children, c)
         if sort 
             sg.sort_cache = topological_sort(get_graph(sg))
             sg.parallel_cache = compute_parallel_levels(sg)
@@ -153,11 +152,7 @@ function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
     p = sg.idtonode[from]
     c = sg.idtonode[to]
     delete!(c.deps,typeof(p.obj))
-    idx = findfirst(isequal(c), p.children)
-    if idx != -1
-        p.children[end], p.children[idx] = p.children[idx], p.children[end]
-        pop!(p.children)
-    end
+    
     if sort 
         sg.sort_cache = topological_sort(get_graph(sg))
         sg.parallel_cache = compute_parallel_levels(sg)
@@ -205,7 +200,10 @@ function merge_graphs!(sg1::CRPlugin, sg2::CRPlugin; sort=true)
         end
     end
 
-    sort && (sg1.sort_cache = topological_sort(get_graph(sg1)))
+    if sort 
+        sg1.sort_cache = topological_sort(get_graph(sg1))
+        sg1.parallel_cache = compute_parallel_levels(sg1)
+    end
 
     return sg1
 end
