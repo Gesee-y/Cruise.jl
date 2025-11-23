@@ -99,6 +99,10 @@ Add the given obj to the system graph.
 function add_system!(sg::CRPlugin, args...; sort=true, mainthread=false)
     id = get_available_id(sg)
     node = CRPluginNode(args...; mainthread=mainthread)
+    
+    for n in values(sg.idtonode)
+        typeof(n) == typeof(node) && return
+    end
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id

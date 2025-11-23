@@ -55,6 +55,15 @@ end
 
 const LOOP_VAR_REF = Ref{GameLoop}(GameLoop())
 
+"""
+This struct represent the code you passed on to the game loop object.
+That code will be used to generate a new system that will be used to execute your code
+"""
+mutable struct GameCode
+    expr::Expr
+    code::Function
+end
+
 function reset!(l::GameLoop)
     l.last_frame_time_ns = 0
     l.frame_idx = 0
@@ -91,13 +100,14 @@ end
 ```
 """
 macro gameloop(args...)
-    length(args) < 2 && error("@gameloop should take at least 2 argument.")
+    length(args) < 1 && error("@gameloop should take at least 1 argument.")
     code = args[end]
-    main = args[end-1]
+    rawcode = QuoteNode(code)
     
     max_fps = 60
     max_duration = 0.3
-    for i in 1:length(args)-2
+    for i in 1:length(args)-1
+        args[i] isa Symbol && error("@gameloop should take keyword arguments not `$(args[i])")
         arg = args[i].args
         if arg[1] == :max_fps
             max_fps = arg[2]
@@ -107,9 +117,13 @@ macro gameloop(args...)
             error("Unknow keyword $(arg[1])")
         end
     end
+
     body = esc(quote
-        app = Cruise.CruiseApp()
         Cruise.off(app) && Cruise.awake!()
+        
+        # Adding the user code as a system in the plugin
+        codeid = add_system!(app.plugins, Cruise.GameCode($rawcode, () -> $code))
+
         tolerance = 0.02
         LOOP_VAR = LOOP_VAR_REF[]
         Cruise.reset!(LOOP_VAR)
@@ -117,15 +131,7 @@ macro gameloop(args...)
         LOOP_VAR.max_frame_duration = $max_duration
         while Cruise.on(app)
 
-            # First pump events and initialize every windows
-            Cruise.update!(app.app)
-            Cruise.update!(app, :preupdate)
-
-            # Then execute the loop code
-            $code
-
-            Cruise.update!(app, :postupdate)
-            Cruise.update!(app.render)
+            Cruise.update!() # Traverse the graph and execute each node
 
             # Advance the timer.
             LOOP_VAR.frame_idx += 1
@@ -161,8 +167,14 @@ macro gameloop(args...)
         end
 
         on(app) && shutdown!()
+        remove_system!(app.plugins, codeid)
     end)
     
-    # A noted by William, global code is slow in julia, better wrap it in an anonymous function
-    return :(((app) -> $body)($main))
+    # As noted by William, global code is slow in julia, better wrap it in an anonymous function
+    return :(((app) -> $body)(Cruise.CruiseApp()))
+end
+
+function Cruise.update!(n::CRPluginNode{GameCode})
+    gamelogic = n.obj
+    gamelogic.code()
 end

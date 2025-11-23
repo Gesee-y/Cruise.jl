@@ -1,23 +1,23 @@
 
-mutable struct Counter
-    c::Int
+mutable struct Counter{T} 
+    c::T
 end
 
 app = CruiseApp()
 
 pl1 = CRPlugin()
 pl2 = CRPlugin()
-counter1 = Counter(0)
-counter2 = Counter(0)
+counter1 = Counter{Int}(0)
+counter2 = Counter{Float64}(0)
 add_system!(pl1, counter1)
 add_system!(pl2, counter2)
 
-Cruise.awake!(n::CRPluginNode{Counter}) = (n.obj.c = 0)
-Cruise.update!(n::CRPluginNode{Counter}) = (n.obj.c += 1)
-Cruise.shutdown!(n::CRPluginNode{Counter}) = (n.obj.c)
+Cruise.awake!(n::CRPluginNode{<:Counter}) = (n.obj.c = 0)
+Cruise.update!(n::CRPluginNode{<:Counter}) = (n.obj.c += 1)
+Cruise.shutdown!(n::CRPluginNode{<:Counter}) = (n.obj.c)
 
-merge_plugin!(app, pl1, :preupdate)
-merge_plugin!(app, pl2, :postupdate)
+merge_plugin!(app, pl1)
+merge_plugin!(app, pl2)
 
 @testset "GameLoop struct" begin
     gl = GameLoop()
@@ -50,7 +50,7 @@ end
 @testset "@gameloop default arguments" begin
     cnt = Ref(0)
 
-    @gameloop app begin
+    @gameloop begin
         cnt[] += 1
         cnt[] >= 2 && shutdown!()
     end
@@ -73,7 +73,7 @@ end
     counter = Ref(0)
     deltas = Float32[]
 
-    @gameloop max_fps=30 app begin
+    @gameloop max_fps=30 begin
         counter[] += 1
         push!(deltas, LOOP_VAR.delta_seconds)
         counter[] >= 3 && shutdown!()
@@ -86,7 +86,7 @@ end
 @testset "GameLoop progression" begin
     frame_indices = Int[]
 
-    @gameloop max_fps=10 app begin
+    @gameloop max_fps=10 begin
         push!(frame_indices, LOOP_VAR.frame_idx)
         LOOP_VAR.frame_idx >= 2 && shutdown!()
     end

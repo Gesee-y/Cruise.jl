@@ -45,7 +45,7 @@ Will create a new global instance of a CruiseApp. Note that a program can only h
 The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
-	const plugins::Dict{Symbol, CRPlugin}
+	const plugins::CRPlugin
 	app::ODApp
 	render::HorizonManager
 	running::Bool
@@ -61,8 +61,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(Dict{Symbol, CRPlugin}(:preupdate => CRPlugin(), :postupdate => CRPlugin()), 
-	    	ODApp(), HorizonManager(),false, false)
+	    app[] = CruiseApp(CRPlugin(), ODApp(), HorizonManager(),false, false)
 	end
 	unlock(app_lock)
 	return app[]	
@@ -93,10 +92,7 @@ Initialize all the systems in the given CRPlugin.
 function awake!()
     a = CruiseApp() 
 	a.running = true
-	awake!(a.app)
-	for sg in values(a.plugins)
-		awake!(sg)
-	end
+	awake!(a.plugins)
 
 	ON_CRUISE_STARTUP.emit
 end
@@ -112,15 +108,7 @@ Update for the current frame the CruiseApp and all his plugins.
 
 Update for the current frame all the systems in the given CRPlugin.
 """
-function update!()
-    a = CruiseApp()
-    update!(a.app)
-	for sg in values(a.plugins)
-		update!(sg)
-	end
-	update!(a.render)
-end
-update!(a::CruiseApp, phase::Symbol) = update!(a.plugins[phase])
+update!() = update!(CruiseApp().plugins)
 update!(sg::CRPlugin) = pmap!(update!, sg)
 update!(n::CRPluginNode) = nothing
 
@@ -135,17 +123,13 @@ This will stop the given system graph by topologically calling shutdown! on the 
 """
 function shutdown!()
 	a = CruiseApp()
-	shutdown!(a.app)
-	shutdown!(a.render)
     if on(a)
         a.running = false
-        for sg in values(a.plugins)
-		    shutdown!(sg)
-	    end
+        shutdown!(a.plugins)
     end
 end
 shutdown!(sg::CRPlugin) = smap!(shutdown!, sg)
-shutdown!(n::CRPluginNode) = (n.status[] = CRPluginStatus.OFF)
+shutdown!(n::CRPluginNode) = (n.status[] = PLUGIN_OFF)
 
 """
     on(a::CruiseApp)
@@ -161,12 +145,8 @@ Returns true if the CruiseApp isn't running.
 """
 off(a::CruiseApp) = !a.running
 
-merge_plugin!(app::CruiseApp, plugin::CRPlugin, phase=:postupdate) = merge_plugin!(app.plugins[phase], plugin)
+merge_plugin!(app::CruiseApp, plugin::CRPlugin) = merge_plugin!(app.plugins, plugin)
 merge_plugin!(plugin1::CRPlugin, plugin2::CRPlugin) = merge_graphs!(plugin1, plugin2)
-
-preupdate_plugins(a::CruiseApp) = a.plugins[:preupdate]
-
-postupdate_plugins(a::CruiseApp) = a.plugins[:postupdate]
 
 ########################################################### OUTDOORS ################################################################
 
