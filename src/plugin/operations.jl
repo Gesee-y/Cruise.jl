@@ -102,7 +102,10 @@ function add_system!(sg::CRPlugin, args...; sort=true, mainthread=false)
     add_node!(sg, id, node)
     add_vertex!(sg.graph)
     node.id = id
-    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
+    if sort 
+        sg.sort_cache = topological_sort(get_graph(sg))
+        sg.parallel_cache = compute_parallel_levels(sg)
+    end
     return id
 end
 
@@ -114,7 +117,10 @@ Removes the system corresponding to id from the system graph.
 function remove_system!(sg::CRPlugin, id::Int; sort=true)
     remove_node!(sg, id)
     rem_vertex!(sg.graph, id)
-    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
+    if sort 
+        sg.sort_cache = topological_sort(get_graph(sg))
+        sg.parallel_cache = compute_parallel_levels(sg)
+    end
 end
 
 """
@@ -130,7 +136,10 @@ function add_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
         c = sg.idtonode[to]
         c.deps[typeof(p.obj)] = WeakRef(p)
         push!(p.children, c)
-        sort && (sg.sort_cache = topological_sort(get_graph(sg)))
+        if sort 
+            sg.sort_cache = topological_sort(get_graph(sg))
+            sg.parallel_cache = compute_parallel_levels(sg)
+        end
     end
 end
 
@@ -149,7 +158,10 @@ function remove_dependency!(sg::CRPlugin, from::Int, to::Int; sort=true)
         p.children[end], p.children[idx] = p.children[idx], p.children[end]
         pop!(p.children)
     end
-    sort && (sg.sort_cache = topological_sort(get_graph(sg)))
+    if sort 
+        sg.sort_cache = topological_sort(get_graph(sg))
+        sg.parallel_cache = compute_parallel_levels(sg)
+    end
 end
 
 """
@@ -216,41 +228,43 @@ end
 Iterate topologically on the graph and apply the function f on it concurrently.
 """
 function pmap!(f, sg::CRPlugin, args...)
-    indeg = indegree(sg.graph)
-    ready = [v for v in vertices(sg.graph) if indeg[v] == 0]
-
-    @sync while !isempty(ready)
-        next_ready = Int[]
-
-        @sync for v in ready
-            node = sg.idtonode[v]
-            
-            if node.mainthread
-                _exec_node(f, node, args...)
-
-                for child in outneighbors(sg.graph, v)
-                    indeg[child] -= 1
-                    if indeg[child] == 0
-                        push!(next_ready, child)
-                    end
-                end
-                continue
-            end
-
-            @spawn begin
-                _exec_node(f, node, args...)
-
-                for child in outneighbors(sg.graph, v)
-                    indeg[child] -= 1
-                    if indeg[child] == 0
-                        push!(next_ready, child)
-                    end
-                end
-            end
+    batches::Vector{NTuple{2,Vector{Int}}} = sg.parallel_cache
+    idtonode = sg.idtonode
+    
+    @inbounds for batch in batches
+        
+        @threads for v in batch[1]
+            node = idtonode[v]
+             _exec_node(f, node, args...)
         end
-
-        ready = next_ready
+        for v in batch[2]
+            node = idtonode[v]
+             _exec_node(f, node, args...)
+        end
     end
+end
+
+compute_parallel_levels(sg::CRPlugin) = compute_parallel_levels(get_graph(sg), sg.sort_cache, sg.idtonode)
+function compute_parallel_levels(graph, nodes_sorted, idtonode)
+    n = nv(graph)
+    levels = zeros(Int, n)
+    
+    for v in nodes_sorted
+        max_parent_level = -1
+        for parent in inneighbors(graph, v)
+            max_parent_level = max(max_parent_level, levels[parent])
+        end
+        levels[v] = max_parent_level + 1
+    end
+    
+    max_level = maximum(levels)
+    parallel_batches = [(Int[], Int[]) for _ in 0:max_level]
+    
+    for v in nodes_sorted
+        push!(parallel_batches[levels[v] + 1][idtonode[v].mainthread + 1], v)
+    end
+    
+    return parallel_batches
 end
 
 function _exec_node(f, node, args...)

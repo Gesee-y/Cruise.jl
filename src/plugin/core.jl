@@ -82,11 +82,12 @@ mutable struct CRPlugin <: AbstractPlugin
     free_ids::Vector{Int}
     current_max::Int
     sort_cache::Vector{Int}
+    parallel_cache::Vector{NTuple{2,Vector{Int}}}
 
     ## Constructors
 
     CRPlugin() = begin
         G = SimpleDiGraph{Int}()
-        new(Dict{Int, CRPlugin}(), G, Int[], 0, Int[])
+        new(Dict{Int, CRPlugin}(), G, Int[], 0, Int[], NTuple{2,Vector{Int}}[])
     end
 end

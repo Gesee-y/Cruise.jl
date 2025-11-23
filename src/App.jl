@@ -3,7 +3,7 @@
 ###########################################################################################################################
 
 export CruiseApp
-export awake!, run!, shutdown!
+export awake!, run!, shutdown!, update!
 export on, off, merge_plugin!, debugmode
 export init_appstyle, context, instance
 
