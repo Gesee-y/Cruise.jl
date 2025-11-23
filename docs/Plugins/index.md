@@ -61,7 +61,7 @@ You can also optionally add another capability to you system. This means that yo
 ```julia
 mutable struct MySys
     value1::Int
-    value2::INt
+    value2::Int
 end
 
 mutable struct MyCapability

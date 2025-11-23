@@ -13,10 +13,11 @@ export init_appstyle, context, instance
 
 mutable struct HorizonManager
 	backends::Dict{HRenderer, WeakRef}
+	other::Dict{HRenderer, Any}
 
 	## Constructor
 
-	HorizonManager() = new(Dict{HRenderer, WeakRef}())
+	HorizonManager() = new(Dict{HRenderer, WeakRef}(), Dict{HRenderer, Any}())
 end
 
 """
@@ -188,10 +189,11 @@ end
 
 ########################################################### HORIZONS ################################################################
 
-function CRHorizons.InitBackend(R::Type{<:HRenderer}, win, sizex, sizey, x=0, y=0)
+function CRHorizons.InitBackend(R::Type{<:HRenderer}, win, sizex, sizey, x=0, y=0; bgcol = BLACK)
 	backend = InitBackend(R, win)
 	CreateViewport(backend, sizex, sizey, x, y)
 	CruiseApp().render.backends[backend] = WeakRef(win)
+	CruiseApp().render.other[backend] = bgcol
 
 	return backend
 end
@@ -205,7 +207,8 @@ function Cruise.update!(manager::HorizonManager)
 			# No need to move memory to delete the deprecated backend, we can just skip them
 			#continue
 		end
-        SetDrawColor(backend,WHITE)
+		col = manager.other[backend]
+        SetDrawColor(backend,col)
         ClearViewport(backend)
         UpdateRender(backend)
     end
