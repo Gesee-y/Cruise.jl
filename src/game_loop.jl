@@ -95,11 +95,14 @@ macro gamelogic(args...)
     rawcode = QuoteNode(code)
     
     cap = ()
+    plugin = CruiseApp().plugins
     for i in 2:length(args)-1
         args[i] isa Symbol && error("@gamelogic should take keyword arguments not `$(args[i])")
         arg = args[i].args
         if arg[1] == :capability
             cap = (arg[2],)
+        elseif arg[1] == :plugin
+            plugin = arg[2]
         else
             error("Unknow keyword $(arg[1])")
         end
@@ -108,7 +111,7 @@ macro gamelogic(args...)
     return quote
         # Adding the user code as a system in the plugin
         logic = Cruise.GameCode{name}($rawcode, () -> $code)
-        LOGICID = add_system!(CruiseApp().plugins, logic, cap...)
+        LOGICID = add_system!($plugin, logic, cap...)
 
         return LOGICID
     end
