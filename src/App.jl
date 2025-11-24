@@ -11,15 +11,6 @@ export init_appstyle, context, instance
 
 @Notifyer ON_CRUISE_STARTUP()
 
-mutable struct HorizonManager
-	backends::Dict{HRenderer, WeakRef}
-	other::Dict{HRenderer, Any}
-
-	## Constructor
-
-	HorizonManager() = new(Dict{HRenderer, WeakRef}(), Dict{HRenderer, Any}())
-end
-
 """
     mutable struct CruiseApp
 		const inst::ODApp
@@ -46,8 +37,6 @@ The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
 	const plugins::CRPlugin
-	app::ODApp
-	render::HorizonManager
 	running::Bool
 	ShouldClose::Bool
 end
@@ -61,14 +50,10 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(CRPlugin(), ODApp(), HorizonManager(),false, false)
+	    app[] = CruiseApp(CRPlugin(), false, false)
 	end
 	unlock(app_lock)
 	return app[]	
-end
-
-Outdoors.connect(NOTIF_QUIT_EVENT) do
-	CruiseApp().ShouldClose = true
 end
 
 ##################################################### FUNCTIONS ##########################################################
@@ -147,52 +132,3 @@ off(a::CruiseApp) = !a.running
 
 merge_plugin!(app::CruiseApp, plugin::CRPlugin) = merge_plugin!(app.plugins, plugin)
 merge_plugin!(plugin1::CRPlugin, plugin2::CRPlugin) = merge_graphs!(plugin1, plugin2)
-
-########################################################### OUTDOORS ################################################################
-
-function Outdoors.CreateWindow(style::Type{<:AbstractStyle}, args...)
-	#InitOutdoor(style)
-	return CreateWindow(CruiseApp().app, style, args...)
-end
-
-function Cruise.awake!(n::ODApp)
-	#InitOutdoor()
-end
-
-function Cruise.update!(n::ODApp)
-	EventLoop(n)
-end
-
-function Cruise.shutdown!(n::ODApp)
-	QuitOutdoor(n)
-end
-
-########################################################### HORIZONS ################################################################
-
-function CRHorizons.InitBackend(R::Type{<:HRenderer}, win, sizex, sizey, x=0, y=0; bgcol = BLACK)
-	backend = InitBackend(R, win)
-	CreateViewport(backend, sizex, sizey, x, y)
-	CruiseApp().render.backends[backend] = WeakRef(win)
-	CruiseApp().render.other[backend] = bgcol
-
-	return backend
-end
-
-function Cruise.update!(manager::HorizonManager)
-	backends = keys(manager.backends)
-
-	for (backend, winref) in manager.backends
-		if isnothing(winref.value)
-			# Given that there are a small number of renderers in a game,
-			# No need to move memory to delete the deprecated backend, we can just skip them
-			#continue
-		end
-		col = manager.other[backend]
-        SetDrawColor(backend,col)
-        ClearViewport(backend)
-        UpdateRender(backend)
-    end
-end
-
-Cruise.shutdown!(n::HorizonManager) = nothing
-

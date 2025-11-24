@@ -14,8 +14,6 @@ using Base.Threads
 
 @reexport using EventNotifiers
 @reexport using GDMathLib
-@reexport using Outdoors
-@reexport using CRHorizons
 
 include("events.jl")
 include("tempstorage.jl")
@@ -26,6 +24,9 @@ include("utilities.jl")
 include("App.jl")
 include("game_loop.jl")
 include("writer.jl")
+
+include(joinpath("..", "plugins", "ODPlugin", "ODPlugin.jl"))
+include(joinpath("..", "plugins", "HZPlugin", "HZPlugin.jl"))
 
 text_en = [
 	"{speed:0.1}Everything begins somewhere.{pause:2}",

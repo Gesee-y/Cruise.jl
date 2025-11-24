@@ -96,6 +96,7 @@ macro gamelogic(args...)
     
     cap = ()
     plugin = CruiseApp().plugins
+    mainthread = false
     for i in 2:length(args)-1
         args[i] isa Symbol && error("@gamelogic should take keyword arguments not `$(args[i])")
         arg = args[i].args
@@ -103,18 +104,21 @@ macro gamelogic(args...)
             cap = (arg[2],)
         elseif arg[1] == :plugin
             plugin = arg[2]
+        elseif arg[1] == :mainthread
+            mainthread = arg[2]
         else
             error("Unknow keyword $(arg[1])")
         end
     end
+    cap = __module__.eval.(cap)
 
-    return quote
+    __module__.eval( quote
         # Adding the user code as a system in the plugin
-        logic = Cruise.GameCode{name}($rawcode, () -> $code)
-        LOGICID = add_system!($plugin, logic, cap...)
+        logic = Cruise.GameCode{$name}($rawcode, (self) -> $code)
+        LOGICID = add_system!($plugin, logic, $cap...; mainthread=$mainthread)
 
         return LOGICID
-    end
+    end)
 end
 
 """
@@ -175,7 +179,7 @@ macro gameloop(args...)
         tolerance = 0.02
         LOOP_VAR = LOOP_VAR_REF[]
         Cruise.reset!(LOOP_VAR)
-        logic.code = () -> func(LOGICID, LOOP_VAR)
+        logic.code = (self) -> func(LOGICID, LOOP_VAR)
         LOOP_VAR.max_fps = $max_fps
         LOOP_VAR.max_frame_duration = $max_duration
         while Cruise.on(app)
@@ -277,5 +281,5 @@ end
 
 function Cruise.update!(n::CRPluginNode{<:GameCode})
     gamelogic = n.obj
-    gamelogic.code()
+    gamelogic.code(n)
 end
