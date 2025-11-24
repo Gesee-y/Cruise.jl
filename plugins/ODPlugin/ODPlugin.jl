@@ -25,7 +25,9 @@ function Cruise.update!(n::CRPluginNode{ODApp})
 end
 
 function Cruise.shutdown!(n::CRPluginNode{ODApp})
-	QuitOutdoor(n.obj)
+	for (_,win) in n.obj.Windows
+		QuitWindow(win)
+	end
 end
 
 Outdoors.connect(NOTIF_QUIT_EVENT) do

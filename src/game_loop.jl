@@ -2,7 +2,7 @@
 #################################################### GAME LOOP ##########################################################
 #########################################################################################################################
 
-export GameLoop
+export GameLoop, GameCode
 export @gameloop, @gamelogic, LOOP_VAR_REF
 export enable_system, disable_system
 
@@ -172,16 +172,17 @@ macro gameloop(args...)
         Cruise.off(app) && Cruise.awake!()
         
         # Adding the user code as a system in the plugin
-        func = (LOGICID, LOOP_VAR) -> $code
-        logic = Cruise.GameCode{:gameloop}($rawcode, identity)
-        LOGICID = add_system!(app.plugins, logic)
 
         tolerance = 0.02
         LOOP_VAR = LOOP_VAR_REF[]
         Cruise.reset!(LOOP_VAR)
-        logic.code = (self) -> func(LOGICID, LOOP_VAR)
         LOOP_VAR.max_fps = $max_fps
         LOOP_VAR.max_frame_duration = $max_duration
+
+        func = (self) -> $code
+        logic = Cruise.GameCode{:gameloop}($rawcode, func)
+        LOGICID = Cruise.add_system!(app.plugins, logic, LOOP_VAR; mainthread=true)
+
         while Cruise.on(app)
 
             Cruise.update!() # Traverse the graph and execute each node
