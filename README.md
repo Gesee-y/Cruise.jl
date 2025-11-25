@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Gesee-y/Cruise.jl/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://github.com/Cruise.jl/blob/main/docs/index.md)
 
-**Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build complex systems or full game engines without too much overhead.
+**Cruise.jl**, a game engine kernel with a powerful plugin system to allows you to build games or full game engines without too much overhead.
 It's closer to Linux philosophy, the same way everyone can build his own OS using the Linux kernel, anyone can build his own engine using Cruise.
 
 ---
@@ -28,7 +28,11 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ## Features
 
-- **Plugin system**: Built around a DAG (Direct Acyclic Graph), it allows you to extend Cruise, share your own plugin and collaborate without too much hassle.
+- **Secure and flexible plugin system**: Built around a DAG (Direct Acyclic Graph), it allows you to extend Cruise, share your own plugin and collaborate without too much hassle. Each system of the plugin have his own inteface to safely interact with his dependencies.
+
+- **Optimal system scheduling**: Through topological sort, Cruise ensure your systems are executed in the most efficient way.
+
+- **Game logics as first class citizens**: Your customs systems have as much power as the core ones
 
 - **Assets Loading and Management**: Cruise can load a wide variety of files (Images, sounds and soon meshes) and manage/reuse them during the game lifecycle.
 
@@ -48,7 +52,7 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ---
 
-## Exisitin Tools and Plugins
+## Exisiting Tools and Plugins
 
 ### Core
 
@@ -63,7 +67,7 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 - [Horizons.jl](https://github.com/Gesee-y/Horizons.jl): A backend-agnostic rendering engine. Based on command buffers, you just need to define your own commands or use the existing ones and create new actions for them to build your own rendering backend. Backend can be obtained via external packages.
 
-- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like do while loops, temporary storage, dynamic structs and more.
+- **Cruise.jl**: The package itself offers several tools and utilities, such as a plugin system to add your own plugins and manage their lifecycle in the game loop, a `@gameloop` macro. Provides utilities like temporary storage and more.
 
 ### Modules
 
@@ -87,12 +91,17 @@ julia> ] add https://github.com/Gesee-y/Cruise.jl
 
 ```julia
 using Cruise
+using Cruise.ODPlugin, Cruise.HZPlugin
 using SDLOutdoors
 using SDLHorizons
 using AssetCrates
 
 # We create a new app
 app = CruiseApp()
+
+merge_plugin!(app, ODPLUGIN)
+merge_plugin!(app, HZPLUGIN)
+
 manager = CrateManager() # The resources manager
 
 # Here we are assigning the global resources manager
@@ -118,10 +127,14 @@ texture = Texture(backend, img)
 
 pos = Vec2f(0,0)
 
-# Our game loop. It update events and render for us. Once the window will be closed, it will stop.
-@gameloop app begin
+@gamelogic pos_update begin
     pos.x += IsKeyPressed(instance(win), RIGHT) - IsKeyPressed(instance(win), LEFT)
     pos.y += IsKeyPressed(instance(win), DOWN) - IsKeyPressed(instance(win), UP)
+end
+
+# Our game loop. It update events and render for us. Once the window will be closed, it will stop.
+@gameloop begin
+    LOOP_VAR = LOOP_VAR_REF[]
     DrawTexture2D(backend, texture, Rect2Df(pos...,1,1)
     println(LOOP_VAR.delta_seconds) # LOOP_VAR contain the internal data of our loop
 end
