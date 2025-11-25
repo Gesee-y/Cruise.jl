@@ -94,10 +94,10 @@ end
     a = add_system!(sg, DummySys())
     b = add_system!(sg, OtherSys())
     add_dependency!(sg, a, b)
-    @test haskey(sg.idtonode[b].deps, Symbol(DummySys))
+    @test haskey(sg.idtonode[b].deps, DummySys)
 
     remove_dependency!(sg, a, b)
-    @test !haskey(sg.idtonode[b].deps, Symbol(DummySys))
+    @test !haskey(sg.idtonode[b].deps, DummySys)
 end
 
 @testset "merge_graphs! merges without duplicating identical system types" begin
@@ -159,14 +159,8 @@ end
         error("boom")
     end
 
-    # run with debugmode() false (we cannot easily toggle global debugmode here), so call _exec_node directly
-    # emulate protected execution
-    #try
-        Cruise._exec_node(raise_error, node)
-    #catch
-        # _exec_node swallows exceptions when not debugmode; but in tests we'll check the status
-    #end
-
+    Cruise._exec_node(raise_error, node)
+    
     @test hasfailed(node)
     @test isa(getlasterror(node), Exception)
 end
