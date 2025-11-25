@@ -31,7 +31,7 @@ julia> app = CruiseApp()
 You can now define a game loop using the `@gameloop` macro:
 
 ```julia
-julia> @gameloop max_fps=60 app begin
+julia> @gameloop max_fps=60 begin
            println("delta seconds: $(LOOP_VAR.delta_seconds)")
            # Simulate a 10-second delay before shutting down
            LOOP_VAR.frame_idx > 600 && shutdown!()

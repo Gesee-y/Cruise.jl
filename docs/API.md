@@ -3,6 +3,7 @@
 ```
 CruiseApp
 @gameloop
+@gamelogic
 awake!
 update!
 shutdown!
@@ -17,6 +18,8 @@ add_system!
 add_dependency!
 remove_system!
 remove_dependency!
+enable_system
+disable_system
 merge_plugin!
 getdep
 isinitialized

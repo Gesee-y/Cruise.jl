@@ -32,7 +32,7 @@ Now we will connect a function to it that will update our health bar object when
 
 ```julia
 connect(HP) do hp
-    HB.current = ho
+    HB.current = hp
 end
 ```
 

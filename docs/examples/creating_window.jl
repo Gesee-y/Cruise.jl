@@ -1,17 +1,13 @@
 using Cruise
-using ODPlugin
+using Cruise.ODPlugin
+using SDLOutdoors
 
 app = CruiseApp()
-Close = Ref(false)
 
-merge_plugin!(app, ODPLUGIN, ODPlugin.PHASE)
+merge_plugin!(app, ODPLUGIN)
 
 win = CreateWindow(SDLStyle, "My First Window", 640, 480)
 
-Outdoors.connect(NOTIF_QUIT_EVENT) do
-	Close[] = true
-end
-
 @gameloop max_fps=60 begin
-   Close[] && shutdown!()
+   app.ShouldClose && shutdown!()
 end

@@ -37,6 +37,7 @@ The next call to CruiseApp will return the same object.
 """
 mutable struct CruiseApp
 	const plugins::CRPlugin
+	temps::TempStorage
 	running::Bool
 	ShouldClose::Bool
 end
@@ -50,7 +51,7 @@ function CruiseApp()
 	global app_lock
 	lock(app_lock)
 	if !isassigned(app)
-	    app[] = CruiseApp(CRPlugin(), false, false)
+	    app[] = CruiseApp(CRPlugin(), TempStorage(), false, false)
 	end
 	unlock(app_lock)
 	return app[]	

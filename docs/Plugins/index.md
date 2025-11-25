@@ -130,6 +130,19 @@ end
 
 Errors during update! are caught automatically and set the node status to PLUGIN_ERR.
 
+---
+
+## Enabling/Disabling systems
+
+A system can be made active or inactive with the functions
+
+```
+enable_system(plugin, sys_id, awake=true) # awake is whether or not `awake!` should be called on the system
+disable_system(plugin, sys_id, shut=false) # shut is whether or not `shutdown!` should be called on the system
+```
+
+A disabled system will no more run but still be in the graph and can be reactivated.
+The benefits of this is that we can add or remove logic without modifying the graph and recomputing the topological order.
 
 ---
 

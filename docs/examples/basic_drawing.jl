@@ -1,28 +1,19 @@
 using Cruise
-using ODPlugin
-using HZPlugin
+using Cruise.ODPlugin
+using Cruise.HZPlugin
+
+using SDLOutdoors, SDLHorizons
 
 app = CruiseApp()
-Close = Ref(false)
 
-merge_plugin!(app, ODPLUGIN, ODPlugin.PHASE)
-merge_plugin!(app, HZPLUGIN, HZPlugin.PHASE)
+merge_plugin!(app, ODPLUGIN)
+merge_plugin!(app, HZPLUGIN)
 
 win = CreateWindow(SDLStyle, "My First Window", 640, 480)
-winptr = GetStyle(win).window
-
-RegisterBackend(SDLRender, winptr, 640, 480)
-
-Outdoors.connect(NOTIF_QUIT_EVENT) do
-	Close[] = true
-end
+backend = InitBackend(SDLRender, GetStyle(win).window, 640, 480)
 
 @gameloop max_fps=60 begin
-    backend = GetBackend(winptr)
-    if !isnothing(backend)
-
-        DrawPoint2D(backend, iRGBA(0, 50, 30, 8), Vec2f(50, 50))
-        DrawLine2D(backend, iRGBA(0, 50, 30, 8), Vec2f(100, 100), Vec2f(150, 150))
-    end
-    Close[] && shutdown!()
+    DrawPoint2D(backend, iRGBA(0, 50, 30, 8), Vec2f(50, 50))
+    DrawLine2D(backend, iRGBA(0, 50, 30, 8), Vec2f(100, 100), Vec2f(150, 150))
+    app.ShouldClose && shutdown!()
 end

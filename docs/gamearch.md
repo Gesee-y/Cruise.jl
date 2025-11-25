@@ -11,7 +11,6 @@ Each plugin can access the data of his dependencies, their states and more.
 This itself form dataflow based architecture when each plugin passes data to the dependent ones.
 For example, when the Physics plugin updates object positions,
 the Renderer plugin automatically gets the new data through the DAG.
-No boilerplate. No manual sync. Just data flowing between systems.
 
 But that's not everything about it.
 You can make plugins for different types of architectures.
