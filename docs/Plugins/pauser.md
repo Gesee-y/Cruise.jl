@@ -62,7 +62,7 @@ using Cruise, PausePlugin
 
 app = CruiseApp()
 
-merge_plugin!(app, PAUSEPLUGIN, :preupdate)
+merge_plugin!(app, PAUSEPLUGIN)
 ```
 
 Now we can simply use the plugin in the game loop.

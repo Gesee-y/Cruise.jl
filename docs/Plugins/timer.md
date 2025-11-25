@@ -111,6 +111,7 @@ Now we can happily use our plugin:
 ```julia
 i = 0
 @gameloop maxfps=60 begin
+    LOOP_VAR = LOOP_VAR_REF[]
     if LOOP_VAR.frame_idx % 50 == 0
         timer = addtimer!(rand())
 

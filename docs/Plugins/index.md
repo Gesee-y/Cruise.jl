@@ -111,10 +111,10 @@ Cruise.shutdown!(node::CRPluginNode{Sys2}) = setstatus(node, PLUGIN_OFF)
 
 ## Merging and Running
 
-Merge the plugin into Cruise at the correct phase:
+Merge the plugin into Cruise:
 
 ```julia
-merge_plugin!(app, plugin, :preupdate)
+merge_plugin!(app, plugin)
 ```
 
 > Even after merging, you can still manage the plugin from the CRPlugin instance you created.
@@ -178,60 +178,6 @@ node.deps[TYPE]  # Returns a WeakRef to the capability of the dependency of type
 **`WeakRef`s** are used here so that when a given plugin node is removed or deleted, his dependencies should not prevent the GC to take it nor should continue using a dead node.
 
 ---
-
-### Plugin Serialization
-
-Persistent plugin must overload the serialization functions `encode_state` that outputs a dictionary with exactly 3 top-level sections with the last 2 following the enumeration:
-
-```julia
-@enum PluginSerializationInfo begin
-    PLUGIN_STATE_INFO
-    PLUGIN_DEBUG_INFO
-end
-```
-
-1. `PLUGIN_STATE_INFO` : the core runtime state of the plugin. It should provides enough informations for you to reconstruct the data of you `CRPluginNode`.
-
-2. `PLUGIN_DEBUG_INFO`: optional info for debugging, monitoring, or health-checks (e.g., counters, last error, timestamps). Anything that could help debug abnormal behaviors in your plugin.
-
-#### Restoring your plugin's state
-
-You should overload the `restore_state` methods which will have the following signature:
-
-```julia
-restore_state(::Val{:YourPluginName}, data::Dict{String, Any})
-```
-
-This function should returns an instance of the object contained in your plugin. You will have to use the informations you previously gave to serialize to create your object
-
-#### Serialization Rules
-
-- Non-serializable fields (callbacks, Tasks, WeakRefs) must be skipped.
-
-- `restore_state` must be able to restore both state and data fully.
-
-- debug can be ignored during restore; it is purely informational.
-
-
-#### Example
-
-```julia
-Dict(
-    "Name" => "TimerPlugin"
-    PLUGIN_STATE_INFO => Dict("current_time" => 12.5, "active" => true),
-    PLUGIN_DEBUG_INFO => Dict("last_update" => DateTime("2025-11-08T10:00:00"))
-)
-```
-
-#### Why this ?
-
-Because it offers:
-
-- Clear separation between runtime, persistent, and debug info
-
-- Easier logging and debugging
-
-- Uniform format for all plugins, making save/load logic generic
 
 ### Registering plugin
 

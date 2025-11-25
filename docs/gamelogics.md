@@ -1,36 +1,105 @@
-# Cruise v0.3.0 documentation: Game logics
+# Cruise v0.3.0 documentation: Game Logics
 
-A game logic is a chunk of code that execute a specific task in your code.
-In regular game engines they are often called **scripts**. These scripts are then tied to an object. when the object is active, his script execute, when it's not, the script isn't executed.
+A **game logic** is a self-contained block of code that performs a specific task in your game.
+In most engines these are called *scripts*, and they’re attached to game objects: if the object is active, its script runs; if not, it doesn’t.
 
-With Cruise, it's a little bit different. Scripts are called **game logics** and are independent of objects. They can be activated/desactivated at will. Their purpose is to accomplish a specific task in your game.
+Cruise doesn’t follow that model.
+Here, a game logic is **not tied to any object**.
+It can be enabled or disabled at any time, connected to other logics, and integrated directly into the main execution graph.
+Its only responsibility is to perform a clearly defined operation inside your game.
 
-One can create a new game logic like this
+---
+
+## Declaring a Game Logic
 
 ```julia
-app = CruiseApp() # Make sure to have called this at least once
+app = CruiseApp()  # Must be called at least once
 
 logic_id = @gamelogic logic_name begin
-    # My code
+    # Logic code
 end
 ```
 
-So here we made a new game logic that we named `logic_name`. The `@gamelogic` macro will return the id of our new logic.
-Why an id ?
-Because a game logic is in fact a system in the main plugin graph. This means that all your logic benefits from all the features a regular plugin node have (capabilities, dependencies, enabling/disabling, etc). Your logic is automatically added to the main plugin, but you can optionnaly pas the keyword argument `plugin=myplugin` so the logic is added to your custom plugin instead.
+`@gamelogic` creates the logic, registers it inside the plugin graph, and returns its **ID**.
+Why an ID?
+Because a game logic is essentially a **system node in the main plugin graph**, with all the same features as any plugin node:
 
-Each game logic is an intace of the object `GameCode{Name}` where `Name` is the name of your logic as a `Symbol`.
-So when getting it from adependency for example, you will just do
+* capabilities
+* dependencies
+* enable/disable
+* ordered execution
+
+By default, the logic is added to the main plugin, but you can place it elsewhere:
 
 ```julia
-pluginnode.deps[GameCode{:name}]
+@gamelogic logic_name plugin=myplugin begin
+    ...
+end
 ```
 
-In your logics, the internal representation of your logic (the node of the graph) is called `self`. for example
+---
+
+## Identity and Access
+
+Each logic is an instance of:
+
+```
+GameCode{Name}
+```
+
+where `Name` is your logic’s name as a `Symbol`.
+
+Example: accessing it from a dependency list:
+
+```julia
+pluginnode.deps[GameCode{:logic_name}]
+```
+
+---
+
+## The `self` Variable
+
+Inside every game logic, Cruise injects a variable called `self`.
+This is the actual node in the plugin graph that represents your system.
 
 ```julia
 @gamelogic logic begin
-    println(self) # self are is a variable specific to the logic that is the node containing the logic
-    # You can use it as with any other node
+    println(self)  # The node itself
+    # You can use it exactly like any other graph node
 end
 ```
+
+`self` gives you:
+
+* access to your capability
+* access to your dependencies
+* node state information
+* full interaction with the graph
+
+---
+
+## Keyword Arguments
+
+Game logics accept several optional keywords:
+
+### `mainthread=false`
+
+Forces the system to always run on the main thread.
+
+### `plugin=<plugin>`
+
+Places the logic inside a specific plugin instead of the main one.
+
+### `capability=<obj>`
+
+Associates a capability to the logic.
+Other systems depending on this logic can query that capability.
+
+Example:
+
+```julia
+@gamelogic movement capability=MovementCap() begin
+    # ...
+end
+```
+

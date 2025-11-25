@@ -18,11 +18,9 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.CRHorizons]]
 deps = ["EventNotifiers", "GDMathLib", "NodeTree", "Reexport"]
-git-tree-sha1 = "ba36bb2f877527a45abcf6da4443d3413d0cffcd"
-repo-rev = "main"
-repo-url = "https://github.com/Gesee-y/CRHorizons.jl"
+git-tree-sha1 = "5f1d31116540edbd8a06a16748eb612055cdeb0e"
 uuid = "d359ef98-a7e3-42d2-87cb-a7a1f294c746"
-version = "0.1.0"
+version = "0.1.2"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -51,14 +49,14 @@ uuid = "ed54f85f-9ee8-4912-9e4a-a43af611f8a9"
 version = "0.1.0"
 
 [[deps.EventNotifiers]]
-git-tree-sha1 = "e97e476f17d72f154bf4a1867c386dfac8c0bd7e"
+git-tree-sha1 = "4c9a42ee2c18cbfffb333a554d3ebd47a4f89841"
 uuid = "de92ec2b-fb1f-40f8-8e84-3094df8dc533"
-version = "1.0.1"
+version = "1.0.3"
 
 [[deps.GDMathLib]]
 git-tree-sha1 = "6c2c8a31394e4523b8e9d7b14a6e3f3f21d21925"
 uuid = "ed54f85f-91e8-4912-9e4a-a43af611f8a9"
-version = "1.3.2"
+version = "1.3.1"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
@@ -126,7 +124,7 @@ version = "1.8.1"
 
 [[deps.Outdoors]]
 deps = ["EventNotifiers", "NodeTree"]
-git-tree-sha1 = "a252994ad78c1102c3a1a5bd102189f25e53389b"
+git-tree-sha1 = "b6f80271d812c1543b85379a041c6458e1cdeaa5"
 uuid = "d3598698-a7e3-42d2-87cb-a7a1f294c746"
 version = "0.6.6"
 
