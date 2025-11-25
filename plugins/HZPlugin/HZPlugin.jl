@@ -1,8 +1,8 @@
 module HZPlugin
 
 using Reexport
-@reexport using ...CRHorizons
-using ..Cruise
+@reexport using CRHorizons
+using Cruise
 
 export HZPLUGIN
 
