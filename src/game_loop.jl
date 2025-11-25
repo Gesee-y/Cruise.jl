@@ -246,10 +246,10 @@ enable_system(id) # Now your game logic will be able to run
 """
 function enable_system(id::Integer, awake=true)
     app = CruiseApp()
-    idtonode = app.idtonode
+    idtonode = app.plugins.idtonode
 
     !haskey(idtonode, id) && return
-    node = app.idtonode[id]
+    node = idtonode[id]
     node.enabled = true
     awake && awake!(node)
 end
@@ -271,10 +271,10 @@ disable_system(id) # Now your game logic will no more run
 """
 function disable_system(id::Integer, shut=false)
     app = CruiseApp()
-    idtonode = app.idtonode
+    idtonode = app.plugins.idtonode
 
     !haskey(idtonode, id) && return
-    node = app.idtonode[id]
+    node = idtonode[id]
     node.enabled = false
 
     shut && shutdown!(node)

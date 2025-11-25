@@ -27,6 +27,7 @@ include("writer.jl")
 
 include(joinpath("..", "plugins", "ODPlugin", "ODPlugin.jl"))
 include(joinpath("..", "plugins", "HZPlugin", "HZPlugin.jl"))
+include(joinpath("..", "plugins", "TimerPlugin", "TimerPlugin.jl"))
 
 text_en = [
 	"{speed:0.1}Everything begins somewhere.{pause:2}",
