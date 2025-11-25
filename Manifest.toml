@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "20f832634634d31e85771103aa56e888018d6ea6"
+project_hash = "f0c1997d5690da75392ee7d7f66fb0b1fdca674b"
 
 [[deps.ArnoldiMethod]]
 deps = ["LinearAlgebra", "Random", "StaticArrays"]
@@ -40,13 +40,6 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
-
-[[deps.ECSInterface]]
-git-tree-sha1 = "fb5215c681b0e7eedcd9245c829fcefc493e36bb"
-repo-rev = "main"
-repo-url = "https://github.com/Gesee-y/ECSInterface.jl"
-uuid = "ed54f85f-9ee8-4912-9e4a-a43af611f8a9"
-version = "0.1.0"
 
 [[deps.EventNotifiers]]
 git-tree-sha1 = "4c9a42ee2c18cbfffb333a554d3ebd47a4f89841"
