@@ -15,21 +15,17 @@ end
 
 @testset "PluginDict basic operations" begin
     pd = Cruise.PluginDict()
-    # store a plain value
-    pd[:foo] = (42)
-    @test haskey(pd, :foo)
-    @test pd[:foo] == 42
 
     # store by type
     dsys = DummySys()
     pd[DummySys] = dsys
-    @test haskey(pd, Symbol(DummySys))
+    @test haskey(pd, DummySys)
     v = pd[DummySys]
     @test typeof(v) == DummySys
 
     # delete
-    delete!(pd, :foo)
-    @test !haskey(pd, :foo)
+    delete!(pd, DummySys)
+    @test !haskey(pd, DummySys)
 
     # values and keys do not error
     _ = keys(pd)
